@@ -22,4 +22,9 @@ class Penjualan extends Model
     {
         return $this->hasMany(PenjualanDetail::class, 'id_penjualan');
     }
+
+    public function jurnal()
+    {
+        return $this->belongsTo(Jurnal::class, 'id_jurnal');
+    }
 }

@@ -23,6 +23,11 @@ class Pembelian extends Model
         return $this->hasMany(PembelianDetail::class, 'id_pembelian');
     }
 
+    public function jurnal()
+    {
+        return $this->belongsTo(Jurnal::class, 'id_jurnal');
+    }
+
     public function getNoFakturAttribute()
     {
         return $this->attributes['no_faktur_pembelian'];

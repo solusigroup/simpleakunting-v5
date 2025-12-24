@@ -12,4 +12,9 @@ class Pelanggan extends Model
     protected $table = 'pelanggan';
     protected $primaryKey = 'id_pelanggan';
     protected $guarded = ['id_pelanggan'];
+
+    public function penjualan()
+    {
+        return $this->hasMany(Penjualan::class, 'id_pelanggan');
+    }
 }
