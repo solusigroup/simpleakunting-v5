@@ -32,8 +32,11 @@
                         <label for="end_banding" class="form-label">Sampai Tanggal</label>
                         <input type="date" class="form-control" id="end_banding" name="end_banding" value="{{ $endBanding }}">
                     </div>
-                    <div class="col-md-2">
-                        <button type="submit" class="btn btn-primary w-100">Tampilkan</button>
+                    <div class="col-md-2 d-flex gap-2 flex-wrap">
+                        <button type="submit" class="btn btn-primary">Tampilkan</button>
+                        <a href="{{ route('laporan.labarugi.pdf', request()->all()) }}" class="btn btn-danger" target="_blank">
+                            <span data-feather="file-text"></span> PDF
+                        </a>
                     </div>
                 </div>
             </form>

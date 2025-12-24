@@ -47,7 +47,9 @@ Route::middleware('auth')->group(function () {
 
     Route::get('laporan', [LaporanController::class, 'index'])->name('laporan.index');
     Route::get('/laporan/neraca', [LaporanController::class, 'neraca'])->name('laporan.neraca');
+    Route::get('/laporan/neraca/pdf', [LaporanController::class, 'neracaPdf'])->name('laporan.neraca.pdf');
     Route::get('/laporan/labarugi', [LaporanController::class, 'labaRugi'])->name('laporan.labarugi');
+    Route::get('/laporan/labarugi/pdf', [LaporanController::class, 'labaRugiPdf'])->name('laporan.labarugi.pdf');
     Route::get('/laporan/aruskas-langsung', [LaporanController::class, 'arusKasLangsung'])->name('laporan.aruskas_langsung');
     Route::get('/laporan/aruskas-tidak-langsung', [LaporanController::class, 'arusKasTidakLangsung'])->name('laporan.aruskas_tidak_langsung');
     Route::get('/laporan/perubahan-ekuitas', [LaporanController::class, 'perubahanEkuitas'])->name('laporan.perubahan_ekuitas');
@@ -62,4 +64,58 @@ Route::middleware('auth')->group(function () {
     Route::get('kas', [KasController::class, 'index'])->name('kas.index');
     Route::get('kas/transfer', [KasController::class, 'transfer'])->name('kas.transfer');
     Route::post('kas/transfer', [KasController::class, 'storeTransfer'])->name('kas.storeTransfer');
+
+    // =====================================================
+    // KOPERASI SIMPAN PINJAM ROUTES
+    // =====================================================
+    
+    // Anggota
+    Route::resource('anggota', \App\Http\Controllers\AnggotaController::class);
+    Route::get('anggota/{id}/kartu', [\App\Http\Controllers\AnggotaController::class, 'kartu'])->name('anggota.kartu');
+
+    // Simpanan
+    Route::resource('simpanan', \App\Http\Controllers\SimpananController::class);
+    Route::get('simpanan-setor', [\App\Http\Controllers\SimpananController::class, 'setor'])->name('simpanan.setor');
+    Route::get('simpanan-tarik', [\App\Http\Controllers\SimpananController::class, 'tarik'])->name('simpanan.tarik');
+    Route::get('simpanan-kartu/{id_anggota}', [\App\Http\Controllers\SimpananController::class, 'kartu'])->name('simpanan.kartu');
+
+    // Pinjaman
+    Route::resource('pinjaman', \App\Http\Controllers\PinjamanController::class);
+    Route::post('pinjaman/simulasi', [\App\Http\Controllers\PinjamanController::class, 'simulasi'])->name('pinjaman.simulasi');
+    Route::post('pinjaman/{id}/submit', [\App\Http\Controllers\PinjamanController::class, 'submit'])->name('pinjaman.submit');
+    Route::get('pinjaman/{id}/pencairan', [\App\Http\Controllers\PinjamanController::class, 'pencairanForm'])->name('pinjaman.pencairan');
+    Route::post('pinjaman/{id}/cairkan', [\App\Http\Controllers\PinjamanController::class, 'cairkan'])->name('pinjaman.cairkan');
+    Route::get('pinjaman/{id}/angsuran', [\App\Http\Controllers\PinjamanController::class, 'angsuranForm'])->name('pinjaman.angsuran');
+    Route::post('pinjaman/{id}/bayar', [\App\Http\Controllers\PinjamanController::class, 'bayarAngsuran'])->name('pinjaman.bayar');
+    Route::get('pinjaman/{id}/pelunasan', [\App\Http\Controllers\PinjamanController::class, 'pelunasanForm'])->name('pinjaman.pelunasan');
+    Route::post('pinjaman/{id}/lunasi', [\App\Http\Controllers\PinjamanController::class, 'lunasi'])->name('pinjaman.lunasi');
+
+    // Approval Workflow
+    Route::get('approval', [\App\Http\Controllers\ApprovalController::class, 'inbox'])->name('approval.inbox');
+    Route::post('approval/{module}/{id}/approve', [\App\Http\Controllers\ApprovalController::class, 'approve'])->name('approval.approve');
+    Route::post('approval/{module}/{id}/reject', [\App\Http\Controllers\ApprovalController::class, 'reject'])->name('approval.reject');
+
+    // Laporan Koperasi
+    Route::get('laporan/simpanan', [LaporanController::class, 'laporanSimpanan'])->name('laporan.simpanan');
+    Route::get('laporan/pinjaman-aktif', [LaporanController::class, 'laporanPinjamanAktif'])->name('laporan.pinjaman_aktif');
+    Route::get('laporan/kolektibilitas', [LaporanController::class, 'laporanKolektibilitas'])->name('laporan.kolektibilitas');
+    Route::get('laporan/aging', [LaporanController::class, 'laporanAgingPinjaman'])->name('laporan.aging');
+
+    // =====================================================
+    // DATABASE MANAGEMENT (Superuser Only)
+    // =====================================================
+    Route::get('database', [\App\Http\Controllers\DatabaseController::class, 'index'])->name('database.index');
+    Route::post('database/truncate', [\App\Http\Controllers\DatabaseController::class, 'truncate'])->name('database.truncate');
+    Route::post('database/fresh', [\App\Http\Controllers\DatabaseController::class, 'fresh'])->name('database.fresh');
+    Route::post('database/drop', [\App\Http\Controllers\DatabaseController::class, 'drop'])->name('database.drop');
+    Route::post('database/seed', [\App\Http\Controllers\DatabaseController::class, 'seed'])->name('database.seed');
+
+    // =====================================================
+    // IMPORT & EXPORT DATA
+    // =====================================================
+    Route::get('import-export', [\App\Http\Controllers\ImportExportController::class, 'index'])->name('import-export.index');
+    Route::get('import-export/export/{module}', [\App\Http\Controllers\ImportExportController::class, 'export'])->name('import-export.export');
+    Route::get('import-export/template/{module}', [\App\Http\Controllers\ImportExportController::class, 'template'])->name('import-export.template');
+    Route::post('import-export/import/{module}', [\App\Http\Controllers\ImportExportController::class, 'import'])->name('import-export.import');
+    Route::get('import-export/export-all', [\App\Http\Controllers\ImportExportController::class, 'exportAll'])->name('import-export.export-all');
 });

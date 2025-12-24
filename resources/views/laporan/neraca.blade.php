@@ -19,9 +19,12 @@
                     <label for="banding_tanggal" class="form-label">Bandingkan Dengan (Opsional)</label>
                     <input type="date" class="form-control" id="banding_tanggal" name="banding_tanggal" value="{{ $bandingTanggal }}">
                 </div>
-                <div class="col-md-4">
+                <div class="col-md-4 d-flex gap-2 align-items-end">
                     <button type="submit" class="btn btn-primary">Tampilkan</button>
                     <a href="{{ route('laporan.neraca') }}" class="btn btn-secondary">Reset</a>
+                    <a href="{{ route('laporan.neraca.pdf', request()->all()) }}" class="btn btn-danger" target="_blank">
+                        <span data-feather="file-text"></span> PDF
+                    </a>
                 </div>
             </form>
         </div>

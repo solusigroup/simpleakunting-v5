@@ -297,12 +297,47 @@
                             </a>
                         </li>
                         <li class="nav-item">
-                            <a class="nav-link {{ request()->routeIs('laporan.persediaan') ? 'active' : '' }}" href="{{ route('laporan.persediaan') }}">
-                                <span data-feather="package"></span>
-                                Laporan Persediaan
-                            </a>
-                        </li>
                     </ul>
+                    </div>
+
+                    <!-- Koperasi Simpan Pinjam -->
+                    @php
+                        $isKoperasiActive = request()->routeIs('anggota.*') || request()->routeIs('simpanan.*') || request()->routeIs('pinjaman.*') || request()->routeIs('approval.*');
+                    @endphp
+                    <h6 class="sidebar-heading d-flex justify-content-between align-items-center px-3 mt-4 mb-1 text-muted" 
+                        data-bs-toggle="collapse" 
+                        data-bs-target="#koperasiMenu" 
+                        aria-expanded="{{ $isKoperasiActive ? 'true' : 'false' }}">
+                        <span>🏦 Simpan Pinjam</span>
+                        <span data-feather="chevron-down" class="feather-chevron-down"></span>
+                    </h6>
+                    <div class="collapse {{ $isKoperasiActive ? 'show' : '' }}" id="koperasiMenu" data-bs-parent="#sidebarAccordion">
+                        <ul class="nav flex-column mb-2 nav-group">
+                            <li class="nav-item">
+                                <a class="nav-link {{ request()->routeIs('anggota.*') ? 'active' : '' }}" href="{{ route('anggota.index') }}">
+                                    <span data-feather="users"></span>
+                                    Anggota
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link {{ request()->routeIs('simpanan.*') ? 'active' : '' }}" href="{{ route('simpanan.index') }}">
+                                    <span data-feather="save"></span>
+                                    Simpanan
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link {{ request()->routeIs('pinjaman.*') ? 'active' : '' }}" href="{{ route('pinjaman.index') }}">
+                                    <span data-feather="credit-card"></span>
+                                    Pinjaman
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link {{ request()->routeIs('approval.*') ? 'active' : '' }}" href="{{ route('approval.inbox') }}">
+                                    <span data-feather="check-square"></span>
+                                    Approval
+                                </a>
+                            </li>
+                        </ul>
                     </div>
 
                     <!-- Admin -->
@@ -330,6 +365,20 @@
                                     Manajemen User
                                 </a>
                             </li>
+                            <li class="nav-item">
+                                <a class="nav-link {{ request()->routeIs('import-export.*') ? 'active' : '' }}" href="{{ route('import-export.index') }}">
+                                    <span data-feather="upload-cloud"></span>
+                                    Import/Export Data
+                                </a>
+                            </li>
+                            @if(auth()->user() && auth()->user()->role === 'superuser')
+                            <li class="nav-item">
+                                <a class="nav-link {{ request()->routeIs('database.*') ? 'active' : '' }}" href="{{ route('database.index') }}">
+                                    <span data-feather="database"></span>
+                                    Manajemen Database
+                                </a>
+                            </li>
+                            @endif
                         </ul>
                     </div>
                 </div>

@@ -40,6 +40,7 @@
                             <label for="role" class="form-label">Role</label>
                             <select class="form-select @error('role') is-invalid @enderror" id="role" name="role" required>
                                 <option value="">-- Pilih Role --</option>
+                                <option value="superuser">Superuser</option>
                                 <option value="admin">Admin</option>
                                 <option value="staff">Staff</option>
                             </select>

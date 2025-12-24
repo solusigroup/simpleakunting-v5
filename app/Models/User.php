@@ -41,6 +41,14 @@ class User extends Authenticatable
     }
 
     /**
+     * Get the name attribute (alias for nama_user).
+     */
+    public function getNameAttribute()
+    {
+        return $this->nama_user;
+    }
+
+    /**
      * Get the attributes that should be cast.
      *
      * @return array<string, string>

@@ -43,6 +43,27 @@
                             @enderror
                         </div>
 
+                        <div class="mb-3">
+                            <label for="jenis_usaha" class="form-label">Jenis Usaha / Tipe COA <span class="text-danger">*</span></label>
+                            <select class="form-select @error('jenis_usaha') is-invalid @enderror" id="jenis_usaha" name="jenis_usaha" required>
+                                <option value="dagang" {{ old('jenis_usaha', $perusahaan->jenis_usaha ?? 'dagang') == 'dagang' ? 'selected' : '' }}>
+                                    Usaha Dagang (COA Dagang)
+                                </option>
+                                <option value="simpan_pinjam" {{ old('jenis_usaha', $perusahaan->jenis_usaha ?? '') == 'simpan_pinjam' ? 'selected' : '' }}>
+                                    Koperasi Simpan Pinjam (COA Simpan Pinjam)
+                                </option>
+                                <option value="serba_usaha" {{ old('jenis_usaha', $perusahaan->jenis_usaha ?? '') == 'serba_usaha' ? 'selected' : '' }}>
+                                    Koperasi Serba Usaha (COA Dagang + Simpan Pinjam)
+                                </option>
+                            </select>
+                            @error('jenis_usaha')
+                                <div class="invalid-feedback">{{ $message }}</div>
+                            @enderror
+                            <small class="text-muted">
+                                Pilih jenis usaha untuk menentukan Chart of Accounts (COA) yang digunakan.
+                            </small>
+                        </div>
+
                         <h5 class="mt-4">Pejabat Penandatangan</h5>
                         <div class="row">
                             <div class="col-md-6 mb-3">

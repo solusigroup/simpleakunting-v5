@@ -7,6 +7,7 @@ use App\Models\JurnalDetail;
 use App\Models\Persediaan;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Barryvdh\DomPDF\Facade\Pdf;
 
 class LaporanController extends Controller
 {
@@ -445,5 +446,150 @@ class LaporanController extends Controller
         });
 
         return view('laporan.persediaan', compact('perusahaan', 'persediaan', 'totalNilai'));
+    }
+
+    /**
+     * Export Neraca to PDF
+     */
+    public function neracaPdf(Request $request)
+    {
+        $perTanggal = $request->input('per_tanggal', date('Y-m-d'));
+        $perusahaan = DB::table('perusahaan')->find(1);
+
+        $akunNeraca = Akun::whereIn('tipe_akun', [
+            'Kas & Bank', 'Piutang', 'Persediaan', 'Aset Lancar Lainnya', 'Aset Tetap',
+            'Utang Usaha', 'Kewajiban Lancar Lainnya', 'Kewajiban Jangka Panjang', 'Ekuitas'
+        ])->orderBy('kode_akun')->get();
+
+        $laporan = $akunNeraca->map(function ($akun) use ($perTanggal) {
+            $saldo = JurnalDetail::where('kode_akun', $akun->kode_akun)
+                ->whereHas('jurnal', function ($q) use ($perTanggal) {
+                    $q->where('tanggal', '<=', $perTanggal);
+                })
+                ->select(DB::raw('SUM(debit) as total_debit'), DB::raw('SUM(kredit) as total_kredit'))
+                ->first();
+
+            $totalDebit = $saldo->total_debit ?? 0;
+            $totalKredit = $saldo->total_kredit ?? 0;
+
+            return [
+                'kode' => $akun->kode_akun,
+                'nama' => $akun->nama_akun,
+                'tipe' => $akun->tipe_akun,
+                'saldo' => $akun->saldo_normal == 'Debit' ? $totalDebit - $totalKredit : $totalKredit - $totalDebit,
+            ];
+        });
+
+        $aktivaLancar = $laporan->whereIn('tipe', ['Kas & Bank', 'Piutang', 'Persediaan', 'Aset Lancar Lainnya'])->values();
+        $aktivaTetap = $laporan->where('tipe', 'Aset Tetap')->values();
+        $kewajiban = $laporan->whereIn('tipe', ['Utang Usaha', 'Kewajiban Lancar Lainnya', 'Kewajiban Jangka Panjang'])->values();
+        $modal = $laporan->where('tipe', 'Ekuitas')->values();
+
+        $totalAktivaLancar = $aktivaLancar->sum('saldo');
+        $totalAktivaTetap = $aktivaTetap->sum('saldo');
+        $totalAktiva = $totalAktivaLancar + $totalAktivaTetap;
+        
+        $totalKewajiban = $kewajiban->sum('saldo');
+        $totalModal = $modal->sum('saldo');
+        $labaBersih = $this->hitungLabaRugi($perTanggal);
+        $totalPasiva = $totalKewajiban + $totalModal + $labaBersih;
+
+        $data = [
+            'title' => 'LAPORAN NERACA',
+            'subtitle' => 'Per Tanggal ' . date('d F Y', strtotime($perTanggal)),
+            'perusahaan' => $perusahaan,
+            'aktivaLancar' => $aktivaLancar,
+            'aktivaTetap' => $aktivaTetap,
+            'kewajiban' => $kewajiban,
+            'modal' => $modal,
+            'totalAktivaLancar' => $totalAktivaLancar,
+            'totalAktivaTetap' => $totalAktivaTetap,
+            'totalAktiva' => $totalAktiva,
+            'totalKewajiban' => $totalKewajiban,
+            'totalModal' => $totalModal,
+            'labaBersih' => $labaBersih,
+            'totalPasiva' => $totalPasiva,
+            'showSignatures' => true,
+            'tanggal' => date('d F Y', strtotime($perTanggal)),
+        ];
+
+        $pdf = Pdf::loadView('laporan.pdf.neraca', $data);
+        $pdf->setPaper('a4', 'portrait');
+        
+        return $pdf->download('neraca_' . $perTanggal . '.pdf');
+    }
+
+    /**
+     * Export Laba Rugi to PDF
+     */
+    public function labaRugiPdf(Request $request)
+    {
+        $startDate = $request->input('start_date', date('Y-m-01'));
+        $endDate = $request->input('end_date', date('Y-m-d'));
+        $perusahaan = DB::table('perusahaan')->find(1);
+
+        $akunLabaRugi = Akun::whereIn('tipe_akun', [
+            'Pendapatan', 'Pendapatan Lainnya', 'HPP', 'Beban', 'Beban Lainnya'
+        ])->orderBy('kode_akun')->get();
+
+        $laporan = $akunLabaRugi->map(function ($akun) use ($startDate, $endDate) {
+            $saldo = JurnalDetail::where('kode_akun', $akun->kode_akun)
+                ->whereHas('jurnal', function ($q) use ($startDate, $endDate) {
+                    $q->whereBetween('tanggal', [$startDate, $endDate]);
+                })
+                ->select(DB::raw('SUM(debit) as total_debit'), DB::raw('SUM(kredit) as total_kredit'))
+                ->first();
+
+            $totalDebit = $saldo->total_debit ?? 0;
+            $totalKredit = $saldo->total_kredit ?? 0;
+
+            return [
+                'kode' => $akun->kode_akun,
+                'nama' => $akun->nama_akun,
+                'tipe' => $akun->tipe_akun,
+                'saldo' => $akun->saldo_normal == 'Kredit' ? $totalKredit - $totalDebit : $totalDebit - $totalKredit,
+            ];
+        });
+
+        $pendapatan = $laporan->whereIn('tipe', ['Pendapatan'])->values();
+        $hpp = $laporan->where('tipe', 'HPP')->values();
+        $beban = $laporan->where('tipe', 'Beban')->values();
+        $pendapatanLain = $laporan->where('tipe', 'Pendapatan Lainnya')->values();
+        $bebanLain = $laporan->where('tipe', 'Beban Lainnya')->values();
+
+        $totalPendapatan = $pendapatan->sum('saldo');
+        $totalHpp = $hpp->sum('saldo');
+        $labaKotor = $totalPendapatan - $totalHpp;
+        $totalBeban = $beban->sum('saldo');
+        $labaOperasional = $labaKotor - $totalBeban;
+        $totalPendapatanLain = $pendapatanLain->sum('saldo');
+        $totalBebanLain = $bebanLain->sum('saldo');
+        $labaBersih = $labaOperasional + $totalPendapatanLain - $totalBebanLain;
+
+        $data = [
+            'title' => 'LAPORAN LABA RUGI',
+            'subtitle' => 'Periode ' . date('d F Y', strtotime($startDate)) . ' s/d ' . date('d F Y', strtotime($endDate)),
+            'perusahaan' => $perusahaan,
+            'pendapatan' => $pendapatan,
+            'hpp' => $hpp,
+            'beban' => $beban,
+            'pendapatanLain' => $pendapatanLain,
+            'bebanLain' => $bebanLain,
+            'totalPendapatan' => $totalPendapatan,
+            'totalHpp' => $totalHpp,
+            'labaKotor' => $labaKotor,
+            'totalBeban' => $totalBeban,
+            'labaOperasional' => $labaOperasional,
+            'totalPendapatanLain' => $totalPendapatanLain,
+            'totalBebanLain' => $totalBebanLain,
+            'labaBersih' => $labaBersih,
+            'showSignatures' => true,
+            'tanggal' => date('d F Y', strtotime($endDate)),
+        ];
+
+        $pdf = Pdf::loadView('laporan.pdf.labarugi', $data);
+        $pdf->setPaper('a4', 'portrait');
+        
+        return $pdf->download('laba_rugi_' . $startDate . '_' . $endDate . '.pdf');
     }
 }
