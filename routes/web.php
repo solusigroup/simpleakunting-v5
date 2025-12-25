@@ -19,6 +19,7 @@ use App\Http\Controllers\PelangganController;
 use App\Http\Controllers\PemasokController;
 use App\Http\Controllers\PersediaanController;
 use App\Http\Controllers\JenisPinjamanController;
+use App\Http\Controllers\JenisSimpananController;
 use App\Http\Controllers\PenjualanController;
 use App\Http\Controllers\PembelianController;
 use App\Http\Controllers\AkunController;
@@ -83,6 +84,9 @@ Route::middleware('auth')->group(function () {
         
         // Jenis Pinjaman CRUD
         Route::resource('jenis-pinjaman', JenisPinjamanController::class);
+        
+        // Jenis Simpanan CRUD
+        Route::resource('jenis-simpanan', JenisSimpananController::class);
     });
 
     // =====================================================
