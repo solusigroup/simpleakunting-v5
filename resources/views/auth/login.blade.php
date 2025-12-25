@@ -4,54 +4,76 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Login - Simple Akunting</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    
+    <!-- Custom CSS -->
+    <link href="{{ asset('css/custom.css') }}" rel="stylesheet">
 </head>
-<body class="bg-light">
-    <div class="container">
-        <div class="row justify-content-center mt-5">
-            <div class="col-md-6">
-                <div class="card shadow">
-                    <div class="card-header bg-primary text-white">
-                        <h4 class="mb-0">Login</h4>
+<body>
+    <div class="auth-page">
+        <div class="auth-container">
+            <div class="auth-card">
+                <div class="auth-header">
+                    <div class="auth-logo">
+                        📊
                     </div>
-                    <div class="card-body">
-                        @if ($errors->any())
-                            <div class="alert alert-danger">
-                                <ul class="mb-0">
-                                    @foreach ($errors->all() as $error)
-                                        <li>{{ $error }}</li>
-                                    @endforeach
-                                </ul>
-                            </div>
-                        @endif
+                    <h1 class="auth-title">Simple Akunting</h1>
+                    <p class="auth-subtitle">Masuk ke akun Anda</p>
+                </div>
+                
+                <div class="auth-body">
+                    @if ($errors->any())
+                        <div class="alert alert-danger">
+                            <ul>
+                                @foreach ($errors->all() as $error)
+                                    <li>{{ $error }}</li>
+                                @endforeach
+                            </ul>
+                        </div>
+                    @endif
 
-                        <form method="POST" action="{{ route('login') }}">
-                            @csrf
-                            <div class="mb-3">
-                                <label for="nama_user" class="form-label">Username</label>
-                                <input type="text" class="form-control" id="nama_user" name="nama_user" value="{{ old('nama_user') }}" required autofocus>
-                            </div>
-                            <div class="mb-3">
-                                <label for="password" class="form-label">Password</label>
-                                <input type="password" class="form-control" id="password" name="password" required>
-                            </div>
-                            <div class="d-grid">
-                                <button type="submit" class="btn btn-primary">Login</button>
-                            </div>
-                        </form>
-                    </div>
-                    <div class="card-footer text-center">
-                        <p class="mb-0">Don't have an account? <a href="{{ route('register') }}">Register here</a></p>
-                    </div>
+                    <form method="POST" action="{{ route('login') }}">
+                        @csrf
+                        <div class="form-group">
+                            <label for="nama_user" class="form-label">Username</label>
+                            <input type="text" 
+                                   class="form-control" 
+                                   id="nama_user" 
+                                   name="nama_user" 
+                                   value="{{ old('nama_user') }}" 
+                                   placeholder="Masukkan username"
+                                   required 
+                                   autofocus>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="password" class="form-label">Password</label>
+                            <input type="password" 
+                                   class="form-control" 
+                                   id="password" 
+                                   name="password" 
+                                   placeholder="Masukkan password"
+                                   required>
+                        </div>
+                        
+                        <button type="submit" class="btn btn-primary btn-block">
+                            Masuk
+                        </button>
+                    </form>
+                </div>
+                
+                <div class="auth-footer">
+                    <p>Belum punya akun? <a href="{{ route('register') }}">Daftar di sini</a></p>
                 </div>
             </div>
-        </div>
-        
-        <!-- Developer Credit -->
-        <div class="text-center mt-4">
-            <p class="text-muted small mb-0">
-                Developed by <a href="https://simpleakunting.my.id" target="_blank" class="text-decoration-none">Kurniawan</a>
-            </p>
+            
+            <div class="auth-credit">
+                <p>Developed by <a href="https://simpleakunting.my.id" target="_blank">Kurniawan</a></p>
+            </div>
         </div>
     </div>
 </body>

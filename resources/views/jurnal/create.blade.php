@@ -3,10 +3,15 @@
 @section('title', 'Buat Jurnal Umum - Simple Akunting')
 
 @section('content')
-    <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
-        <h1 class="h2">Buat Jurnal Manual</h1>
-        <div class="btn-toolbar mb-2 mb-md-0">
-            <a href="{{ route('jurnal.index') }}" class="btn btn-sm btn-secondary">
+    <!-- Page Header -->
+    <div class="page-header-actions">
+        <div>
+            <h1 class="page-title">Buat Jurnal Manual</h1>
+            <p class="page-subtitle">Tambah entri jurnal baru secara manual</p>
+        </div>
+        <div>
+            <a href="{{ route('jurnal.index') }}" class="btn btn-outline btn-sm">
+                <span data-feather="arrow-left" style="width: 16px; height: 16px; margin-right: 4px;"></span>
                 Kembali
             </a>
         </div>
@@ -14,52 +19,64 @@
 
     <form action="{{ route('jurnal.store') }}" method="POST" id="formJurnal">
         @csrf
-        <div class="row mb-3">
-            <div class="col-md-4">
-                <label for="no_transaksi" class="form-label">No Transaksi</label>
-                <input type="text" class="form-control" id="no_transaksi" name="no_transaksi" value="{{ $noTransaksi }}" readonly>
-            </div>
-            <div class="col-md-4">
-                <label for="tanggal" class="form-label">Tanggal</label>
-                <input type="date" class="form-control" id="tanggal" name="tanggal" value="{{ date('Y-m-d') }}" required>
-            </div>
-            <div class="col-md-4">
-                <label for="deskripsi" class="form-label">Deskripsi</label>
-                <input type="text" class="form-control" id="deskripsi" name="deskripsi" required>
+        
+        <!-- Header Form -->
+        <div class="form-card mb-4">
+            <div class="form-card-body">
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="no_transaksi" class="form-label">No Transaksi</label>
+                        <input type="text" class="form-control" id="no_transaksi" name="no_transaksi" value="{{ $noTransaksi }}" readonly style="background: var(--color-bg);">
+                    </div>
+                    <div class="form-group">
+                        <label for="tanggal" class="form-label">Tanggal</label>
+                        <input type="date" class="form-control" id="tanggal" name="tanggal" value="{{ date('Y-m-d') }}" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="deskripsi" class="form-label">Deskripsi</label>
+                        <input type="text" class="form-control" id="deskripsi" name="deskripsi" placeholder="Masukkan deskripsi jurnal" required>
+                    </div>
+                </div>
             </div>
         </div>
 
-        <div class="card">
-            <div class="card-header">Detail Jurnal</div>
-            <div class="card-body p-0">
-                <table class="table table-bordered mb-0">
-                    <thead class="table-light">
+        <!-- Detail Jurnal -->
+        <div class="form-card mb-4">
+            <div class="form-card-header">
+                <h3 class="form-card-title">Detail Jurnal</h3>
+            </div>
+            <div class="table-responsive">
+                <table class="data-table">
+                    <thead>
                         <tr>
-                            <th width="40%">Akun</th>
-                            <th width="25%">Debit</th>
-                            <th width="25%">Kredit</th>
-                            <th width="10%">Aksi</th>
+                            <th style="width: 40%;">Akun</th>
+                            <th style="width: 25%;">Debit</th>
+                            <th style="width: 25%;">Kredit</th>
+                            <th style="width: 10%;">Aksi</th>
                         </tr>
                     </thead>
                     <tbody id="container_jurnal">
                         <!-- Rows via JS -->
                     </tbody>
                     <tfoot>
-                        <tr>
-                            <td class="text-end fw-bold">Total</td>
+                        <tr style="background: var(--color-bg);">
+                            <td class="text-right fw-bold" style="text-align: right;">Total</td>
                             <td>
-                                <input type="text" class="form-control form-control-sm" id="total_debit_display" readonly>
+                                <input type="text" class="form-control form-control-sm" id="total_debit_display" readonly style="background: var(--color-bg); font-weight: 600;">
                                 <input type="hidden" id="total_debit" value="0">
                             </td>
                             <td>
-                                <input type="text" class="form-control form-control-sm" id="total_kredit_display" readonly>
+                                <input type="text" class="form-control form-control-sm" id="total_kredit_display" readonly style="background: var(--color-bg); font-weight: 600;">
                                 <input type="hidden" id="total_kredit" value="0">
                             </td>
                             <td></td>
                         </tr>
                         <tr>
-                            <td colspan="4">
-                                <button type="button" class="btn btn-sm btn-success" onclick="tambahBaris()">+ Tambah Baris</button>
+                            <td colspan="4" style="padding: var(--space-md);">
+                                <button type="button" class="btn btn-success btn-sm" onclick="tambahBaris()">
+                                    <span data-feather="plus" style="width: 14px; height: 14px; margin-right: 4px;"></span>
+                                    Tambah Baris
+                                </button>
                             </td>
                         </tr>
                     </tfoot>
@@ -67,11 +84,18 @@
             </div>
         </div>
 
-        <div class="mt-3 mb-5">
-            <div id="balance_alert" class="alert alert-danger" style="display: none;">
-                Jurnal tidak seimbang (Balance)! Selisih: <span id="selisih_display">0</span>
+        <!-- Submit Section -->
+        <div class="form-card">
+            <div class="form-card-body">
+                <div id="balance_alert" class="alert alert-danger" style="display: none;">
+                    <span data-feather="alert-circle" style="width: 18px; height: 18px; margin-right: 8px;"></span>
+                    Jurnal tidak seimbang (Balance)! Selisih: <strong><span id="selisih_display">0</span></strong>
+                </div>
+                <button type="submit" class="btn btn-primary btn-block" id="btnSubmit" disabled style="padding: 16px;">
+                    <span data-feather="save" style="width: 18px; height: 18px; margin-right: 8px;"></span>
+                    Simpan Jurnal
+                </button>
             </div>
-            <button type="submit" class="btn btn-lg btn-primary w-100" id="btnSubmit" disabled>Simpan Jurnal</button>
         </div>
     </form>
 @endsection
@@ -101,11 +125,14 @@
                     <input type="number" class="form-control form-control-sm input-kredit" name="details[${rowCount}][kredit]" value="0" min="0" onkeyup="hitungTotal()" onchange="hitungTotal()">
                 </td>
                 <td>
-                    <button type="button" class="btn btn-sm btn-danger" onclick="hapusBaris(${rowCount})">X</button>
+                    <button type="button" class="btn btn-danger btn-icon btn-sm" onclick="hapusBaris(${rowCount})">
+                        <span data-feather="x" style="width: 14px; height: 14px;"></span>
+                    </button>
                 </td>
             </tr>
         `;
         document.getElementById('container_jurnal').insertAdjacentHTML('beforeend', html);
+        feather.replace();
         rowCount++;
     }
 
@@ -136,7 +163,10 @@
             alert.style.display = 'none';
         } else {
             btn.setAttribute('disabled', 'disabled');
-            alert.style.display = 'block';
+            if (totalDebit > 0 || totalKredit > 0) {
+                alert.style.display = 'flex';
+                alert.style.alignItems = 'center';
+            }
             document.getElementById('selisih_display').innerText = formatRupiah(Math.abs(totalDebit - totalKredit));
         }
     }

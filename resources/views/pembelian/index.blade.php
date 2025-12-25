@@ -3,51 +3,71 @@
 @section('title', 'Daftar Pembelian - Simple Akunting')
 
 @section('content')
-    <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
-        <h1 class="h2">Daftar Pembelian</h1>
-        <div class="btn-toolbar mb-2 mb-md-0">
-            <a href="{{ route('pembelian.create') }}" class="btn btn-sm btn-primary">
+    <!-- Page Header -->
+    <div class="page-header-actions">
+        <div>
+            <h1 class="page-title">Pembelian</h1>
+            <p class="page-subtitle">Daftar semua transaksi pembelian</p>
+        </div>
+        <div>
+            <a href="{{ route('pembelian.create') }}" class="btn btn-primary btn-sm">
+                <span data-feather="plus" style="width: 16px; height: 16px; margin-right: 4px;"></span>
                 Buat Faktur Baru
             </a>
         </div>
     </div>
 
-    <div class="table-responsive">
-        <table class="table table-striped table-sm">
-            <thead>
-                <tr>
-                    <th scope="col">Tanggal</th>
-                    <th scope="col">No Faktur</th>
-                    <th scope="col">Pemasok</th>
-                    <th scope="col">Total</th>
-                    <th scope="col">Pembayaran</th>
-                    <th scope="col">Status</th>
-                    <th scope="col">Aksi</th>
-                </tr>
-            </thead>
-            <tbody>
-                @forelse ($pembelian as $p)
+    <!-- Table Card -->
+    <div class="table-card">
+        <div class="table-responsive">
+            <table class="data-table">
+                <thead>
                     <tr>
-                        <td>{{ \Carbon\Carbon::parse($p->tanggal_faktur)->format('d/m/Y') }}</td>
-                        <td>{{ $p->no_faktur }}</td>
-                        <td>{{ $p->pemasok->nama_pemasok ?? '-' }}</td>
-                        <td>Rp {{ number_format($p->total, 2, ',', '.') }}</td>
-                        <td>{{ $p->metode_pembayaran }}</td>
-                        <td>
-                            <span class="badge bg-{{ $p->status_pembayaran == 'Lunas' ? 'success' : 'warning' }}">
-                                {{ $p->status_pembayaran }}
-                            </span>
-                        </td>
-                        <td>
-                            <a href="{{ route('pembelian.show', $p->id_pembelian) }}" class="btn btn-sm btn-info text-white">Detail</a>
-                        </td>
+                        <th>Tanggal</th>
+                        <th>No Faktur</th>
+                        <th>Pemasok</th>
+                        <th>Total</th>
+                        <th>Pembayaran</th>
+                        <th>Status</th>
+                        <th>Aksi</th>
                     </tr>
-                @empty
-                    <tr>
-                        <td colspan="7" class="text-center">Belum ada transaksi pembelian.</td>
-                    </tr>
-                @endforelse
-            </tbody>
-        </table>
+                </thead>
+                <tbody>
+                    @forelse ($pembelian as $p)
+                        <tr>
+                            <td>{{ \Carbon\Carbon::parse($p->tanggal_faktur)->format('d/m/Y') }}</td>
+                            <td><strong>{{ $p->no_faktur }}</strong></td>
+                            <td>{{ $p->pemasok->nama_pemasok ?? '-' }}</td>
+                            <td style="font-weight: 600; color: var(--color-danger);">Rp {{ number_format($p->total, 0, ',', '.') }}</td>
+                            <td>
+                                <span class="badge badge-secondary">{{ $p->metode_pembayaran }}</span>
+                            </td>
+                            <td>
+                                <span class="badge {{ $p->status_pembayaran == 'Lunas' ? 'badge-success' : 'badge-warning' }}">
+                                    {{ $p->status_pembayaran }}
+                                </span>
+                            </td>
+                            <td>
+                                <div class="action-buttons">
+                                    <a href="{{ route('pembelian.show', $p->id_pembelian) }}" class="btn btn-sm btn-primary">
+                                        Detail
+                                    </a>
+                                </div>
+                            </td>
+                        </tr>
+                    @empty
+                        <tr>
+                            <td colspan="7">
+                                <div class="table-empty">
+                                    <div class="table-empty-icon">🛍️</div>
+                                    <p>Belum ada transaksi pembelian.</p>
+                                    <a href="{{ route('pembelian.create') }}" class="btn btn-primary btn-sm">Buat Faktur Pertama</a>
+                                </div>
+                            </td>
+                        </tr>
+                    @endforelse
+                </tbody>
+            </table>
+        </div>
     </div>
 @endsection
