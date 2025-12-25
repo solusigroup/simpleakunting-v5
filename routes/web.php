@@ -18,6 +18,7 @@ use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\PelangganController;
 use App\Http\Controllers\PemasokController;
 use App\Http\Controllers\PersediaanController;
+use App\Http\Controllers\JenisPinjamanController;
 use App\Http\Controllers\PenjualanController;
 use App\Http\Controllers\PembelianController;
 use App\Http\Controllers\AkunController;
@@ -79,6 +80,9 @@ Route::middleware('auth')->group(function () {
         Route::get('akun/{akun}/edit', [AkunController::class, 'edit'])->name('akun.edit');
         Route::put('akun/{akun}', [AkunController::class, 'update'])->name('akun.update');
         Route::delete('akun/{akun}', [AkunController::class, 'destroy'])->name('akun.destroy');
+        
+        // Jenis Pinjaman CRUD
+        Route::resource('jenis-pinjaman', JenisPinjamanController::class);
     });
 
     // =====================================================
