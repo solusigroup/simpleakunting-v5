@@ -61,11 +61,11 @@
                     
                     <div class="row">
                         <div class="col-md-6 mb-3">
-                            <label for="akun_simpanan" class="form-label">Akun Simpanan (Kewajiban) <span class="text-danger">*</span></label>
+                            <label for="akun_simpanan" class="form-label">Akun Simpanan (Kewajiban/Ekuitas) <span class="text-danger">*</span></label>
                             <select class="form-select @error('akun_simpanan') is-invalid @enderror" 
                                 id="akun_simpanan" name="akun_simpanan" required>
                                 <option value="">-- Pilih Akun --</option>
-                                @foreach($akunKewajiban as $akun)
+                                @foreach($akunSimpanan as $akun)
                                     <option value="{{ $akun->kode_akun }}" 
                                         {{ old('akun_simpanan', $jenisSimpanan->akun_simpanan) == $akun->kode_akun ? 'selected' : '' }}>
                                         {{ $akun->kode_akun }} - {{ $akun->nama_akun }}

@@ -22,9 +22,10 @@ class JenisSimpananController extends Controller
      */
     public function create()
     {
-        $akunKewajiban = Akun::where('klasifikasi', '2')->orderBy('kode_akun')->get();
+        // Simpanan bisa masuk ke Kewajiban (2) atau Ekuitas (3) untuk Simpanan Pokok
+        $akunSimpanan = Akun::whereIn('klasifikasi', ['2', '3'])->orderBy('kode_akun')->get();
         $akunBiaya = Akun::where('klasifikasi', '5')->orderBy('kode_akun')->get();
-        return view('jenis-simpanan.create', compact('akunKewajiban', 'akunBiaya'));
+        return view('jenis-simpanan.create', compact('akunSimpanan', 'akunBiaya'));
     }
 
     /**
@@ -56,9 +57,10 @@ class JenisSimpananController extends Controller
     public function edit(string $id)
     {
         $jenisSimpanan = JenisSimpanan::findOrFail($id);
-        $akunKewajiban = Akun::where('klasifikasi', '2')->orderBy('kode_akun')->get();
+        // Simpanan bisa masuk ke Kewajiban (2) atau Ekuitas (3) untuk Simpanan Pokok
+        $akunSimpanan = Akun::whereIn('klasifikasi', ['2', '3'])->orderBy('kode_akun')->get();
         $akunBiaya = Akun::where('klasifikasi', '5')->orderBy('kode_akun')->get();
-        return view('jenis-simpanan.edit', compact('jenisSimpanan', 'akunKewajiban', 'akunBiaya'));
+        return view('jenis-simpanan.edit', compact('jenisSimpanan', 'akunSimpanan', 'akunBiaya'));
     }
 
     /**
