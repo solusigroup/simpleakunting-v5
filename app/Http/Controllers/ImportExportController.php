@@ -22,7 +22,7 @@ class ImportExportController extends Controller
         'anggota' => [
             'label' => 'Anggota Koperasi',
             'table' => 'anggota',
-            'columns' => ['no_anggota', 'nik', 'nama_lengkap', 'alamat', 'telepon', 'email', 'tanggal_masuk', 'status']
+            'columns' => ['no_anggota', 'nik', 'nama_lengkap', 'alamat', 'telepon', 'email', 'tanggal_daftar', 'status']
         ],
         'simpanan' => [
             'label' => 'Simpanan',
