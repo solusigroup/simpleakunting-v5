@@ -15,10 +15,11 @@ Sistem Akuntansi Terpadu berbasis Laravel dengan dukungan multi-bisnis: Dagang, 
 - **Buku Besar** - Laporan buku besar per akun
 - **Neraca Saldo** - Trial Balance dengan periode yang dapat disesuaikan
 - **Laporan Keuangan Lengkap**:
-  - Neraca (Balance Sheet)
-  - Laba Rugi (Income Statement)
+  - Neraca (Balance Sheet) - Comparative and single period
+  - Laba Rugi (Income Statement) - Comparative and single period
   - Arus Kas (Cash Flow - Langsung & Tidak Langsung)
   - Perubahan Ekuitas
+  - Buku Besar tiap CoA
 - **Tutup Buku** - Penutupan periode akuntansi
 
 ### 💰 Transaksi Bisnis
