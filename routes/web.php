@@ -30,7 +30,10 @@ use App\Http\Controllers\PerusahaanController;
 use App\Http\Controllers\UserController;
 use App\Http\Controllers\PenerimaanController;
 use App\Http\Controllers\PembayaranController;
-use App\Http\Controllers\KasController;
+use App\Http\Controllers\ManufacturingController;
+use App\Http\Controllers\AgricultureController;
+use App\Http\Controllers\AccountingPeriodeController;
+use App\Http\Controllers\CabangController;
 
 Route::middleware('auth')->group(function () {
     Route::post('logout', [AuthController::class, 'logout'])->name('logout');
@@ -124,6 +127,7 @@ Route::middleware('auth')->group(function () {
         Route::get('perusahaan', [PerusahaanController::class, 'edit'])->name('perusahaan.edit');
         Route::put('perusahaan', [PerusahaanController::class, 'update'])->name('perusahaan.update');
         Route::resource('users', UserController::class);
+        Route::resource('cabang', CabangController::class);
     });
 
     // =====================================================
@@ -164,6 +168,42 @@ Route::middleware('auth')->group(function () {
         Route::get('laporan/pinjaman-aktif', [LaporanController::class, 'laporanPinjamanAktif'])->name('laporan.pinjaman_aktif');
         Route::get('laporan/kolektibilitas', [LaporanController::class, 'laporanKolektibilitas'])->name('laporan.kolektibilitas');
         Route::get('laporan/aging', [LaporanController::class, 'laporanAgingPinjaman'])->name('laporan.aging');
+        Route::get('laporan/outstanding-simpan-pinjam', [LaporanController::class, 'outstandingSimpanPinjam'])->name('laporan.outstanding_simpan_pinjam');
+        Route::get('laporan/kolektibilitas-pinjaman', [LaporanController::class, 'kolektibilitasPinjaman'])->name('laporan.kolektibilitas_pinjaman');
+        Route::get('laporan/perhitungan-shu', [LaporanController::class, 'perhitunganShu'])->name('laporan.perhitungan_shu');
+    });
+
+
+    // =====================================================
+    // MANUFACTURING - Manajer, Admin, Superuser
+    // =====================================================
+    Route::middleware('role:superuser,admin,manajer')->group(function () {
+        Route::get('manufacturing/bom', [ManufacturingController::class, 'bomIndex'])->name('manufacturing.bom.index');
+        Route::get('manufacturing/bom/create', [ManufacturingController::class, 'bomCreate'])->name('manufacturing.bom.create');
+        Route::post('manufacturing/bom', [ManufacturingController::class, 'bomStore'])->name('manufacturing.bom.store');
+        
+        Route::get('manufacturing/production', [ManufacturingController::class, 'productionIndex'])->name('manufacturing.production.index');
+        Route::get('manufacturing/production/create', [ManufacturingController::class, 'productionCreate'])->name('manufacturing.production.create');
+        Route::post('manufacturing/production', [ManufacturingController::class, 'productionStore'])->name('manufacturing.production.store');
+    });
+
+    // =====================================================
+    // AGRICULTURE (PSAK 69) - Manajer, Admin, Superuser
+    // =====================================================
+    Route::middleware('role:superuser,admin,manajer')->group(function () {
+        Route::get('agriculture', [AgricultureController::class, 'index'])->name('agriculture.index');
+        Route::get('agriculture/create', [AgricultureController::class, 'create'])->name('agriculture.create');
+        Route::post('agriculture', [AgricultureController::class, 'store'])->name('agriculture.store');
+        Route::post('agriculture/{id}/revaluation', [AgricultureController::class, 'revaluation'])->name('agriculture.revaluation');
+    });
+
+    // =====================================================
+    // TEKNIS AKUNTANSI / CLOSING - Admin, Superuser
+    // =====================================================
+    Route::middleware('role:superuser,admin')->group(function () {
+         Route::get('accounting/closing', [AccountingPeriodeController::class, 'index'])->name('accounting.closing.index');
+         Route::get('accounting/closing/create', [AccountingPeriodeController::class, 'create'])->name('accounting.closing.create');
+         Route::post('accounting/closing', [AccountingPeriodeController::class, 'closeBook'])->name('accounting.closing.store');
     });
 
     // =====================================================

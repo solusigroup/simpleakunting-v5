@@ -592,4 +592,207 @@ class LaporanController extends Controller
         
         return $pdf->download('laba_rugi_' . $startDate . '_' . $endDate . '.pdf');
     }
+
+    // =====================================================
+    // LAPORAN SIMPAN PINJAM
+    // =====================================================
+
+    /**
+     * Outstanding Simpanan dan Pinjaman
+     */
+    public function outstandingSimpanPinjam(Request $request)
+    {
+        $perTanggal = $request->input('per_tanggal', date('Y-m-d'));
+        $perusahaan = DB::table('perusahaan')->find(1);
+
+        // Outstanding Simpanan per Anggota
+        $simpanan = DB::table('simpanan')
+            ->join('anggota', 'simpanan.id_anggota', '=', 'anggota.id_anggota')
+            ->join('jenis_simpanan', 'simpanan.id_jenis_simpanan', '=', 'jenis_simpanan.id_jenis_simpanan')
+            ->where('simpanan.tanggal', '<=', $perTanggal)
+            ->select(
+                'anggota.id_anggota',
+                'anggota.nama_lengkap',
+                'anggota.no_anggota',
+                'jenis_simpanan.nama_simpanan',
+                DB::raw("SUM(CASE WHEN simpanan.jenis_transaksi = 'setor' THEN simpanan.jumlah ELSE -simpanan.jumlah END) as saldo")
+            )
+            ->groupBy('anggota.id_anggota', 'anggota.nama_lengkap', 'anggota.no_anggota', 'jenis_simpanan.nama_simpanan')
+            ->having('saldo', '>', 0)
+            ->orderBy('anggota.nama_lengkap')
+            ->get();
+
+        // Outstanding Pinjaman per Anggota
+        $pinjaman = DB::table('pinjaman')
+            ->join('anggota', 'pinjaman.id_anggota', '=', 'anggota.id_anggota')
+            ->join('jenis_pinjaman', 'pinjaman.id_jenis_pinjaman', '=', 'jenis_pinjaman.id_jenis_pinjaman')
+            ->where('pinjaman.tanggal_pengajuan', '<=', $perTanggal)
+            ->whereIn('pinjaman.status', ['active', 'disbursed'])
+            ->select(
+                'anggota.id_anggota',
+                'anggota.nama_lengkap',
+                'anggota.no_anggota',
+                'jenis_pinjaman.nama_pinjaman',
+                'pinjaman.jumlah_pinjaman',
+                'pinjaman.sisa_pokok',
+                'pinjaman.tanggal_jatuh_tempo'
+            )
+            ->orderBy('anggota.nama_lengkap')
+            ->get();
+
+        $totalSimpanan = $simpanan->sum('saldo');
+        $totalPinjaman = $pinjaman->sum('sisa_pokok');
+
+        return view('laporan.outstanding_simpan_pinjam', compact(
+            'perusahaan', 'perTanggal', 'simpanan', 'pinjaman', 'totalSimpanan', 'totalPinjaman'
+        ));
+    }
+
+    /**
+     * Kolektibilitas Pinjaman
+     */
+    public function kolektibilitasPinjaman(Request $request)
+    {
+        $perTanggal = $request->input('per_tanggal', date('Y-m-d'));
+        $perusahaan = DB::table('perusahaan')->find(1);
+
+        // Klasifikasi Kolektibilitas OJK:
+        // 1 = Lancar (0-30 hari)
+        // 2 = Dalam Perhatian Khusus (31-90 hari)
+        // 3 = Kurang Lancar (91-120 hari)
+        // 4 = Diragukan (121-180 hari)
+        // 5 = Macet (>180 hari)
+
+        $pinjaman = DB::table('pinjaman')
+            ->join('anggota', 'pinjaman.id_anggota', '=', 'anggota.id_anggota')
+            ->join('jenis_pinjaman', 'pinjaman.id_jenis_pinjaman', '=', 'jenis_pinjaman.id_jenis_pinjaman')
+            ->whereIn('pinjaman.status', ['active', 'disbursed'])
+            ->select(
+                'pinjaman.*',
+                'anggota.nama_lengkap',
+                'anggota.no_anggota',
+                'jenis_pinjaman.nama_pinjaman'
+            )
+            ->get()
+            ->map(function ($item) use ($perTanggal) {
+                // Hitung hari tunggakan
+                $jatuhTempo = $item->tanggal_jatuh_tempo ?? $item->tanggal_pengajuan;
+                $hariTunggak = max(0, (strtotime($perTanggal) - strtotime($jatuhTempo)) / 86400);
+
+                // Tentukan kolektibilitas
+                if ($hariTunggak <= 30) {
+                    $item->kolektibilitas = 1;
+                    $item->status_kolektibilitas = 'Lancar';
+                } elseif ($hariTunggak <= 90) {
+                    $item->kolektibilitas = 2;
+                    $item->status_kolektibilitas = 'Dalam Perhatian Khusus';
+                } elseif ($hariTunggak <= 120) {
+                    $item->kolektibilitas = 3;
+                    $item->status_kolektibilitas = 'Kurang Lancar';
+                } elseif ($hariTunggak <= 180) {
+                    $item->kolektibilitas = 4;
+                    $item->status_kolektibilitas = 'Diragukan';
+                } else {
+                    $item->kolektibilitas = 5;
+                    $item->status_kolektibilitas = 'Macet';
+                }
+
+                $item->hari_tunggak = $hariTunggak;
+                return $item;
+            });
+
+        // Rekapitulasi per Kolektibilitas
+        $rekap = $pinjaman->groupBy('kolektibilitas')->map(function ($group, $kol) {
+            return [
+                'kolektibilitas' => $kol,
+                'status' => $group->first()->status_kolektibilitas,
+                'jumlah_pinjaman' => $group->count(),
+                'total_sisa_pokok' => $group->sum('sisa_pokok'),
+            ];
+        })->sortBy('kolektibilitas')->values();
+
+        return view('laporan.kolektibilitas_pinjaman', compact(
+            'perusahaan', 'perTanggal', 'pinjaman', 'rekap'
+        ));
+    }
+
+    /**
+     * Perhitungan dan Pembagian SHU
+     */
+    public function perhitunganShu(Request $request)
+    {
+        $tahun = $request->input('tahun', date('Y'));
+        $perusahaan = DB::table('perusahaan')->find(1);
+
+        $startDate = $tahun . '-01-01';
+        $endDate = $tahun . '-12-31';
+
+        // 1. Hitung Pendapatan Koperasi
+        $pendapatanBunga = DB::table('pinjaman_angsuran')
+            ->whereBetween('tanggal_bayar', [$startDate, $endDate])
+            ->sum('bunga_dibayar');
+
+        $pendapatanAdmin = DB::table('pinjaman')
+            ->whereBetween('tanggal_pengajuan', [$startDate, $endDate])
+            ->sum('biaya_admin');
+
+        $pendapatanLain = 0; // Bisa ditambahkan sumber lain
+
+        $totalPendapatan = $pendapatanBunga + $pendapatanAdmin + $pendapatanLain;
+
+        // 2. Hitung Beban Koperasi (dari jurnal)
+        $totalBeban = JurnalDetail::whereHas('akun', function($q) {
+            $q->whereIn('tipe_akun', ['Beban', 'Beban Lainnya']);
+        })->whereHas('jurnal', function ($q) use ($startDate, $endDate) {
+            $q->whereBetween('tanggal', [$startDate, $endDate]);
+        })->sum(DB::raw('debit - kredit'));
+
+        // 3. SHU Bersih
+        $shuBersih = $totalPendapatan - $totalBeban;
+
+        // 4. Pembagian SHU (contoh: 40% untuk anggota, 60% untuk koperasi)
+        $persenAnggota = 40;
+        $shuAnggota = $shuBersih * ($persenAnggota / 100);
+
+        // 5. Hitung kontribusi per anggota (berdasarkan simpanan dan pinjaman)
+        $anggota = DB::table('anggota')
+            ->where('status', 'aktif')
+            ->get()
+            ->map(function ($a) use ($startDate, $endDate, $shuAnggota) {
+                // Total simpanan anggota
+                $simpanan = DB::table('simpanan')
+                    ->where('id_anggota', $a->id_anggota)
+                    ->whereBetween('tanggal', [$startDate, $endDate])
+                    ->where('jenis_transaksi', 'setor')
+                    ->sum('jumlah');
+
+                // Total jasa pinjaman anggota
+                $jasaPinjaman = DB::table('pinjaman_angsuran')
+                    ->join('pinjaman', 'pinjaman_angsuran.id_pinjaman', '=', 'pinjaman.id_pinjaman')
+                    ->where('pinjaman.id_anggota', $a->id_anggota)
+                    ->whereBetween('pinjaman_angsuran.tanggal_bayar', [$startDate, $endDate])
+                    ->sum('pinjaman_angsuran.bunga_dibayar');
+
+                $a->simpanan = $simpanan;
+                $a->jasa_pinjaman = $jasaPinjaman;
+                $a->kontribusi = $simpanan + $jasaPinjaman;
+                return $a;
+            });
+
+        $totalKontribusi = $anggota->sum('kontribusi');
+
+        // Hitung SHU per anggota
+        $anggota = $anggota->map(function ($a) use ($shuAnggota, $totalKontribusi) {
+            $a->shu = $totalKontribusi > 0 ? ($a->kontribusi / $totalKontribusi) * $shuAnggota : 0;
+            return $a;
+        })->filter(function ($a) {
+            return $a->kontribusi > 0;
+        });
+
+        return view('laporan.perhitungan_shu', compact(
+            'perusahaan', 'tahun', 'pendapatanBunga', 'pendapatanAdmin', 'pendapatanLain',
+            'totalPendapatan', 'totalBeban', 'shuBersih', 'persenAnggota', 'shuAnggota',
+            'anggota', 'totalKontribusi'
+        ));
+    }
 }

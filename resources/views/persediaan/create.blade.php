@@ -50,6 +50,31 @@
                             @enderror
                         </div>
 
+                        @if(($jenisUsaha ?? 'dagang') !== 'jasa')
+                        <div class="mb-3">
+                            <label for="jenis_barang" class="form-label">Kategori Persediaan <span class="text-danger">*</span></label>
+                            <select class="form-select @error('jenis_barang') is-invalid @enderror" id="jenis_barang" name="jenis_barang" required>
+                                <option value="">-- Pilih Kategori --</option>
+                                {{-- Barang Dagangan tersedia untuk semua jenis usaha kecuali jasa --}}
+                                <option value="barang_dagangan" {{ old('jenis_barang') == 'barang_dagangan' ? 'selected' : '' }}>Persediaan Barang Dagangan</option>
+                                
+                                @if(in_array($jenisUsaha ?? 'dagang', ['pertanian', 'multi']))
+                                <option value="aset_biologis" {{ old('jenis_barang') == 'aset_biologis' ? 'selected' : '' }}>Persediaan Aset Biologis (PSAK 69)</option>
+                                @endif
+                                
+                                @if(in_array($jenisUsaha ?? 'dagang', ['manufaktur', 'multi']))
+                                <option value="bahan_baku" {{ old('jenis_barang') == 'bahan_baku' ? 'selected' : '' }}>Persediaan Bahan Baku</option>
+                                <option value="barang_dalam_proses" {{ old('jenis_barang') == 'barang_dalam_proses' ? 'selected' : '' }}>Barang dalam Proses (WIP)</option>
+                                <option value="barang_jadi" {{ old('jenis_barang') == 'barang_jadi' ? 'selected' : '' }}>Barang Jadi</option>
+                                @endif
+                            </select>
+                            <small class="text-muted">Kategori menentukan perlakuan akuntansi persediaan. Ubah Jenis Usaha di Profil Perusahaan untuk opsi lebih lengkap.</small>
+                            @error('jenis_barang')
+                                <div class="invalid-feedback">{{ $message }}</div>
+                            @enderror
+                        </div>
+                        @endif
+
                         <div class="row">
                             <div class="col-md-6 mb-3">
                                 <label for="stok_awal" class="form-label">Stok Awal</label>

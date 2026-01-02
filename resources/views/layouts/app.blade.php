@@ -430,6 +430,64 @@
             </div>
             @endif
 
+            @php
+                $jenisUsaha = DB::table('perusahaan')->value('jenis_usaha') ?? 'dagang';
+                $showManufacturing = in_array($jenisUsaha, ['manufaktur', 'multi']);
+                $showAgriculture = in_array($jenisUsaha, ['pertanian', 'multi']);
+            @endphp
+
+            <!-- Manufacturing -->
+            @if($showManufacturing && auth()->user()->hasRole('superuser','admin','manajer'))
+            @php
+                $isMfgActive = request()->routeIs('manufacturing.*');
+            @endphp
+            <div class="sidebar-section">
+                <div class="sidebar-section-header" data-bs-toggle="collapse" data-bs-target="#mfgMenu" aria-expanded="{{ $isMfgActive ? 'true' : 'false' }}">
+                    <span>🏭 Manufaktur</span>
+                    <span data-feather="chevron-down" class="chevron"></span>
+                </div>
+                <div class="collapse {{ $isMfgActive ? 'show' : '' }}" id="mfgMenu">
+                    <ul class="sidebar-nav sidebar-submenu">
+                        <li class="sidebar-nav-item">
+                            <a class="sidebar-nav-link {{ request()->routeIs('manufacturing.bom.*') ? 'active' : '' }}" href="{{ route('manufacturing.bom.index') }}">
+                                <span data-feather="layers"></span>
+                                Bill of Materials
+                            </a>
+                        </li>
+                        <li class="sidebar-nav-item">
+                            <a class="sidebar-nav-link {{ request()->routeIs('manufacturing.production.*') ? 'active' : '' }}" href="{{ route('manufacturing.production.index') }}">
+                                <span data-feather="settings"></span>
+                                Produksi
+                            </a>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+            @endif
+
+            <!-- Agriculture (PSAK 69) -->
+            @if($showAgriculture && auth()->user()->hasRole('superuser','admin','manajer'))
+            @php
+                $isAgriActive = request()->routeIs('agriculture.*');
+            @endphp
+            <div class="sidebar-section">
+                <div class="sidebar-section-header" data-bs-toggle="collapse" data-bs-target="#agriMenu" aria-expanded="{{ $isAgriActive ? 'true' : 'false' }}">
+                    <span>🌱 Pertanian</span>
+                    <span data-feather="chevron-down" class="chevron"></span>
+                </div>
+                <div class="collapse {{ $isAgriActive ? 'show' : '' }}" id="agriMenu">
+                    <ul class="sidebar-nav sidebar-submenu">
+                        <li class="sidebar-nav-item">
+                            <a class="sidebar-nav-link {{ request()->routeIs('agriculture.*') ? 'active' : '' }}" href="{{ route('agriculture.index') }}">
+                                <span data-feather="feather"></span>
+                                Aset Biologis
+                            </a>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+            @endif
+
             <!-- Transaksi -->
             @php
                 $isTransaksiActive = request()->routeIs('penjualan.*') || request()->routeIs('pembelian.*') || request()->routeIs('jurnal.*');
@@ -586,6 +644,29 @@
                             </a>
                         </li>
                         @endif
+                        
+                        <!-- Laporan Simpan Pinjam -->
+                        <li class="sidebar-nav-item mt-2">
+                            <span class="sidebar-nav-link text-secondary small">📊 Laporan</span>
+                        </li>
+                        <li class="sidebar-nav-item">
+                            <a class="sidebar-nav-link {{ request()->routeIs('laporan.outstanding_simpan_pinjam') ? 'active' : '' }}" href="{{ route('laporan.outstanding_simpan_pinjam') }}">
+                                <span data-feather="bar-chart-2"></span>
+                                Outstanding
+                            </a>
+                        </li>
+                        <li class="sidebar-nav-item">
+                            <a class="sidebar-nav-link {{ request()->routeIs('laporan.kolektibilitas_pinjaman') ? 'active' : '' }}" href="{{ route('laporan.kolektibilitas_pinjaman') }}">
+                                <span data-feather="pie-chart"></span>
+                                Kolektibilitas
+                            </a>
+                        </li>
+                        <li class="sidebar-nav-item">
+                            <a class="sidebar-nav-link {{ request()->routeIs('laporan.perhitungan_shu') ? 'active' : '' }}" href="{{ route('laporan.perhitungan_shu') }}">
+                                <span data-feather="dollar-sign"></span>
+                                Perhitungan SHU
+                            </a>
+                        </li>
                     </ul>
                 </div>
             </div>
@@ -629,6 +710,12 @@
                             </a>
                         </li>
                         <li class="sidebar-nav-item">
+                            <a class="sidebar-nav-link {{ request()->routeIs('cabang.*') ? 'active' : '' }}" href="{{ route('cabang.index') }}">
+                                <span data-feather="map-pin"></span>
+                                Kantor Cabang
+                            </a>
+                        </li>
+                        <li class="sidebar-nav-item">
                             <a class="sidebar-nav-link {{ request()->routeIs('jenis-pinjaman.*') ? 'active' : '' }}" href="{{ route('jenis-pinjaman.index') }}">
                                 <span data-feather="layers"></span>
                                 Jenis Pinjaman
@@ -648,6 +735,14 @@
                             </a>
                         </li>
                         @endif
+                        
+                        <!-- Closing (Tutup Buku) -->
+                        <li class="sidebar-nav-item">
+                            <a class="sidebar-nav-link {{ request()->routeIs('accounting.closing.*') ? 'active' : '' }}" href="{{ route('accounting.closing.index') }}">
+                                <span data-feather="lock"></span>
+                                Tutup Buku
+                            </a>
+                        </li>
                     </ul>
                 </div>
             </div>

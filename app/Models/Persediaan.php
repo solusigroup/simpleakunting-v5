@@ -27,4 +27,14 @@ class Persediaan extends Model
     {
         return $this->hasMany(PembelianDetail::class, 'id_barang');
     }
+
+    public function cabang()
+    {
+        return $this->belongsTo(Cabang::class, 'id_cabang');
+    }
+
+    public function bom()
+    {
+        return $this->hasOne(Bom::class, 'barang_jadi_id', 'id_barang');
+    }
 }

@@ -58,6 +58,15 @@
                                 <option value="jasa" {{ old('jenis_usaha', $perusahaan->jenis_usaha ?? '') == 'jasa' ? 'selected' : '' }}>
                                     Usaha Jasa (Tanpa HPP)
                                 </option>
+                                <option value="manufaktur" {{ old('jenis_usaha', $perusahaan->jenis_usaha ?? '') == 'manufaktur' ? 'selected' : '' }}>
+                                    Perusahaan Manufaktur (BOM, Produksi, HPP)
+                                </option>
+                                <option value="pertanian" {{ old('jenis_usaha', $perusahaan->jenis_usaha ?? '') == 'pertanian' ? 'selected' : '' }}>
+                                    Usaha Pertanian/Peternakan (PSAK 69 Aset Biologis)
+                                </option>
+                                <option value="multi" {{ old('jenis_usaha', $perusahaan->jenis_usaha ?? '') == 'multi' ? 'selected' : '' }}>
+                                    Multi Usaha (Gabungan Semuanya)
+                                </option>
                             </select>
                             @error('jenis_usaha')
                                 <div class="invalid-feedback">{{ $message }}</div>

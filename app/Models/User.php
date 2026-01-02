@@ -33,6 +33,7 @@ class User extends Authenticatable
         'password_hash',
         'role',
         'jabatan',
+        'id_cabang',
     ];
 
     protected $hidden = [
@@ -207,5 +208,10 @@ class User extends Authenticatable
     {
         // Cannot edit users with higher or equal privilege
         return $this->getRoleLevel() < $targetUser->getRoleLevel();
+    }
+
+    public function cabang()
+    {
+        return $this->belongsTo(Cabang::class, 'id_cabang');
     }
 }
