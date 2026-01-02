@@ -163,8 +163,8 @@ LOG_LEVEL=error
 DB_CONNECTION=mysql
 DB_HOST=127.0.0.1
 DB_PORT=3306
-DB_DATABASE=simpleakunting
-DB_USERNAME=simpleakun_user
+DB_DATABASE=simpleak_v5
+DB_USERNAME=simpleak_v5user
 DB_PASSWORD=password_yang_kuat
 
 BROADCAST_DRIVER=log
