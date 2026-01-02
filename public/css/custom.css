@@ -8,10 +8,15 @@
    CSS Variables (Design Tokens)
 ======================================== */
 :root {
-    /* Primary Colors */
-    --color-primary: #1a2a3e;
-    --color-primary-light: #2d4a6e;
-    --color-primary-dark: #101c2c;
+    /* Primary Colors - Purple-Pink Theme */
+    --color-primary: #8B5CF6;
+    --color-primary-light: #A78BFA;
+    --color-primary-dark: #7C3AED;
+
+    /* Gradient Colors */
+    --gradient-primary: linear-gradient(135deg, #8B5CF6 0%, #EC4899 100%);
+    --gradient-primary-hover: linear-gradient(135deg, #7C3AED 0%, #DB2777 100%);
+    --gradient-primary-subtle: linear-gradient(135deg, #A78BFA 0%, #F472B6 100%);
 
     /* Accent Colors */
     --color-success: #10b981;
@@ -158,7 +163,7 @@ h4 {
     justify-content: center;
     align-items: center;
     padding: var(--space-md);
-    background: linear-gradient(135deg, var(--color-primary) 0%, var(--color-primary-light) 100%);
+    background: var(--gradient-primary);
 }
 
 .auth-container {
@@ -174,7 +179,7 @@ h4 {
 }
 
 .auth-header {
-    background: var(--color-primary);
+    background: var(--gradient-primary-subtle);
     padding: var(--space-xl) var(--space-lg);
     text-align: center;
 }
@@ -332,14 +337,15 @@ h4 {
 }
 
 .btn-primary {
-    background: var(--color-primary);
+    background: var(--gradient-primary);
     color: var(--color-white);
+    border: none;
 }
 
 .btn-primary:hover {
-    background: var(--color-primary-light);
+    background: var(--gradient-primary-hover);
     transform: translateY(-1px);
-    box-shadow: var(--shadow-md);
+    box-shadow: 0 10px 25px rgba(139, 92, 246, 0.3);
 }
 
 .btn-primary:active {
@@ -453,7 +459,7 @@ h4 {
 }
 
 .summary-card.primary {
-    background: linear-gradient(135deg, var(--color-primary) 0%, var(--color-primary-light) 100%);
+    background: var(--gradient-primary);
     color: var(--color-white);
 }
 
@@ -906,10 +912,10 @@ h4 {
     --color-border: #334155;
     --color-border-light: #1e293b;
 
-    /* Dark mode accent colors */
-    --color-accent-teal: #14b8a6;
-    --color-accent-magenta: #ec4899;
-    --color-accent-cyan: #06b6d4;
+    /* Dark mode accent colors - Purple-Pink Theme */
+    --color-accent-primary: #A78BFA;
+    --color-accent-secondary: #F472B6;
+    --color-accent-gradient: linear-gradient(135deg, #A78BFA 0%, #F472B6 100%);
 
     --shadow-card: 0 4px 12px rgba(0, 0, 0, 0.3);
 }
@@ -943,9 +949,9 @@ body.dark-mode {
 }
 
 .dark-mode .sidebar-nav-link.active {
-    background: rgba(20, 184, 166, 0.1);
-    color: var(--color-accent-teal);
-    border-left-color: var(--color-accent-teal);
+    background: rgba(167, 139, 250, 0.1);
+    color: var(--color-accent-primary);
+    border-left-color: var(--color-accent-primary);
 }
 
 .dark-mode .sidebar-nav-link .feather {
@@ -954,7 +960,7 @@ body.dark-mode {
 
 .dark-mode .sidebar-nav-link.active .feather,
 .dark-mode .sidebar-nav-link:hover .feather {
-    color: var(--color-accent-teal);
+    color: var(--color-accent-primary);
 }
 
 .dark-mode .sidebar-section-header {
@@ -998,15 +1004,15 @@ body.dark-mode {
 }
 
 .dark-mode .summary-card.primary {
-    background: linear-gradient(135deg, var(--color-accent-teal) 0%, #0d9488 100%);
+    background: var(--color-accent-gradient);
 }
 
 .dark-mode .summary-card.success {
-    border-left-color: var(--color-accent-teal);
+    border-left-color: var(--color-success);
 }
 
 .dark-mode .summary-card.danger {
-    border-left-color: var(--color-accent-magenta);
+    border-left-color: var(--color-danger);
 }
 
 .dark-mode .summary-card-label {
@@ -1043,8 +1049,8 @@ body.dark-mode {
 
 .dark-mode .form-control:focus,
 .dark-mode .form-select:focus {
-    border-color: var(--color-accent-teal);
-    box-shadow: 0 0 0 3px rgba(20, 184, 166, 0.2);
+    border-color: var(--color-accent-primary);
+    box-shadow: 0 0 0 3px rgba(167, 139, 250, 0.2);
 }
 
 .dark-mode .form-control::placeholder {
@@ -1057,12 +1063,13 @@ body.dark-mode {
 
 /* Dark Mode Buttons */
 .dark-mode .btn-primary {
-    background: var(--color-accent-teal);
-    border-color: var(--color-accent-teal);
+    background: var(--color-accent-gradient);
+    border: none;
 }
 
 .dark-mode .btn-primary:hover {
-    background: #0d9488;
+    background: linear-gradient(135deg, #8B5CF6 0%, #DB2777 100%);
+    box-shadow: 0 10px 25px rgba(167, 139, 250, 0.3);
 }
 
 .dark-mode .btn-outline {
@@ -1071,15 +1078,15 @@ body.dark-mode {
 }
 
 .dark-mode .btn-outline:hover {
-    border-color: var(--color-accent-teal);
-    color: var(--color-accent-teal);
-    background: rgba(20, 184, 166, 0.1);
+    border-color: var(--color-accent-primary);
+    color: var(--color-accent-primary);
+    background: rgba(167, 139, 250, 0.1);
 }
 
 /* Dark Mode Badges */
 .dark-mode .badge-primary {
-    background: rgba(20, 184, 166, 0.15);
-    color: var(--color-accent-teal);
+    background: rgba(167, 139, 250, 0.15);
+    color: var(--color-accent-primary);
 }
 
 .dark-mode .badge-success {
@@ -1098,8 +1105,8 @@ body.dark-mode {
 }
 
 .dark-mode .badge-info {
-    background: rgba(6, 182, 212, 0.15);
-    color: var(--color-accent-cyan);
+    background: rgba(167, 139, 250, 0.15);
+    color: var(--color-accent-primary);
 }
 
 .dark-mode .badge-secondary {
@@ -1131,13 +1138,13 @@ body.dark-mode {
 
 .dark-mode .pagination .page-item .page-link:hover {
     background: rgba(255, 255, 255, 0.05);
-    border-color: var(--color-accent-teal);
-    color: var(--color-accent-teal);
+    border-color: var(--color-accent-primary);
+    color: var(--color-accent-primary);
 }
 
 .dark-mode .pagination .page-item.active .page-link {
-    background: var(--color-accent-teal);
-    border-color: var(--color-accent-teal);
+    background: var(--color-accent-primary);
+    border-color: var(--color-accent-primary);
     color: var(--color-bg);
 }
 
@@ -1171,7 +1178,7 @@ body.dark-mode {
 
 .dark-mode .bottom-nav-link.active,
 .dark-mode .bottom-nav-link:hover {
-    color: var(--color-accent-teal);
+    color: var(--color-accent-primary);
 }
 
 /* Dark Mode Dropdown */
@@ -1360,13 +1367,13 @@ body.dark-mode {
 }
 
 .dark-mode .filter-chip:hover {
-    border-color: var(--color-accent-teal);
-    color: var(--color-accent-teal);
+    border-color: var(--color-accent-primary);
+    color: var(--color-accent-primary);
 }
 
 .dark-mode .filter-chip.active {
-    background: var(--color-accent-teal);
-    border-color: var(--color-accent-teal);
+    background: var(--color-accent-primary);
+    border-color: var(--color-accent-primary);
     color: var(--color-bg);
 }
 
@@ -1395,13 +1402,13 @@ body.dark-mode {
 }
 
 .transaction-icon.income {
-    background: rgba(20, 184, 166, 0.1);
-    color: var(--color-accent-teal);
+    background: rgba(16, 185, 129, 0.1);
+    color: var(--color-success);
 }
 
 .transaction-icon.expense {
-    background: rgba(236, 72, 153, 0.1);
-    color: var(--color-accent-magenta);
+    background: rgba(239, 68, 68, 0.1);
+    color: var(--color-danger);
 }
 
 .transaction-info {
@@ -1426,11 +1433,11 @@ body.dark-mode {
 }
 
 .transaction-amount.income {
-    color: var(--color-accent-teal);
+    color: var(--color-success);
 }
 
 .transaction-amount.expense {
-    color: var(--color-accent-magenta);
+    color: var(--color-danger);
 }
 
 .dark-mode .transaction-item {

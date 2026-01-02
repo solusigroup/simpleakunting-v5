@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Login - Simple Akunting</title>
+    <title>Login - Simple Akunting v5</title>
     
     <!-- Google Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -21,7 +21,7 @@
                     <div class="auth-logo">
                         📊
                     </div>
-                    <h1 class="auth-title">Simple Akunting</h1>
+                    <h1 class="auth-title">Simple Akunting v5</h1>
                     <p class="auth-subtitle">Masuk ke akun Anda</p>
                 </div>
                 

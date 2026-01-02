@@ -34,7 +34,7 @@
             left: 0;
             right: 0;
             height: 60px;
-            background: var(--color-primary);
+            background: var(--gradient-primary);
             display: flex;
             align-items: center;
             justify-content: space-between;
@@ -149,7 +149,7 @@
         }
 
         .sidebar-nav-link.active {
-            background: rgba(26, 42, 62, 0.05);
+            background: rgba(139, 92, 246, 0.05);
             color: var(--color-primary);
             border-left-color: var(--color-primary);
         }
