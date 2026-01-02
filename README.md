@@ -1,59 +1,313 @@
-<p align="center"><a href="https://laravel.com" target="_blank"><img src="https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg" width="400" alt="Laravel Logo"></a></p>
+# Simple Akunting v5
 
-<p align="center">
-<a href="https://github.com/laravel/framework/actions"><img src="https://github.com/laravel/framework/workflows/tests/badge.svg" alt="Build Status"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/dt/laravel/framework" alt="Total Downloads"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/v/laravel/framework" alt="Latest Stable Version"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
-</p>
+![Laravel](https://img.shields.io/badge/Laravel-12.x-red?logo=laravel)
+![PHP](https://img.shields.io/badge/PHP-8.3+-blue?logo=php)
+![MySQL](https://img.shields.io/badge/MySQL-8.0+-orange?logo=mysql)
+![Bootstrap](https://img.shields.io/badge/Bootstrap-5.3-purple?logo=bootstrap)
 
-## About Laravel
+Sistem Akuntansi Terpadu berbasis Laravel dengan dukungan multi-bisnis: Dagang, Manufaktur, Pertanian (PSAK 69), dan Koperasi Simpan Pinjam.
 
-Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:
+## 🌟 Fitur Utama
 
-- [Simple, fast routing engine](https://laravel.com/docs/routing).
-- [Powerful dependency injection container](https://laravel.com/docs/container).
-- Multiple back-ends for [session](https://laravel.com/docs/session) and [cache](https://laravel.com/docs/cache) storage.
-- Expressive, intuitive [database ORM](https://laravel.com/docs/eloquent).
-- Database agnostic [schema migrations](https://laravel.com/docs/migrations).
-- [Robust background job processing](https://laravel.com/docs/queues).
-- [Real-time event broadcasting](https://laravel.com/docs/broadcasting).
+### 📊 Akuntansi Dasar
+- **Manajemen Akun (COA)** - Chart of Accounts dengan template standar per jenis usaha
+- **Jurnal Umum** - Pencatatan jurnal dengan auto-posting
+- **Buku Besar** - Laporan buku besar per akun
+- **Neraca Saldo** - Trial Balance dengan periode yang dapat disesuaikan
+- **Laporan Keuangan Lengkap**:
+  - Neraca (Balance Sheet)
+  - Laba Rugi (Income Statement)
+  - Arus Kas (Cash Flow - Langsung & Tidak Langsung)
+  - Perubahan Ekuitas
+- **Tutup Buku** - Penutupan periode akuntansi
 
-Laravel is accessible, powerful, and provides tools required for large, robust applications.
+### 💰 Transaksi Bisnis
+- **Penjualan** - Faktur penjualan dengan auto-jurnal
+- **Pembelian** - Faktur pembelian dengan auto-jurnal
+- **Penerimaan Pembayaran** - Pelunasan piutang
+- **Pembayaran Utang** - Pelunasan utang usaha
+- **Persediaan** - Manajemen stok dengan kartu stok
+- **Kategori Persediaan**:
+  - Barang Dagangan
+  - Aset Biologis (PSAK 69)
+  - Bahan Baku
+  - Barang Dalam Proses (WIP)
+  - Barang Jadi
 
-## Learning Laravel
+### 🏭 Manufaktur
+- **Bill of Materials (BOM)** - Struktur produk dan komponen
+- **Order Produksi** - Perencanaan dan pelaksanaan produksi
+- **Manajemen Bahan Baku** - Tracking penggunaan material
+- **Barang Dalam Proses** - Work in Process monitoring
+- **Barang Jadi** - Finished goods inventory
+- **Biaya Produksi**:
+  - Biaya Bahan Baku
+  - Biaya Tenaga Kerja Langsung
+  - Biaya Overhead Pabrik (BOP)
 
-Laravel has the most extensive and thorough [documentation](https://laravel.com/docs) and video tutorial library of all modern web application frameworks, making it a breeze to get started with the framework. You can also check out [Laravel Learn](https://laravel.com/learn), where you will be guided through building a modern Laravel application.
+### 🌾 Pertanian (PSAK 69)
+- **Aset Biologis** - Manajemen tanaman dan ternak
+- **Penilaian Nilai Wajar** - Fair value measurement sesuai PSAK 69
+- **Revaluasi Otomatis** - Pencatatan perubahan nilai wajar
+- **Produk Agrikultur** - Hasil panen dan ternak
+- **Jenis Aset Biologis**:
+  - Tanaman Semusim (Annual Crops)
+  - Hewan Ternak Potong
+  - Tanaman Kehutanan
+  - Hewan Ternak Bibit/Indukan
+  - Tanaman Produktif (Bearer Plants)
 
-If you don't feel like reading, [Laracasts](https://laracasts.com) can help. Laracasts contains thousands of video tutorials on a range of topics including Laravel, modern PHP, unit testing, and JavaScript. Boost your skills by digging into our comprehensive video library.
+### 🏦 Koperasi Simpan Pinjam
+- **Manajemen Anggota** - Data anggota koperasi
+- **Simpanan** - Simpanan Pokok, Wajib, Sukarela, Deposito
+- **Pinjaman** - Permohonan dan pencairan pinjaman
+- **Angsuran** - Pembayaran angsuran dengan jadwal
+- **Approval Workflow** - Sistem persetujuan berjenjang
+- **Laporan Koperasi**:
+  - Outstanding Simpanan & Pinjaman
+  - Kolektibilitas Pinjaman (sesuai OJK)
+  - Perhitungan & Pembagian SHU
 
-## Laravel Sponsors
+### 🏢 Multi-Cabang
+- **Manajemen Cabang** - Kelola multiple lokasi bisnis
+- **Data Terpisah** - Isolasi data per cabang
+- **Konsolidasi** - Laporan gabungan semua cabang
 
-We would like to extend our thanks to the following sponsors for funding Laravel development. If you are interested in becoming a sponsor, please visit the [Laravel Partners program](https://partners.laravel.com).
+## 🛠️ Teknologi
 
-### Premium Partners
+- **Backend**: Laravel 12.x
+- **Frontend**: Bootstrap 5.3, Vite, Feather Icons
+- **Database**: MySQL 8.0+
+- **PHP**: 8.3+
+- **Node.js**: 20.x+
 
-- **[Vehikl](https://vehikl.com)**
-- **[Tighten Co.](https://tighten.co)**
-- **[Kirschbaum Development Group](https://kirschbaumdevelopment.com)**
-- **[64 Robots](https://64robots.com)**
-- **[Curotec](https://www.curotec.com/services/technologies/laravel)**
-- **[DevSquad](https://devsquad.com/hire-laravel-developers)**
-- **[Redberry](https://redberry.international/laravel-development)**
-- **[Active Logic](https://activelogic.com)**
+## 📋 Persyaratan Sistem
 
-## Contributing
+- PHP >= 8.3
+- MySQL >= 8.0 atau MariaDB >= 10.3
+- Composer
+- Node.js >= 20.x dan npm
+- Extension PHP:
+  - OpenSSL
+  - PDO
+  - Mbstring
+  - Tokenizer
+  - XML
+  - Ctype
+  - JSON
+  - BCMath
 
-Thank you for considering contributing to the Laravel framework! The contribution guide can be found in the [Laravel documentation](https://laravel.com/docs/contributions).
+## 🚀 Instalasi
 
-## Code of Conduct
+### 1. Clone Repository
 
-In order to ensure that the Laravel community is welcoming to all, please review and abide by the [Code of Conduct](https://laravel.com/docs/contributions#code-of-conduct).
+```bash
+git clone https://github.com/solusigroup/simpleakunting-v5.git
+cd simpleakunting-v5
+```
 
-## Security Vulnerabilities
+### 2. Install Dependencies
 
-If you discover a security vulnerability within Laravel, please send an e-mail to Taylor Otwell via [taylor@laravel.com](mailto:taylor@laravel.com). All security vulnerabilities will be promptly addressed.
+```bash
+composer install
+npm install
+```
 
-## License
+### 3. Konfigurasi Environment
 
-The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
+```bash
+cp .env.example .env
+php artisan key:generate
+```
+
+Edit file `.env` dan sesuaikan konfigurasi database:
+
+```env
+DB_CONNECTION=mysql
+DB_HOST=127.0.0.1
+DB_PORT=3306
+DB_DATABASE=simpleakunting
+DB_USERNAME=root
+DB_PASSWORD=
+```
+
+### 4. Migrasi Database
+
+```bash
+php artisan migrate
+```
+
+### 5. Seed Data (Optional)
+
+Seed COA standar berdasarkan jenis usaha:
+
+```bash
+php artisan db:seed --class=CoaTemplateSeeder
+```
+
+### 6. Build Assets
+
+```bash
+npm run build
+```
+
+Atau untuk development:
+
+```bash
+npm run dev
+```
+
+### 7. Jalankan Aplikasi
+
+```bash
+php artisan serve
+```
+
+Aplikasi akan berjalan di `http://localhost:8000`
+
+## ⚙️ Konfigurasi
+
+### Profil Perusahaan
+
+Setelah instalasi, segera isi **Profil Perusahaan** di menu Admin:
+
+1. Nama Perusahaan
+2. **Jenis Usaha**: Pilih salah satu
+   - Dagang
+   - Manufaktur
+   - Pertanian (PSAK 69)
+   - Jasa
+   - Multi Usaha
+3. Alamat dan kontak
+4. **Akun Default** untuk transaksi otomatis
+
+### Chart of Accounts (COA)
+
+Template COA akan dimuat otomatis berdasarkan jenis usaha:
+- **Dagang**: 57 akun standar perdagangan
+- **Manufaktur**: +25 akun produksi
+- **Pertanian**: +19 akun agrikultur (PSAK 69)
+
+Anda dapat menambah, edit, atau hapus akun sesuai kebutuhan.
+
+### Tutup Buku
+
+Disarankan untuk melakukan tutup buku setiap akhir periode:
+1. Buka menu **Tutup Buku**
+2. Pilih periode penutupan
+3. Sistem akan otomatis:
+   - Menutup akun laba rugi
+   - Transfer ke Ikhtisar Laba Rugi
+   - Update Laba Ditahan
+
+## 📖 Panduan Penggunaan
+
+### Alur Transaksi Dagang
+
+1. **Setup Awal**:
+   - Isi Profil Perusahaan
+   - Cek/sesuaikan COA
+   - Tambah data pelanggan & pemasok
+   - Input persediaan awal
+
+2. **Transaksi Pembelian**:
+   - Buat Faktur Pembelian
+   - Sistem auto-jurnal: Debit Persediaan, Kredit Utang
+   - Bayar Utang saat jatuh tempo
+
+3. **Transaksi Penjualan**:
+   - Buat Faktur Penjualan
+   - Sistem auto-jurnal: Debit Piutang, Kredit Penjualan
+   - Auto-HPP: Debit HPP, Kredit Persediaan
+   - Terima pembayaran
+
+4. **Laporan**:
+   - Cek Neraca & Laba Rugi
+   - Analisis Arus Kas
+   - Review Kartu Stok
+
+### Alur Manufaktur
+
+1. **Setup BOM**: Definisikan struktur produk
+2. **Order Produksi**: Buat pesanan produksi
+3. **Eksekusi Produksi**: 
+   - Konsumsi Bahan Baku
+   - Catat Tenaga Kerja
+   - Alokasi Overhead
+4. **Selesai Produksi**: Transfer ke Barang Jadi
+5. **Penjualan**: Jual barang jadi
+
+### Alur Koperasi
+
+1. **Registrasi Anggota**: Input data anggota
+2. **Simpanan**: Catat setoran simpanan
+3. **Pinjaman**:
+   - Anggota ajukan pinjaman
+   - Approval oleh pengurus
+   - Pencairan pinjaman
+4. **Angsuran**: Catat pembayaran angsuran
+5. **Laporan**: 
+   - Outstanding
+   - Kolektibilitas
+   - Perhitungan SHU
+
+## 🗂️ Struktur Folder
+
+```
+simpleakunting-v5/
+│
+├── app/
+│   ├── Http/Controllers/        # Controllers
+│   ├── Models/                  # Eloquent Models
+│   └── ...
+│
+├── database/
+│   ├── migrations/              # Database Migrations
+│   └── seeders/                 # Data Seeders
+│       └── CoaTemplateSeeder.php
+│
+├── resources/
+│   └── views/                   # Blade Templates
+│       ├── accounting/          # Tutup Buku
+│       ├── agriculture/         # PSAK 69
+│       ├── cabang/              # Multi-cabang
+│       ├── laporan/             # Reports
+│       ├── manufacturing/       # Manufaktur
+│       └── ...
+│
+├── routes/
+│   └── web.php                  # Web Routes
+│
+└── public/                      # Public Assets
+```
+
+## 🤝 Kontribusi
+
+Kontribusi sangat diterima! Silakan:
+
+1. Fork repository ini
+2. Buat branch fitur (`git checkout -b fitur-baru`)
+3. Commit perubahan (`git commit -m 'Tambah fitur baru'`)
+4. Push ke branch (`git push origin fitur-baru`)
+5. Buat Pull Request
+
+## 📝 Lisensi
+
+Project ini dilisensikan di bawah [MIT License](LICENSE).
+
+## 📧 Kontak
+
+- **Developer**: Solusi Group
+- **Email**: kurniawan@petalmail.com
+- **GitHub**: [@solusigroup](https://github.com/solusigroup)
+
+## 🙏 Acknowledgments
+
+- Laravel Framework
+- Bootstrap
+- Feather Icons
+- Seluruh kontributor open source
+
+---
+
+**Simple Akunting v5** - Sistem Akuntansi Terpadu untuk UMKM Indonesia 🇮🇩
