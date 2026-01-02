@@ -44,17 +44,8 @@ Route::middleware('auth')->group(function () {
     // MASTER DATA - Read access for manajer+, Write access for admin+
     // =====================================================
     
-    // Read-only routes for manajer (index, show)
-    Route::middleware('role:superuser,admin,manajer')->group(function () {
-        Route::get('pelanggan', [PelangganController::class, 'index'])->name('pelanggan.index');
-        Route::get('pelanggan/{pelanggan}', [PelangganController::class, 'show'])->name('pelanggan.show');
-        Route::get('pemasok', [PemasokController::class, 'index'])->name('pemasok.index');
-        Route::get('pemasok/{pemasok}', [PemasokController::class, 'show'])->name('pemasok.show');
-        Route::get('persediaan', [PersediaanController::class, 'index'])->name('persediaan.index');
-        Route::get('akun', [AkunController::class, 'index'])->name('akun.index');
-    });
-    
     // Write routes for admin+ (create, store, edit, update, destroy)
+    // NOTE: These must be registered BEFORE the {param} routes to prevent route conflicts
     Route::middleware('role:superuser,admin')->group(function () {
         Route::get('pelanggan/create', [PelangganController::class, 'create'])->name('pelanggan.create');
         Route::post('pelanggan', [PelangganController::class, 'store'])->name('pelanggan.store');
@@ -85,6 +76,17 @@ Route::middleware('auth')->group(function () {
         
         // Jenis Simpanan CRUD
         Route::resource('jenis-simpanan', JenisSimpananController::class);
+    });
+
+    // Read-only routes for manajer (index, show)
+    // NOTE: These wildcard routes must come AFTER the /create routes
+    Route::middleware('role:superuser,admin,manajer')->group(function () {
+        Route::get('pelanggan', [PelangganController::class, 'index'])->name('pelanggan.index');
+        Route::get('pelanggan/{pelanggan}', [PelangganController::class, 'show'])->name('pelanggan.show');
+        Route::get('pemasok', [PemasokController::class, 'index'])->name('pemasok.index');
+        Route::get('pemasok/{pemasok}', [PemasokController::class, 'show'])->name('pemasok.show');
+        Route::get('persediaan', [PersediaanController::class, 'index'])->name('persediaan.index');
+        Route::get('akun', [AkunController::class, 'index'])->name('akun.index');
     });
 
     // =====================================================
