@@ -185,14 +185,109 @@ MAIL_FROM_ADDRESS=your-email@gmail.com
 MAIL_FROM_NAME="${APP_NAME}"
 ```
 
-#### c. Migrasi Database
+#### c. Migrasi Database dan Seeding
+
 ```bash
 # Run migrations
 sudo -u www-data php artisan migrate --force
+```
 
-# Seed COA template (optional)
+##### Database Seeding (Mengisi Data Awal)
+
+Aplikasi menyediakan beberapa seeder untuk mengisi data awal. Pilih seeder yang sesuai dengan jenis usaha Anda:
+
+**1. Seeder Chart of Accounts (COA)**
+
+Pilih salah satu sesuai jenis usaha:
+
+```bash
+# Option A: COA untuk Perusahaan Dagang/Retail
+sudo -u www-data php artisan db:seed --class=CoaDagangSeeder
+
+# Option B: COA untuk Koperasi Simpan Pinjam
+sudo -u www-data php artisan db:seed --class=CoaSimpanPinjamSeeder
+
+# Option C: COA Template Lengkap (Recommended - multi-purpose)
 sudo -u www-data php artisan db:seed --class=CoaTemplateSeeder
 ```
+
+**2. Seeder Data Awal Perusahaan**
+
+```bash
+# Isi data profil perusahaan default
+sudo -u www-data php artisan db:seed --class=PerusahaanSeeder
+```
+
+**3. Seeder Jenis Simpan Pinjam** (jika menggunakan modul koperasi)
+
+```bash
+# Isi jenis simpanan dan pinjaman default
+sudo -u www-data php artisan db:seed --class=JenisSimpanPinjamSeeder
+```
+
+**4. Jalankan Semua Seeder Sekaligus**
+
+```bash
+# Run all seeders yang terdaftar di DatabaseSeeder
+sudo -u www-data php artisan db:seed
+```
+
+##### Penjelasan Seeder
+
+| Seeder | Deskripsi | Kapan Digunakan |
+|--------|-----------|-----------------|
+| `CoaTemplateSeeder` | COA lengkap untuk berbagai jenis usaha | **Recommended** - Untuk instalasi baru, paling fleksibel |
+| `CoaDagangSeeder` | COA khusus perusahaan dagang | Jika fokus pada usaha dagang/retail |
+| `CoaSimpanPinjamSeeder` | COA khusus koperasi | Jika fokus pada koperasi simpan pinjam |
+| `PerusahaanSeeder` | Data profil perusahaan | Selalu jalankan untuk setup awal |
+| `JenisSimpanPinjamSeeder` | Jenis simpanan & pinjaman | Hanya jika menggunakan modul koperasi |
+
+##### Fresh Install (HATI-HATI!)
+
+Jika ingin reset database dan seed ulang (akan **MENGHAPUS SEMUA DATA**):
+
+```bash
+# WARNING: Ini akan drop semua tabel dan recreate!
+sudo -u www-data php artisan migrate:fresh --seed
+```
+
+##### Membuat User Superuser
+
+Setelah database ter-setup, buat user admin pertama:
+
+```bash
+# Via Tinker
+sudo -u www-data php artisan tinker
+```
+
+Kemudian jalankan di tinker:
+
+```php
+\App\Models\User::create([
+    'nama_user' => 'admin',
+    'password_hash' => bcrypt('password_anda'),
+    'role' => 'superuser',
+    'jabatan' => 'Administrator'
+]);
+exit
+```
+
+Atau via SQL langsung:
+
+```sql
+INSERT INTO users (nama_user, password_hash, role, jabatan, created_at, updated_at) 
+VALUES (
+    'admin',
+    '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', -- password: 'password'
+    'superuser',
+    'Administrator',
+    NOW(),
+    NOW()
+);
+```
+
+> **Note**: Hash di atas adalah untuk password `'password'`. Untuk production, gunakan password yang kuat!
+
 
 #### d. Build Assets
 ```bash
