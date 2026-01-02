@@ -9,7 +9,7 @@ Sistem Akuntansi Terpadu berbasis Laravel dengan dukungan multi-bisnis: Dagang, 
 
 ## 🌟 Fitur Utama
 
-### 📊 Akuntansi Dasar
+### 📊 Akuntansi Dasar - Base On SAK EP; KepKemendesa 136/2022
 - **Manajemen Akun (COA)** - Chart of Accounts dengan template standar per jenis usaha
 - **Jurnal Umum** - Pencatatan jurnal dengan auto-posting
 - **Buku Besar** - Laporan buku besar per akun
@@ -45,7 +45,7 @@ Sistem Akuntansi Terpadu berbasis Laravel dengan dukungan multi-bisnis: Dagang, 
   - Biaya Tenaga Kerja Langsung
   - Biaya Overhead Pabrik (BOP)
 
-### 🌾 Pertanian (PSAK 69)
+### 🌾 Pertanian (PSAK 69)/Ketahanan Pangan
 - **Aset Biologis** - Manajemen tanaman dan ternak
 - **Penilaian Nilai Wajar** - Fair value measurement sesuai PSAK 69
 - **Revaluasi Otomatis** - Pencatatan perubahan nilai wajar
@@ -57,7 +57,7 @@ Sistem Akuntansi Terpadu berbasis Laravel dengan dukungan multi-bisnis: Dagang, 
   - Hewan Ternak Bibit/Indukan
   - Tanaman Produktif (Bearer Plants)
 
-### 🏦 Koperasi Simpan Pinjam
+### 🏦 Koperasi / Usaha Simpan Pinjam
 - **Manajemen Anggota** - Data anggota koperasi
 - **Simpanan** - Simpanan Pokok, Wajib, Sukarela, Deposito
 - **Pinjaman** - Permohonan dan pencairan pinjaman
