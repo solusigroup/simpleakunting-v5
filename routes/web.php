@@ -34,6 +34,7 @@ use App\Http\Controllers\ManufacturingController;
 use App\Http\Controllers\AgricultureController;
 use App\Http\Controllers\AccountingPeriodeController;
 use App\Http\Controllers\CabangController;
+use App\Http\Controllers\KasController;
 
 Route::middleware('auth')->group(function () {
     Route::post('logout', [AuthController::class, 'logout'])->name('logout');
