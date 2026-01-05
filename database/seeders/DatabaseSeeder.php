@@ -5,6 +5,7 @@ namespace Database\Seeders;
 use App\Models\User;
 use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
+use Illuminate\Support\Facades\Hash;
 
 class DatabaseSeeder extends Seeder
 {
@@ -15,12 +16,15 @@ class DatabaseSeeder extends Seeder
      */
     public function run(): void
     {
-        // User::factory(10)->create();
-
-        User::factory()->create([
-            'name' => 'Test User',
-            'email' => 'test@example.com',
-        ]);
+        // Create default superuser if not exists
+        if (!User::where('nama_user', 'admin')->exists()) {
+            User::create([
+                'nama_user' => 'admin',
+                'password_hash' => Hash::make('admin123'),
+                'role' => 'superuser',
+                'jabatan' => 'Administrator',
+            ]);
+        }
 
         $this->call([
             AkunSeeder::class,
@@ -28,3 +32,4 @@ class DatabaseSeeder extends Seeder
         ]);
     }
 }
+
