@@ -103,7 +103,7 @@
             </div>
             
             <div class="auth-credit">
-                <p>Developed by <a href="https://simpleakunting.my.id" target="_blank">Kurniawan</a></p>
+                <p>Developed by <a href="https://simpleakunting.id" target="_blank">Kurniawan</a></p>
             </div>
         </div>
     </div>

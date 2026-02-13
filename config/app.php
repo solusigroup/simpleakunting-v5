@@ -56,6 +56,19 @@ return [
 
     /*
     |--------------------------------------------------------------------------
+    | Multi-Tenancy Mode
+    |--------------------------------------------------------------------------
+    |
+    | When enabled, the application runs in multi-tenant mode with
+    | database-per-tenant isolation and subdomain identification.
+    | When disabled, the application works as a single-tenant app.
+    |
+    */
+
+    'tenancy_enabled' => (bool) env('TENANCY_ENABLED', false),
+
+    /*
+    |--------------------------------------------------------------------------
     | Application Timezone
     |--------------------------------------------------------------------------
     |

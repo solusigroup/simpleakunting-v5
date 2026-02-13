@@ -63,7 +63,7 @@
             </div>
 
             <div class="login-hero-footer">
-                <p>© 2026 Simple Akunting v5. Made by <a href="https://simpleakunting.my.id"
+                <p>© 2026 Simple Akunting v5. Made by <a href="https://simpleakunting.id"
                         target="_blank">Kurniawan</a></p>
             </div>
         </div>

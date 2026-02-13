@@ -1,7 +1,12 @@
 <?php
 
+declare(strict_types=1);
+
+use Illuminate\Support\Facades\Route;
+use Stancl\Tenancy\Middleware\InitializeTenancyBySubdomain;
+use Stancl\Tenancy\Middleware\PreventAccessFromCentralDomains;
+
 use App\Http\Controllers\AuthController;
-use App\Http\Controllers\TenantRegistrationController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\PelangganController;
 use App\Http\Controllers\PemasokController;
@@ -23,51 +28,22 @@ use App\Http\Controllers\AgricultureController;
 use App\Http\Controllers\AccountingPeriodeController;
 use App\Http\Controllers\CabangController;
 use App\Http\Controllers\KasController;
-use App\Http\Controllers\AnggotaController;
-use App\Http\Controllers\SimpananController;
-use App\Http\Controllers\PinjamanController;
-use App\Http\Controllers\ApprovalController;
-use App\Http\Controllers\DatabaseController;
-use App\Http\Controllers\ImportExportController;
-use Illuminate\Support\Facades\Route;
 
 /*
 |--------------------------------------------------------------------------
-| Web Routes (Central / Single-Tenant)
+| Tenant Routes
 |--------------------------------------------------------------------------
 |
-| When TENANCY_ENABLED=false:
-|   All business routes below are loaded as is (single-tenant mode).
-|
-| When TENANCY_ENABLED=true:
-|   Only central routes (landing page, tenant registration, admin) are loaded here.
-|   Business routes are loaded from routes/tenant.php with subdomain middleware.
+| These routes are loaded only when TENANCY_ENABLED=true.
+| They are wrapped with tenant identification middleware.
 |
 */
 
-// =====================================================
-// CENTRAL ROUTES (only when multi-tenant is enabled)
-// =====================================================
-if (config('app.tenancy_enabled')) {
-
-    // Central landing page
-    Route::get('/', function () {
-        return view('central.landing');
-    })->name('central.landing');
-
-    // Tenant Registration (admin only via central)
-    Route::middleware('web')->group(function () {
-        Route::get('register-tenant', [TenantRegistrationController::class, 'showForm'])->name('central.register-tenant');
-        Route::post('register-tenant', [TenantRegistrationController::class, 'register'])->name('central.register-tenant.store');
-        Route::get('admin/tenants', [TenantRegistrationController::class, 'index'])->name('central.tenants.index');
-        Route::delete('admin/tenants/{id}', [TenantRegistrationController::class, 'destroy'])->name('central.tenants.destroy');
-    });
-
-} else {
-
-    // =====================================================
-    // SINGLE-TENANT MODE (original routes, unchanged)
-    // =====================================================
+Route::middleware([
+    'web',
+    InitializeTenancyBySubdomain::class,
+    PreventAccessFromCentralDomains::class,
+])->group(function () {
 
     Route::get('/', function () {
         return redirect()->route('login');
@@ -76,8 +52,6 @@ if (config('app.tenancy_enabled')) {
     Route::middleware('guest')->group(function () {
         Route::get('login', [AuthController::class, 'showLoginForm'])->name('login');
         Route::post('login', [AuthController::class, 'login']);
-        Route::get('register', [AuthController::class, 'showRegisterForm'])->name('register');
-        Route::post('register', [AuthController::class, 'register']);
     });
 
     Route::middleware('auth')->group(function () {
@@ -92,7 +66,6 @@ if (config('app.tenancy_enabled')) {
         // MASTER DATA - Read access for manajer+, Write access for admin+
         // =====================================================
         
-        // Write routes for admin+ (create, store, edit, update, destroy)
         Route::middleware('role:superuser,admin')->group(function () {
             Route::get('pelanggan/create', [PelangganController::class, 'create'])->name('pelanggan.create');
             Route::post('pelanggan', [PelangganController::class, 'store'])->name('pelanggan.store');
@@ -118,14 +91,10 @@ if (config('app.tenancy_enabled')) {
             Route::put('akun/{akun}', [AkunController::class, 'update'])->name('akun.update');
             Route::delete('akun/{akun}', [AkunController::class, 'destroy'])->name('akun.destroy');
             
-            // Jenis Pinjaman CRUD
             Route::resource('jenis-pinjaman', JenisPinjamanController::class);
-            
-            // Jenis Simpanan CRUD
             Route::resource('jenis-simpanan', JenisSimpananController::class);
         });
 
-        // Read-only routes for manajer (index, show)
         Route::middleware('role:superuser,admin,manajer')->group(function () {
             Route::get('pelanggan', [PelangganController::class, 'index'])->name('pelanggan.index');
             Route::get('pelanggan/{pelanggan}', [PelangganController::class, 'show'])->name('pelanggan.show');
@@ -177,35 +146,30 @@ if (config('app.tenancy_enabled')) {
         // KOPERASI SIMPAN PINJAM - All authenticated users
         // =====================================================
         
-        // Anggota
-        Route::resource('anggota', AnggotaController::class);
-        Route::get('anggota/{id}/kartu', [AnggotaController::class, 'kartu'])->name('anggota.kartu');
+        Route::resource('anggota', \App\Http\Controllers\AnggotaController::class);
+        Route::get('anggota/{id}/kartu', [\App\Http\Controllers\AnggotaController::class, 'kartu'])->name('anggota.kartu');
 
-        // Simpanan
-        Route::resource('simpanan', SimpananController::class);
-        Route::get('simpanan-setor', [SimpananController::class, 'setor'])->name('simpanan.setor');
-        Route::get('simpanan-tarik', [SimpananController::class, 'tarik'])->name('simpanan.tarik');
-        Route::get('simpanan-kartu/{id_anggota}', [SimpananController::class, 'kartu'])->name('simpanan.kartu');
+        Route::resource('simpanan', \App\Http\Controllers\SimpananController::class);
+        Route::get('simpanan-setor', [\App\Http\Controllers\SimpananController::class, 'setor'])->name('simpanan.setor');
+        Route::get('simpanan-tarik', [\App\Http\Controllers\SimpananController::class, 'tarik'])->name('simpanan.tarik');
+        Route::get('simpanan-kartu/{id_anggota}', [\App\Http\Controllers\SimpananController::class, 'kartu'])->name('simpanan.kartu');
 
-        // Pinjaman - simulasi harus SEBELUM resource agar tidak tertangkap oleh {pinjaman}
-        Route::post('pinjaman/simulasi', [PinjamanController::class, 'simulasi'])->name('pinjaman.simulasi');
-        Route::resource('pinjaman', PinjamanController::class);
-        Route::post('pinjaman/{id}/submit', [PinjamanController::class, 'submit'])->name('pinjaman.submit');
-        Route::get('pinjaman/{id}/pencairan', [PinjamanController::class, 'pencairanForm'])->name('pinjaman.pencairan');
-        Route::post('pinjaman/{id}/cairkan', [PinjamanController::class, 'cairkan'])->name('pinjaman.cairkan');
-        Route::get('pinjaman/{id}/angsuran', [PinjamanController::class, 'angsuranForm'])->name('pinjaman.angsuran');
-        Route::post('pinjaman/{id}/bayar', [PinjamanController::class, 'bayarAngsuran'])->name('pinjaman.bayar');
-        Route::get('pinjaman/{id}/pelunasan', [PinjamanController::class, 'pelunasanForm'])->name('pinjaman.pelunasan');
-        Route::post('pinjaman/{id}/lunasi', [PinjamanController::class, 'lunasi'])->name('pinjaman.lunasi');
+        Route::post('pinjaman/simulasi', [\App\Http\Controllers\PinjamanController::class, 'simulasi'])->name('pinjaman.simulasi');
+        Route::resource('pinjaman', \App\Http\Controllers\PinjamanController::class);
+        Route::post('pinjaman/{id}/submit', [\App\Http\Controllers\PinjamanController::class, 'submit'])->name('pinjaman.submit');
+        Route::get('pinjaman/{id}/pencairan', [\App\Http\Controllers\PinjamanController::class, 'pencairanForm'])->name('pinjaman.pencairan');
+        Route::post('pinjaman/{id}/cairkan', [\App\Http\Controllers\PinjamanController::class, 'cairkan'])->name('pinjaman.cairkan');
+        Route::get('pinjaman/{id}/angsuran', [\App\Http\Controllers\PinjamanController::class, 'angsuranForm'])->name('pinjaman.angsuran');
+        Route::post('pinjaman/{id}/bayar', [\App\Http\Controllers\PinjamanController::class, 'bayarAngsuran'])->name('pinjaman.bayar');
+        Route::get('pinjaman/{id}/pelunasan', [\App\Http\Controllers\PinjamanController::class, 'pelunasanForm'])->name('pinjaman.pelunasan');
+        Route::post('pinjaman/{id}/lunasi', [\App\Http\Controllers\PinjamanController::class, 'lunasi'])->name('pinjaman.lunasi');
 
-        // Approval Workflow - Manajer, Admin, Superuser
         Route::middleware('role:superuser,admin,manajer')->group(function () {
-            Route::get('approval', [ApprovalController::class, 'inbox'])->name('approval.inbox');
-            Route::post('approval/{module}/{id}/approve', [ApprovalController::class, 'approve'])->name('approval.approve');
-            Route::post('approval/{module}/{id}/reject', [ApprovalController::class, 'reject'])->name('approval.reject');
+            Route::get('approval', [\App\Http\Controllers\ApprovalController::class, 'inbox'])->name('approval.inbox');
+            Route::post('approval/{module}/{id}/approve', [\App\Http\Controllers\ApprovalController::class, 'approve'])->name('approval.approve');
+            Route::post('approval/{module}/{id}/reject', [\App\Http\Controllers\ApprovalController::class, 'reject'])->name('approval.reject');
         });
 
-        // Laporan Koperasi - Manajer, Admin, Superuser
         Route::middleware('role:superuser,admin,manajer')->group(function () {
             Route::get('laporan/simpanan', [LaporanController::class, 'laporanSimpanan'])->name('laporan.simpanan');
             Route::get('laporan/pinjaman-aktif', [LaporanController::class, 'laporanPinjamanAktif'])->name('laporan.pinjaman_aktif');
@@ -252,22 +216,22 @@ if (config('app.tenancy_enabled')) {
         // DATABASE MANAGEMENT - Superuser Only
         // =====================================================
         Route::middleware('role:superuser')->group(function () {
-            Route::get('database', [DatabaseController::class, 'index'])->name('database.index');
-            Route::post('database/truncate', [DatabaseController::class, 'truncate'])->name('database.truncate');
-            Route::post('database/fresh', [DatabaseController::class, 'fresh'])->name('database.fresh');
-            Route::post('database/drop', [DatabaseController::class, 'drop'])->name('database.drop');
-            Route::post('database/seed', [DatabaseController::class, 'seed'])->name('database.seed');
+            Route::get('database', [\App\Http\Controllers\DatabaseController::class, 'index'])->name('database.index');
+            Route::post('database/truncate', [\App\Http\Controllers\DatabaseController::class, 'truncate'])->name('database.truncate');
+            Route::post('database/fresh', [\App\Http\Controllers\DatabaseController::class, 'fresh'])->name('database.fresh');
+            Route::post('database/drop', [\App\Http\Controllers\DatabaseController::class, 'drop'])->name('database.drop');
+            Route::post('database/seed', [\App\Http\Controllers\DatabaseController::class, 'seed'])->name('database.seed');
         });
 
         // =====================================================
         // IMPORT & EXPORT DATA - Manajer, Admin, Superuser
         // =====================================================
         Route::middleware('role:superuser,admin,manajer')->group(function () {
-            Route::get('import-export', [ImportExportController::class, 'index'])->name('import-export.index');
-            Route::get('import-export/export/{module}', [ImportExportController::class, 'export'])->name('import-export.export');
-            Route::get('import-export/template/{module}', [ImportExportController::class, 'template'])->name('import-export.template');
-            Route::post('import-export/import/{module}', [ImportExportController::class, 'import'])->name('import-export.import');
-            Route::get('import-export/export-all', [ImportExportController::class, 'exportAll'])->name('import-export.export-all');
+            Route::get('import-export', [\App\Http\Controllers\ImportExportController::class, 'index'])->name('import-export.index');
+            Route::get('import-export/export/{module}', [\App\Http\Controllers\ImportExportController::class, 'export'])->name('import-export.export');
+            Route::get('import-export/template/{module}', [\App\Http\Controllers\ImportExportController::class, 'template'])->name('import-export.template');
+            Route::post('import-export/import/{module}', [\App\Http\Controllers\ImportExportController::class, 'import'])->name('import-export.import');
+            Route::get('import-export/export-all', [\App\Http\Controllers\ImportExportController::class, 'exportAll'])->name('import-export.export-all');
         });
     });
-}
+});
