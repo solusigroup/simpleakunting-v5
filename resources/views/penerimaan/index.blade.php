@@ -18,6 +18,8 @@
                 <tr>
                     <th scope="col">Tanggal</th>
                     <th scope="col">No Transaksi</th>
+                    <th scope="col">Cabang</th>
+                    <th scope="col">Unit Usaha</th>
                     <th scope="col">Keterangan</th>
                     <th scope="col">Total Terima</th>
                     <th scope="col">Aksi</th>
@@ -28,6 +30,8 @@
                     <tr>
                         <td>{{ \Carbon\Carbon::parse($p->tanggal)->format('d/m/Y') }}</td>
                         <td>{{ $p->no_transaksi }}</td>
+                        <td>{{ $p->cabang->nama_cabang ?? '-' }}</td>
+                        <td>{{ $p->unitUsaha->nama_unit ?? '-' }}</td>
                         <td>{{ Str::limit($p->deskripsi, 50) }}</td>
                         <td>Rp {{ number_format($p->details->where('debit', '>', 0)->sum('debit'), 2, ',', '.') }}</td>
                         <td>
@@ -36,7 +40,7 @@
                     </tr>
                 @empty
                     <tr>
-                        <td colspan="5" class="text-center">Belum ada data penerimaan.</td>
+                        <td colspan="7" class="text-center">Belum ada data penerimaan.</td>
                     </tr>
                 @endforelse
             </tbody>

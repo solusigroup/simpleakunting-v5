@@ -11,9 +11,11 @@ use Illuminate\Support\Facades\DB;
 
 class PenerimaanController extends Controller
 {
+    use \App\Traits\CheckClosedPeriod;
     public function index()
     {
-        $penerimaan = Jurnal::where('sumber_jurnal', 'Penerimaan Kas')
+        $penerimaan = Jurnal::with(['cabang', 'unitUsaha', 'details'])
+            ->where('sumber_jurnal', 'Penerimaan Kas')
             ->orderBy('tanggal', 'desc')
             ->orderBy('created_at', 'desc')
             ->paginate(20);
@@ -45,7 +47,7 @@ class PenerimaanController extends Controller
     {
         $request->validate([
             'no_transaksi' => 'required|unique:jurnal_umum,no_transaksi',
-            'tanggal' => 'required|date',
+            'tanggal' => 'required|date|before_or_equal:today',
             'akun_kas' => 'required|exists:akun,kode_akun', // Debit
             'id_pelanggan' => 'nullable|exists:pelanggan,id_pelanggan',
             'keterangan' => 'required|string',
@@ -57,11 +59,22 @@ class PenerimaanController extends Controller
         try {
             DB::beginTransaction();
 
+            // C3: Cek periode tutup buku
+            $this->validatePeriodOpen($request->tanggal);
+
+            // H5: Generate no_transaksi atomik
+            $lastTrans = Jurnal::where('sumber_jurnal', 'Penerimaan Kas')->orderBy('id_jurnal', 'desc')->lockForUpdate()->first();
+            $nextNo = 1;
+            if ($lastTrans && preg_match('/CR-(\d+)/', $lastTrans->no_transaksi, $matches)) {
+                $nextNo = (int)$matches[1] + 1;
+            }
+            $noTransaksi = 'CR-' . str_pad($nextNo, 5, '0', STR_PAD_LEFT);
+
             $totalTerima = collect($request->details)->sum('jumlah');
 
             // 1. Buat Jurnal Header
             $jurnal = Jurnal::create([
-                'no_transaksi' => $request->no_transaksi,
+                'no_transaksi' => $noTransaksi,
                 'tanggal' => $request->tanggal,
                 'deskripsi' => $request->keterangan,
                 'sumber_jurnal' => 'Penerimaan Kas',
@@ -101,13 +114,16 @@ class PenerimaanController extends Controller
 
         } catch (\Exception $e) {
             DB::rollBack();
-            return back()->with('error', 'Gagal menyimpan transaksi: ' . $e->getMessage())->withInput();
+            $msg = str_contains($e->getMessage(), 'Periode')
+                ? $e->getMessage()
+                : 'Gagal menyimpan transaksi. Silakan coba lagi.';
+            return back()->with('error', $msg)->withInput();
         }
     }
 
     public function show($id)
     {
-        $jurnal = Jurnal::with('details.akun')->findOrFail($id);
+        $jurnal = Jurnal::with(['details.akun', 'cabang', 'unitUsaha'])->findOrFail($id);
         return view('penerimaan.show', compact('jurnal'));
     }
 }

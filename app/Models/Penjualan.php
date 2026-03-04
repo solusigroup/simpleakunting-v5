@@ -4,10 +4,11 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use App\Traits\LogsActivity;
 
 class Penjualan extends Model
 {
-    use HasFactory;
+    use HasFactory, LogsActivity, \App\Traits\HasCabang;
 
     protected $table = 'penjualan';
     protected $primaryKey = 'id_penjualan';
@@ -26,5 +27,10 @@ class Penjualan extends Model
     public function jurnal()
     {
         return $this->belongsTo(Jurnal::class, 'id_jurnal');
+    }
+
+    public function posSession()
+    {
+        return $this->belongsTo(PosSession::class, 'id_pos_session');
     }
 }

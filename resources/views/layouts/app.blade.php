@@ -359,6 +359,31 @@
                 <span class="d-none d-sm-inline">Simple Akunting</span>
             </a>
         </div>
+        
+        <!-- Cabang/Unit Selector (Admin/Superuser) -->
+        @if(auth()->user()->hasRole('superuser', 'admin'))
+        <div class="d-none d-lg-flex align-items-center gap-2 mx-auto">
+            <form action="{{ route('cabang.switch') }}" method="POST" id="formSwitchCabang" class="d-flex align-items-center gap-2">
+                @csrf
+                <select name="active_cabang" class="form-select form-select-sm" style="width: auto; background: rgba(255,255,255,0.1); color: white; border: 1px solid rgba(255,255,255,0.2);" onchange="this.form.submit()">
+                    <option value="" style="color: black;">-- Semua Cabang --</option>
+                    @foreach(DB::table('cabang')->orderBy('nama_cabang')->get() as $c)
+                        <option value="{{ $c->id }}" {{ session('active_cabang') == $c->id ? 'selected' : '' }} style="color: black;">{{ $c->nama_cabang }}</option>
+                    @endforeach
+                </select>
+
+                @if(session('active_cabang'))
+                <select name="active_unit" class="form-select form-select-sm" style="width: auto; background: rgba(255,255,255,0.1); color: white; border: 1px solid rgba(255,255,255,0.2);" onchange="this.form.submit()">
+                    <option value="" style="color: black;">-- Semua Unit --</option>
+                    @foreach(DB::table('unit_usaha')->where('id_cabang', session('active_cabang'))->orderBy('nama_unit')->get() as $u)
+                        <option value="{{ $u->id }}" {{ session('active_unit') == $u->id ? 'selected' : '' }} style="color: black;">{{ $u->nama_unit }}</option>
+                    @endforeach
+                </select>
+                @endif
+            </form>
+        </div>
+        @endif
+
         <div class="header-actions">
             <span class="text-white d-none d-md-inline" style="opacity: 0.8; font-size: 0.875rem;">
                 {{ Auth::user()->nama_user }}
@@ -488,6 +513,41 @@
             </div>
             @endif
 
+            <!-- Point of Sales -->
+            @if(auth()->user()->canAccessPos())
+            @php
+                $isPosActive = request()->routeIs('pos.*');
+            @endphp
+            <div class="sidebar-section">
+                <div class="sidebar-section-header" data-bs-toggle="collapse" data-bs-target="#posMenu" aria-expanded="{{ $isPosActive ? 'true' : 'false' }}">
+                    <span>🛒 Point of Sales</span>
+                    <span data-feather="chevron-down" class="chevron"></span>
+                </div>
+                <div class="collapse {{ $isPosActive ? 'show' : '' }}" id="posMenu">
+                    <ul class="sidebar-nav sidebar-submenu">
+                        <li class="sidebar-nav-item">
+                            <a class="sidebar-nav-link {{ request()->routeIs('pos.index') ? 'active' : '' }}" href="{{ route('pos.index') }}">
+                                <span data-feather="monitor"></span>
+                                Kasir
+                            </a>
+                        </li>
+                        <li class="sidebar-nav-item">
+                            <a class="sidebar-nav-link {{ request()->routeIs('pos.session.*') ? 'active' : '' }}" href="{{ route('pos.session.create') }}">
+                                <span data-feather="clock"></span>
+                                Buka/Tutup Shift
+                            </a>
+                        </li>
+                        <li class="sidebar-nav-item">
+                            <a class="sidebar-nav-link {{ request()->routeIs('pos.shift.*') ? 'active' : '' }}" href="{{ route('pos.session.create') }}">
+                                <span data-feather="file-text"></span>
+                                Laporan Shift
+                            </a>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+            @endif
+
             <!-- Transaksi -->
             @php
                 $isTransaksiActive = request()->routeIs('penjualan.*') || request()->routeIs('pembelian.*') || request()->routeIs('jurnal.*');
@@ -554,6 +614,29 @@
                 </div>
             </div>
 
+            <!-- Akuntansi / Tutup Buku -->
+            @if(in_array(auth()->user()->role ?? '', ['admin', 'manajer', 'owner']))
+            @php
+                $isClosingActive = request()->routeIs('accounting.closing.*');
+            @endphp
+            <div class="sidebar-section">
+                <div class="sidebar-section-header" data-bs-toggle="collapse" data-bs-target="#akuntansiMenu" aria-expanded="{{ $isClosingActive ? 'true' : 'false' }}">
+                    <span>📊 Akuntansi</span>
+                    <span data-feather="chevron-down" class="chevron"></span>
+                </div>
+                <div class="collapse {{ $isClosingActive ? 'show' : '' }}" id="akuntansiMenu">
+                    <ul class="sidebar-nav sidebar-submenu">
+                        <li class="sidebar-nav-item">
+                            <a class="sidebar-nav-link {{ request()->routeIs('accounting.closing.*') ? 'active' : '' }}" href="{{ route('accounting.closing.index') }}">
+                                <span data-feather="lock"></span>
+                                Tutup Buku (Closing)
+                            </a>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+            @endif
+
             <!-- Laporan -->
             @if(auth()->user()->canViewReports())
             @php
@@ -600,6 +683,18 @@
                             <a class="sidebar-nav-link {{ request()->routeIs('laporan.perubahan_ekuitas') ? 'active' : '' }}" href="{{ route('laporan.perubahan_ekuitas') }}">
                                 <span data-feather="pie-chart"></span>
                                 Perubahan Ekuitas
+                            </a>
+                        </li>
+                        <li class="sidebar-nav-item">
+                            <a class="sidebar-nav-link {{ request()->routeIs('laporan.persediaan') ? 'active' : '' }}" href="{{ route('laporan.persediaan') }}">
+                                <span data-feather="package"></span>
+                                Persediaan Barang
+                            </a>
+                        </li>
+                        <li class="sidebar-nav-item">
+                            <a class="sidebar-nav-link {{ request()->routeIs('laporan.mutasi_persediaan') ? 'active' : '' }}" href="{{ route('laporan.mutasi_persediaan') }}">
+                                <span data-feather="repeat"></span>
+                                Mutasi Persediaan
                             </a>
                         </li>
                     </ul>
@@ -686,7 +781,7 @@
             <!-- Admin -->
             @if(auth()->user()->canManageUsers())
             @php
-                $isAdminActive = request()->routeIs('perusahaan.*') || request()->routeIs('users.*') || request()->routeIs('database.*') || request()->routeIs('jenis-pinjaman.*') || request()->routeIs('jenis-simpanan.*');
+                $isAdminActive = request()->routeIs('perusahaan.*') || request()->routeIs('users.*') || request()->routeIs('database.*') || request()->routeIs('jenis-pinjaman.*') || request()->routeIs('jenis-simpanan.*') || request()->routeIs('audit-trail.*');
             @endphp
             <div class="sidebar-section">
                 <div class="sidebar-section-header" data-bs-toggle="collapse" data-bs-target="#adminMenu" aria-expanded="{{ $isAdminActive ? 'true' : 'false' }}">
@@ -716,6 +811,12 @@
                             </a>
                         </li>
                         <li class="sidebar-nav-item">
+                            <a class="sidebar-nav-link {{ request()->routeIs('unit-usaha.*') ? 'active' : '' }}" href="{{ route('unit-usaha.index') }}">
+                                <span data-feather="briefcase"></span>
+                                Unit Usaha
+                            </a>
+                        </li>
+                        <li class="sidebar-nav-item">
                             <a class="sidebar-nav-link {{ request()->routeIs('jenis-pinjaman.*') ? 'active' : '' }}" href="{{ route('jenis-pinjaman.index') }}">
                                 <span data-feather="layers"></span>
                                 Jenis Pinjaman
@@ -725,6 +826,12 @@
                             <a class="sidebar-nav-link {{ request()->routeIs('jenis-simpanan.*') ? 'active' : '' }}" href="{{ route('jenis-simpanan.index') }}">
                                 <span data-feather="layers"></span>
                                 Jenis Simpanan
+                            </a>
+                        </li>
+                        <li class="sidebar-nav-item">
+                            <a class="sidebar-nav-link {{ request()->routeIs('audit-trail.*') ? 'active' : '' }}" href="{{ route('audit-trail.index') }}">
+                                <span data-feather="shield"></span>
+                                Audit Trail
                             </a>
                         </li>
                         @if(auth()->user()->canAccessDatabase())

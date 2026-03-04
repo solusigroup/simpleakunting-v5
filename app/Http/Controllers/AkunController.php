@@ -4,12 +4,33 @@ namespace App\Http\Controllers;
 
 use App\Models\Akun;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 
 class AkunController extends Controller
 {
     public function index()
     {
         $akun = Akun::orderBy('kode_akun')->get();
+
+        // Hitung saldo terkini per akun dari jurnal_detail
+        $saldoPerAkun = DB::table('jurnal_detail')
+            ->select('kode_akun', DB::raw('SUM(debit) as total_debit'), DB::raw('SUM(kredit) as total_kredit'))
+            ->groupBy('kode_akun')
+            ->get()
+            ->keyBy('kode_akun');
+
+        foreach ($akun as $a) {
+            $data = $saldoPerAkun->get($a->kode_akun);
+            $totalDebit = $data->total_debit ?? 0;
+            $totalKredit = $data->total_kredit ?? 0;
+
+            if ($a->saldo_normal == 'Debit') {
+                $a->saldo_terkini = $totalDebit - $totalKredit;
+            } else {
+                $a->saldo_terkini = $totalKredit - $totalDebit;
+            }
+        }
+
         return view('akun.index', compact('akun'));
     }
 
@@ -25,9 +46,12 @@ class AkunController extends Controller
             'nama_akun' => 'required|string|max:255',
             'tipe_akun' => 'required|string',
             'saldo_normal' => 'required|in:Debit,Kredit',
+            'saldo_awal' => 'nullable|numeric|min:0',
         ]);
 
-        Akun::create($request->all());
+        $data = $request->all();
+        $data['saldo_awal'] = $request->input('saldo_awal', 0);
+        Akun::create($data);
 
         return redirect()->route('akun.index')->with('success', 'Akun berhasil ditambahkan.');
     }
@@ -43,6 +67,7 @@ class AkunController extends Controller
             'nama_akun' => 'required|string|max:255',
             'tipe_akun' => 'required|string',
             'saldo_normal' => 'required|in:Debit,Kredit',
+            'saldo_awal' => 'nullable|numeric|min:0',
         ]);
 
         $akun->update($request->all());

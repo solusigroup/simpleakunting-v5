@@ -33,6 +33,10 @@
                         <td>
                             <a href="{{ route('users.edit', $u->id_user) }}" class="btn btn-sm btn-warning">Edit</a>
                             @if($u->id_user != auth()->id())
+                                <form action="{{ route('users.reset-password', $u->id_user) }}" method="POST" class="d-inline" onsubmit="return confirm('Reset password {{ $u->nama_user }} ke default?')">
+                                    @csrf
+                                    <button type="submit" class="btn btn-sm btn-outline-secondary">🔑 Reset</button>
+                                </form>
                                 <form action="{{ route('users.destroy', $u->id_user) }}" method="POST" class="d-inline" onsubmit="return confirm('Yakin ingin menghapus user ini?')">
                                     @csrf
                                     @method('DELETE')

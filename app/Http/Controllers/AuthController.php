@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\User;
+use App\Models\AuditTrail;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
@@ -27,6 +28,13 @@ class AuthController extends Controller
         if ($user && Hash::check($credentials['password'], $user->password_hash)) {
             Auth::login($user);
             $request->session()->regenerate();
+
+            // Set default active_cabang if user has one
+            if ($user->id_cabang) {
+                session(['active_cabang' => $user->id_cabang]);
+            }
+
+            AuditTrail::log('login', 'User login: ' . $user->nama_user);
 
             return redirect()->intended('dashboard');
         }
@@ -64,6 +72,8 @@ class AuthController extends Controller
 
     public function logout(Request $request)
     {
+        AuditTrail::log('logout', 'User logout: ' . Auth::user()->nama_user);
+
         Auth::logout();
 
         $request->session()->invalidate();

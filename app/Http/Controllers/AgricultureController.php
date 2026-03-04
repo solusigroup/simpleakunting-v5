@@ -116,10 +116,11 @@ class AgricultureController extends Controller
             // Gain: Debit Bio Asset, Credit Gain (Revenue)
             // Loss: Debit Loss (Expense), Credit Bio Asset
             
-            // Hardcoded Accounts for now (Needs to be in Settings)
-            $akunAsetBiologis = '1-10500'; // Example
-            $akunKeuntungan = '4-80000'; // Other Income
-            $akunKerugian = '6-80000'; // Other Expense
+            // H6: Dynamic account codes dari settings
+            $perusahaan = DB::table('perusahaan')->first();
+            $akunAsetBiologis = $perusahaan->akun_aset_biologis ?? '1-10500';
+            $akunKeuntungan = $perusahaan->akun_keuntungan_revaluasi ?? '4-80000';
+            $akunKerugian = $perusahaan->akun_kerugian_revaluasi ?? '6-80000';
 
             // Generate No Transaksi
             $lastJurnal = Jurnal::where('sumber_jurnal', 'Revaluasi')->orderBy('id_jurnal', 'desc')->first();

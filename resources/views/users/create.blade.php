@@ -55,6 +55,18 @@
                                 <div class="invalid-feedback">{{ $message }}</div>
                             @enderror
                         </div>
+                        <div class="mb-3">
+                            <label for="id_cabang" class="form-label">Cabang</label>
+                            <select class="form-select @error('id_cabang') is-invalid @enderror" id="id_cabang" name="id_cabang">
+                                <option value="">-- Tanpa Cabang --</option>
+                                @foreach($cabang as $c)
+                                    <option value="{{ $c->id }}" {{ old('id_cabang') == $c->id ? 'selected' : '' }}>{{ $c->kode_cabang }} - {{ $c->nama_cabang }}</option>
+                                @endforeach
+                            </select>
+                            @error('id_cabang')
+                                <div class="invalid-feedback">{{ $message }}</div>
+                            @enderror
+                        </div>
                         <button type="submit" class="btn btn-primary">Simpan</button>
                     </form>
                 </div>

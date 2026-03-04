@@ -5,14 +5,49 @@
 @section('content')
 <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
     <h1 class="h2">Perhitungan dan Pembagian SHU</h1>
-    <form class="d-flex gap-2" method="GET">
-        <select name="tahun" class="form-select form-select-sm">
-            @for($y = date('Y'); $y >= date('Y') - 5; $y--)
-                <option value="{{ $y }}" {{ $tahun == $y ? 'selected' : '' }}>{{ $y }}</option>
-            @endfor
-        </select>
-        <button type="submit" class="btn btn-sm btn-primary">Hitung</button>
-    </form>
+</div>
+
+<!-- Filter -->
+<div class="card mb-4">
+    <div class="card-body">
+        <form action="{{ route('laporan.perhitungan_shu') }}" method="GET" class="row g-3 align-items-end">
+            <div class="col-md-3">
+                <label for="tahun" class="form-label">Tahun</label>
+                <select name="tahun" id="tahun" class="form-select">
+                    @for($y = date('Y'); $y >= date('Y') - 5; $y--)
+                        <option value="{{ $y }}" {{ $tahun == $y ? 'selected' : '' }}>{{ $y }}</option>
+                    @endfor
+                </select>
+            </div>
+            <div class="col-md-3">
+                <label for="id_cabang" class="form-label">Cabang</label>
+                <select name="id_cabang" id="id_cabang" class="form-select">
+                    <option value="">Semua Cabang</option>
+                    @foreach($cabang as $c)
+                        <option value="{{ $c->id }}" {{ request('id_cabang', session('active_cabang')) == $c->id ? 'selected' : '' }}>
+                            {{ $c->nama_cabang }}
+                        </option>
+                    @endforeach
+                </select>
+            </div>
+            <div class="col-md-3">
+                <label for="id_unit_usaha" class="form-label">Unit Usaha</label>
+                <select name="id_unit_usaha" id="id_unit_usaha" class="form-select">
+                    <option value="">Semua Unit</option>
+                    @foreach($unitUsaha as $u)
+                        <option value="{{ $u->id }}" data-cabang="{{ $u->id_cabang }}" 
+                            {{ request('id_unit_usaha', session('active_unit')) == $u->id ? 'selected' : '' }}>
+                            {{ $u->nama_unit }}
+                        </option>
+                    @endforeach
+                </select>
+            </div>
+            <div class="col-md-3 d-flex gap-2">
+                <button type="submit" class="btn btn-primary">Hitung</button>
+                <a href="{{ route('laporan.perhitungan_shu') }}" class="btn btn-secondary">Reset</a>
+            </div>
+        </form>
+    </div>
 </div>
 
 <div class="row mb-4">
@@ -133,3 +168,38 @@
     </div>
 </div>
 @endsection
+
+@push('scripts')
+<script>
+    document.getElementById('id_cabang').addEventListener('change', function() {
+        let cabangId = this.value;
+        let unitSelect = document.getElementById('id_unit_usaha');
+        let units = unitSelect.querySelectorAll('option');
+        
+        unitSelect.value = "";
+        units.forEach(opt => {
+            if (opt.value === "") return;
+            if (opt.getAttribute('data-cabang') == cabangId || !cabangId) {
+                opt.style.display = "";
+            } else {
+                opt.style.display = "none";
+            }
+        });
+    });
+
+    // Trigger on load
+    if (document.getElementById('id_cabang').value) {
+        let cabangId = document.getElementById('id_cabang').value;
+        let unitSelect = document.getElementById('id_unit_usaha');
+        
+        unitSelect.querySelectorAll('option').forEach(opt => {
+            if (opt.value === "") return;
+            if (opt.getAttribute('data-cabang') == cabangId) {
+                opt.style.display = "";
+            } else {
+                opt.style.display = "none";
+            }
+        });
+    }
+</script>
+@endpush

@@ -9,7 +9,7 @@ class CabangController extends Controller
 {
     public function index()
     {
-        $cabang = Cabang::all();
+        $cabang = Cabang::paginate(20);
         return view('cabang.index', compact('cabang'));
     }
 
@@ -57,6 +57,12 @@ class CabangController extends Controller
     public function destroy($id)
     {
         $cabang = Cabang::findOrFail($id);
+
+        // Cek referensi sebelum hapus
+        if ($cabang->users()->exists()) {
+            return back()->with('error', 'Cabang tidak bisa dihapus karena masih ada user yang terkait.');
+        }
+
         $cabang->delete();
 
         return redirect()->route('cabang.index')->with('success', 'Cabang berhasil dihapus.');

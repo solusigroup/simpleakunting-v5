@@ -116,6 +116,31 @@ class User extends Authenticatable
     }
 
     /**
+     * Check if user is kasir.
+     */
+    public function isKasir(): bool
+    {
+        return $this->role === 'kasir';
+    }
+
+    /**
+     * Check if user can access POS module.
+     */
+    public function canAccessPos(): bool
+    {
+        return $this->hasRole(['superuser', 'admin', 'manajer', 'staff', 'kasir']);
+    }
+
+    /**
+     * Check if user can access POS Buying (pembelian).
+     * Only manajer and above can input buying.
+     */
+    public function canAccessPosBuying(): bool
+    {
+        return $this->hasRole(['superuser', 'admin', 'manajer']);
+    }
+
+    /**
      * Check if user can manage other users.
      * Only superuser and admin can manage users.
      */
@@ -148,7 +173,7 @@ class User extends Authenticatable
      */
     public function canViewReports(): bool
     {
-        return $this->hasRole(['superuser', 'admin', 'manajer', 'staff']);
+        return $this->hasRole(['superuser', 'admin', 'manajer', 'staff', 'kasir']);
     }
 
     /**
@@ -197,6 +222,7 @@ class User extends Authenticatable
             'admin' => 2,
             'manajer' => 3,
             'staff' => 4,
+            'kasir' => 5,
             default => 99,
         };
     }

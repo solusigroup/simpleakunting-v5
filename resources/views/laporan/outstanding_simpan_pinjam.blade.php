@@ -5,10 +5,45 @@
 @section('content')
 <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
     <h1 class="h2">Outstanding Simpanan dan Pinjaman</h1>
-    <form class="d-flex gap-2" method="GET">
-        <input type="date" name="per_tanggal" class="form-control form-control-sm" value="{{ $perTanggal }}">
-        <button type="submit" class="btn btn-sm btn-primary">Filter</button>
-    </form>
+</div>
+
+<!-- Filter -->
+<div class="card mb-4">
+    <div class="card-body">
+        <form action="{{ route('laporan.outstanding_simpan_pinjam') }}" method="GET" class="row g-3 align-items-end">
+            <div class="col-md-3">
+                <label for="per_tanggal" class="form-label">Per Tanggal</label>
+                <input type="date" name="per_tanggal" id="per_tanggal" class="form-control" value="{{ $perTanggal }}">
+            </div>
+            <div class="col-md-3">
+                <label for="id_cabang" class="form-label">Cabang</label>
+                <select name="id_cabang" id="id_cabang" class="form-select">
+                    <option value="">Semua Cabang</option>
+                    @foreach($cabang as $c)
+                        <option value="{{ $c->id }}" {{ request('id_cabang', session('active_cabang')) == $c->id ? 'selected' : '' }}>
+                            {{ $c->nama_cabang }}
+                        </option>
+                    @endforeach
+                </select>
+            </div>
+            <div class="col-md-3">
+                <label for="id_unit_usaha" class="form-label">Unit Usaha</label>
+                <select name="id_unit_usaha" id="id_unit_usaha" class="form-select">
+                    <option value="">Semua Unit</option>
+                    @foreach($unitUsaha as $u)
+                        <option value="{{ $u->id }}" data-cabang="{{ $u->id_cabang }}" 
+                            {{ request('id_unit_usaha', session('active_unit')) == $u->id ? 'selected' : '' }}>
+                            {{ $u->nama_unit }}
+                        </option>
+                    @endforeach
+                </select>
+            </div>
+            <div class="col-md-3 d-flex gap-2">
+                <button type="submit" class="btn btn-primary">Tampilkan</button>
+                <a href="{{ route('laporan.outstanding_simpan_pinjam') }}" class="btn btn-secondary">Reset</a>
+            </div>
+        </form>
+    </div>
 </div>
 
 <div class="row mb-4">
@@ -99,3 +134,38 @@
     </div>
 </div>
 @endsection
+
+@push('scripts')
+<script>
+    document.getElementById('id_cabang').addEventListener('change', function() {
+        let cabangId = this.value;
+        let unitSelect = document.getElementById('id_unit_usaha');
+        let units = unitSelect.querySelectorAll('option');
+        
+        unitSelect.value = "";
+        units.forEach(opt => {
+            if (opt.value === "") return;
+            if (opt.getAttribute('data-cabang') == cabangId || !cabangId) {
+                opt.style.display = "";
+            } else {
+                opt.style.display = "none";
+            }
+        });
+    });
+
+    // Trigger on load
+    if (document.getElementById('id_cabang').value) {
+        let cabangId = document.getElementById('id_cabang').value;
+        let unitSelect = document.getElementById('id_unit_usaha');
+        
+        unitSelect.querySelectorAll('option').forEach(opt => {
+            if (opt.value === "") return;
+            if (opt.getAttribute('data-cabang') == cabangId) {
+                opt.style.display = "";
+            } else {
+                opt.style.display = "none";
+            }
+        });
+    }
+</script>
+@endpush

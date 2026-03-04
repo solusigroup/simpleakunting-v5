@@ -37,6 +37,24 @@
                                 @endforeach
                             </select>
                         </div>
+                        <div class="mb-3">
+                            <label for="id_cabang" class="form-label">Cabang <span class="text-danger">*</span></label>
+                            <select class="form-select" id="id_cabang" name="id_cabang" required>
+                                <option value="">-- Pilih Cabang --</option>
+                                @foreach($cabang as $c)
+                                    <option value="{{ $c->id }}" {{ old('id_cabang', auth()->user()->id_cabang) == $c->id ? 'selected' : '' }}>{{ $c->kode_cabang }} - {{ $c->nama_cabang }}</option>
+                                @endforeach
+                            </select>
+                        </div>
+                        <div class="mb-3">
+                            <label for="id_unit_usaha" class="form-label">Unit Usaha <span class="text-danger">*</span></label>
+                            <select class="form-select" id="id_unit_usaha" name="id_unit_usaha" required>
+                                <option value="">-- Pilih Unit --</option>
+                                @foreach($unitUsaha as $u)
+                                    <option value="{{ $u->id }}" data-cabang="{{ $u->id_cabang }}" {{ old('id_unit_usaha') == $u->id ? 'selected' : '' }}>{{ $u->kode_unit }} - {{ $u->nama_unit }}</option>
+                                @endforeach
+                            </select>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -123,7 +141,7 @@
 
 @push('scripts')
 <script>
-    let barangData = {!! json_encode($barang) !!};
+    let barangData = @json($barang);
     let rowCount = 0;
 
     function formatRupiah(angka) {
@@ -262,8 +280,28 @@
         }
     }
 
+    // Cascade Cabang -> Unit Usaha
+    document.getElementById('id_cabang').addEventListener('change', function() {
+        let cabangId = this.value;
+        let unitSelect = document.getElementById('id_unit_usaha');
+        let units = unitSelect.querySelectorAll('option');
+        
+        unitSelect.value = "";
+        units.forEach(opt => {
+            if (opt.value === "") return;
+            if (opt.getAttribute('data-cabang') == cabangId || !cabangId) {
+                opt.style.display = "";
+            } else {
+                opt.style.display = "none";
+            }
+        });
+    });
+
     // Init
     tambahBaris();
     toggleAkunKas();
+    if (document.getElementById('id_cabang').value) {
+        document.getElementById('id_cabang').dispatchEvent(new Event('change'));
+    }
 </script>
 @endpush

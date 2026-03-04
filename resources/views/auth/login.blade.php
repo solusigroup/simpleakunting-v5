@@ -129,7 +129,14 @@
                 </form>
 
                 <div class="login-form-footer">
+                    <p style="margin-bottom: 8px;">
+                        <a href="#" onclick="alert('Hubungi Admin atau Superuser untuk mereset password Anda.\n\nAdmin dapat mereset melalui menu:\nAdmin → Manajemen User → 🔑 Reset'); return false;" style="color: #8b5cf6; font-weight: 500;">
+                            🔑 Lupa Password?
+                        </a>
+                    </p>
+                    @if(Route::has('register'))
                     <p>Belum punya akun? <a href="{{ route('register') }}">Daftar di sini</a></p>
+                    @endif
                 </div>
             </div>
         </div>

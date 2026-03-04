@@ -5,12 +5,15 @@ namespace App\Http\Controllers;
 use App\Models\Akun;
 use App\Models\Jurnal;
 use App\Models\JurnalDetail;
+use App\Models\Cabang;
+use App\Models\UnitUsaha;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 
 class KasController extends Controller
 {
     use \App\Traits\CheckSaldoTrait;
+    use \App\Traits\CheckClosedPeriod;
 
     public function index()
     {
@@ -39,14 +42,19 @@ class KasController extends Controller
         }
         $noTransaksi = 'TF-' . str_pad($nextNo, 5, '0', STR_PAD_LEFT);
 
-        return view('kas.transfer', compact('akunKas', 'noTransaksi'));
+        $cabang = Cabang::orderBy('nama_cabang')->get();
+        $unitUsaha = UnitUsaha::active()->orderBy('nama_unit')->get();
+
+        return view('kas.transfer', compact('akunKas', 'noTransaksi', 'cabang', 'unitUsaha'));
     }
 
     public function storeTransfer(Request $request)
     {
         $request->validate([
             'no_transaksi' => 'required|unique:jurnal_umum,no_transaksi',
-            'tanggal' => 'required|date',
+            'tanggal' => 'required|date|before_or_equal:today',
+            'id_cabang' => 'required|exists:cabang,id',
+            'id_unit_usaha' => 'required|exists:unit_usaha,id',
             'dari_akun' => 'required|exists:akun,kode_akun',
             'ke_akun' => 'required|exists:akun,kode_akun|different:dari_akun',
             'jumlah' => 'required|numeric|min:1',
@@ -56,6 +64,17 @@ class KasController extends Controller
         try {
             DB::beginTransaction();
 
+            // C3: Cek periode tutup buku
+            $this->validatePeriodOpen($request->tanggal);
+
+            // H5: Generate no_transaksi atomik
+            $lastTrans = Jurnal::where('sumber_jurnal', 'Transfer Kas')->orderBy('id_jurnal', 'desc')->lockForUpdate()->first();
+            $nextNo = 1;
+            if ($lastTrans && preg_match('/TF-(\d+)/', $lastTrans->no_transaksi, $matches)) {
+                $nextNo = (int)$matches[1] + 1;
+            }
+            $noTransaksi = 'TF-' . str_pad($nextNo, 5, '0', STR_PAD_LEFT);
+
             // Cek Saldo Akun Asal
             if (!$this->checkSaldoCukup($request->dari_akun, $request->jumlah)) {
                 $saldo = $this->getSaldoSaatIni($request->dari_akun);
@@ -64,8 +83,10 @@ class KasController extends Controller
 
             // 1. Buat Jurnal Header
             $jurnal = Jurnal::create([
-                'no_transaksi' => $request->no_transaksi,
+                'no_transaksi' => $noTransaksi,
                 'tanggal' => $request->tanggal,
+                'id_cabang' => $request->id_cabang,
+                'id_unit_usaha' => $request->id_unit_usaha,
                 'deskripsi' => $request->keterangan,
                 'sumber_jurnal' => 'Transfer Kas',
                 'is_locked' => 0
@@ -92,7 +113,11 @@ class KasController extends Controller
 
         } catch (\Exception $e) {
             DB::rollBack();
-            return back()->with('error', 'Gagal melakukan transfer: ' . $e->getMessage())->withInput();
+            \Illuminate\Support\Facades\Log::error('Kas transfer error', ['error' => $e->getMessage()]);
+            $msg = str_contains($e->getMessage(), 'Periode') || str_contains($e->getMessage(), 'Saldo')
+                ? $e->getMessage()
+                : 'Gagal melakukan transfer. Silakan coba lagi.';
+            return back()->with('error', $msg)->withInput();
         }
     }
 }

@@ -24,7 +24,7 @@
                 <div class="d-flex justify-content-between align-items-start">
                     <div>
                         <p class="summary-card-label mb-2">Total Saldo Kas & Bank</p>
-                        <h2 class="mb-0" style="font-size: 2rem;">Rp {{ number_format($totalPiutang - $totalUtang, 0, ',', '.') }}</h2>
+                        <h2 class="mb-0" style="font-size: 2rem;">Rp {{ number_format($totalKasBank, 0, ',', '.') }}</h2>
                     </div>
                     <div style="font-size: 48px; opacity: 0.3;">💰</div>
                 </div>
@@ -291,11 +291,11 @@
         new Chart(ctx1, {
             type: 'line',
             data: {
-                labels: {!! $chartLabels !!},
+                labels: @json($chartLabels),
                 datasets: [
                     {
                         label: 'Penjualan',
-                        data: {!! $chartSales !!},
+                        data: @json($chartSales),
                         borderColor: '#10b981',
                         backgroundColor: 'rgba(16, 185, 129, 0.1)',
                         tension: 0.4,
@@ -303,7 +303,7 @@
                     },
                     {
                         label: 'Pembelian',
-                        data: {!! $chartPurchases !!},
+                        data: @json($chartPurchases),
                         borderColor: '#ef4444',
                         backgroundColor: 'rgba(239, 68, 68, 0.1)',
                         tension: 0.4,
@@ -349,17 +349,17 @@
         new Chart(ctx2, {
             type: 'bar',
             data: {
-                labels: {!! $chartLabels !!},
+                labels: @json($chartLabels),
                 datasets: [
                     {
                         label: 'Pendapatan',
-                        data: {!! $chartPendapatan !!},
+                        data: @json($chartPendapatan),
                         backgroundColor: '#10b981',
                         borderRadius: 6
                     },
                     {
                         label: 'Biaya',
-                        data: {!! $chartBiaya !!},
+                        data: @json($chartBiaya),
                         backgroundColor: '#ef4444',
                         borderRadius: 6
                     }

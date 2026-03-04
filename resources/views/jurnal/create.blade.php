@@ -24,17 +24,39 @@
         <div class="form-card mb-4">
             <div class="form-card-body">
                 <div class="form-row">
-                    <div class="form-group">
+                    <div class="form-group" style="flex: 1;">
                         <label for="no_transaksi" class="form-label">No Transaksi</label>
                         <input type="text" class="form-control" id="no_transaksi" name="no_transaksi" value="{{ $noTransaksi }}" readonly style="background: var(--color-bg);">
                     </div>
-                    <div class="form-group">
+                    <div class="form-group" style="flex: 1;">
                         <label for="tanggal" class="form-label">Tanggal</label>
                         <input type="date" class="form-control" id="tanggal" name="tanggal" value="{{ date('Y-m-d') }}" required>
                     </div>
-                    <div class="form-group">
-                        <label for="deskripsi" class="form-label">Deskripsi</label>
-                        <input type="text" class="form-control" id="deskripsi" name="deskripsi" placeholder="Masukkan deskripsi jurnal" required>
+                </div>
+                <div class="form-row mt-3">
+                    <div class="form-group" style="flex: 1;">
+                        <label for="id_cabang" class="form-label">Cabang <span class="text-danger">*</span></label>
+                        <select class="form-select @error('id_cabang') is-invalid @enderror" id="id_cabang" name="id_cabang" required>
+                            <option value="">-- Pilih Cabang --</option>
+                            @foreach($cabang as $c)
+                                <option value="{{ $c->id }}" {{ old('id_cabang', session('active_cabang') ?: auth()->user()->id_cabang) == $c->id ? 'selected' : '' }}>{{ $c->kode_cabang }} - {{ $c->nama_cabang }}</option>
+                            @endforeach
+                        </select>
+                    </div>
+                    <div class="form-group" style="flex: 1;">
+                        <label for="id_unit_usaha" class="form-label">Unit Usaha <span class="text-danger">*</span></label>
+                        <select class="form-select @error('id_unit_usaha') is-invalid @enderror" id="id_unit_usaha" name="id_unit_usaha" required>
+                            <option value="">-- Pilih Unit --</option>
+                            @foreach($unitUsaha as $u)
+                                <option value="{{ $u->id }}" data-cabang="{{ $u->id_cabang }}" {{ old('id_unit_usaha', session('active_unit')) == $u->id ? 'selected' : '' }}>{{ $u->kode_unit }} - {{ $u->nama_unit }}</option>
+                            @endforeach
+                        </select>
+                    </div>
+                </div>
+                <div class="form-row mt-3">
+                    <div class="form-group" style="flex: 1;">
+                        <label for="deskripsi" class="form-label">Deskripsi Jurnal</label>
+                        <input type="text" class="form-control" id="deskripsi" name="deskripsi" placeholder="Contoh: Pembayaran Gaji Karyawan" required value="{{ old('deskripsi') }}">
                     </div>
                 </div>
             </div>
@@ -102,7 +124,7 @@
 
 @push('scripts')
 <script>
-    let akunData = {!! json_encode($akun) !!};
+    let akunData = @json($akun);
     let rowCount = 0;
 
     function formatRupiah(angka) {
@@ -169,6 +191,28 @@
             }
             document.getElementById('selisih_display').innerText = formatRupiah(Math.abs(totalDebit - totalKredit));
         }
+    }
+
+    // Cascade Cabang -> Unit Usaha
+    document.getElementById('id_cabang').addEventListener('change', function() {
+        let cabangId = this.value;
+        let unitSelect = document.getElementById('id_unit_usaha');
+        let units = unitSelect.querySelectorAll('option');
+        
+        unitSelect.value = "";
+        units.forEach(opt => {
+            if (opt.value === "") return;
+            if (opt.getAttribute('data-cabang') == cabangId || !cabangId) {
+                opt.style.display = "";
+            } else {
+                opt.style.display = "none";
+            }
+        });
+    });
+
+    // Trigger initial cascade if cabang is pre-selected
+    if (document.getElementById('id_cabang').value) {
+        document.getElementById('id_cabang').dispatchEvent(new Event('change'));
     }
 
     // Init 2 rows

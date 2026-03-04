@@ -29,6 +29,7 @@ use App\Http\Controllers\PinjamanController;
 use App\Http\Controllers\ApprovalController;
 use App\Http\Controllers\DatabaseController;
 use App\Http\Controllers\ImportExportController;
+use App\Http\Controllers\PosController;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -50,18 +51,26 @@ use Illuminate\Support\Facades\Route;
 // =====================================================
 if (config('app.tenancy_enabled')) {
 
-    // Central landing page
-    Route::get('/', function () {
-        return view('central.landing');
-    })->name('central.landing');
+    // Scope central routes to central domains so tenant routes
+    // loaded later by TenancyServiceProvider don't override them
+    foreach (config('tenancy.central_domains', []) as $domain) {
+        Route::domain($domain)->group(function () {
 
-    // Tenant Registration (admin only via central)
-    Route::middleware('web')->group(function () {
-        Route::get('register-tenant', [TenantRegistrationController::class, 'showForm'])->name('central.register-tenant');
-        Route::post('register-tenant', [TenantRegistrationController::class, 'register'])->name('central.register-tenant.store');
-        Route::get('admin/tenants', [TenantRegistrationController::class, 'index'])->name('central.tenants.index');
-        Route::delete('admin/tenants/{id}', [TenantRegistrationController::class, 'destroy'])->name('central.tenants.destroy');
-    });
+            // Central landing page
+            Route::get('/', function () {
+                return view('central.landing');
+            })->name('central.landing');
+
+            // Tenant Registration (admin only via central)
+            Route::middleware('web')->group(function () {
+                Route::get('register-tenant', [TenantRegistrationController::class, 'showForm'])->name('central.register-tenant');
+                Route::post('register-tenant', [TenantRegistrationController::class, 'register'])->name('central.register-tenant.store');
+                Route::get('admin/tenants', [TenantRegistrationController::class, 'index'])->name('central.tenants.index');
+                Route::delete('admin/tenants/{id}', [TenantRegistrationController::class, 'destroy'])->name('central.tenants.destroy');
+            });
+
+        });
+    }
 
 } else {
 
@@ -136,6 +145,22 @@ if (config('app.tenancy_enabled')) {
         });
 
         // =====================================================
+        // POINT OF SALES - Kasir, Staff, Manajer, Admin, Superuser
+        // =====================================================
+        Route::middleware('role:superuser,admin,manajer,staff,kasir')->group(function () {
+            Route::get('pos', [PosController::class, 'index'])->name('pos.index');
+            Route::get('pos/search', [PosController::class, 'searchProduct'])->name('pos.search');
+            Route::post('pos/sale', [PosController::class, 'storeSale'])->name('pos.store.sale');
+            Route::post('pos/purchase', [PosController::class, 'storePurchase'])->name('pos.store.purchase');
+            Route::get('pos/session', [PosController::class, 'sessionCreate'])->name('pos.session.create');
+            Route::post('pos/session/open', [PosController::class, 'sessionOpen'])->name('pos.session.open');
+            Route::post('pos/session/close', [PosController::class, 'sessionClose'])->name('pos.session.close');
+            Route::get('pos/receipt/{id}', [PosController::class, 'receipt'])->name('pos.receipt');
+            Route::get('pos/purchase-receipt/{id}', [PosController::class, 'purchaseReceipt'])->name('pos.purchase.receipt');
+            Route::get('pos/shift-report/{id}', [PosController::class, 'shiftReport'])->name('pos.shift.report');
+        });
+
+        // =====================================================
         // TRANSAKSI - All authenticated users
         // =====================================================
         Route::resource('penjualan', PenjualanController::class);
@@ -150,7 +175,7 @@ if (config('app.tenancy_enabled')) {
         // =====================================================
         // LAPORAN - Semua role (termasuk staff)
         // =====================================================
-        Route::middleware('role:superuser,admin,manajer,staff')->group(function () {
+        Route::middleware('role:superuser,admin,manajer,staff,kasir')->group(function () {
             Route::get('bukubesar', [BukuBesarController::class, 'index'])->name('bukubesar.index');
             Route::get('laporan', [LaporanController::class, 'index'])->name('laporan.index');
             Route::get('/laporan/neraca', [LaporanController::class, 'neraca'])->name('laporan.neraca');
@@ -161,6 +186,7 @@ if (config('app.tenancy_enabled')) {
             Route::get('/laporan/aruskas-tidak-langsung', [LaporanController::class, 'arusKasTidakLangsung'])->name('laporan.aruskas_tidak_langsung');
             Route::get('/laporan/perubahan-ekuitas', [LaporanController::class, 'perubahanEkuitas'])->name('laporan.perubahan_ekuitas');
             Route::get('/laporan/persediaan', [LaporanController::class, 'persediaan'])->name('laporan.persediaan');
+            Route::get('/laporan/mutasi-persediaan', [LaporanController::class, 'mutasiPersediaan'])->name('laporan.mutasi_persediaan');
         });
 
         // =====================================================
@@ -170,6 +196,7 @@ if (config('app.tenancy_enabled')) {
             Route::get('perusahaan', [PerusahaanController::class, 'edit'])->name('perusahaan.edit');
             Route::put('perusahaan', [PerusahaanController::class, 'update'])->name('perusahaan.update');
             Route::resource('users', UserController::class);
+            Route::post('users/{user}/reset-password', [UserController::class, 'resetPassword'])->name('users.reset-password');
             Route::resource('cabang', CabangController::class);
         });
 

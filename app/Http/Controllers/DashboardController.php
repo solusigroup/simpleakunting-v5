@@ -18,14 +18,30 @@ class DashboardController extends Controller
 {
     public function index()
     {
-        // 1. Summary Cards - Existing
-        $totalPiutang = Pelanggan::sum('saldo_terkini_piutang') ?? 0;
-        $totalUtang = Pemasok::sum('saldo_terkini_hutang') ?? 0;
-        
-        // Calculate inventory value: sum(stok_saat_ini * harga_beli)
-        $nilaiPersediaan = Persediaan::select(DB::raw('SUM(stok_saat_ini * harga_beli) as total'))->value('total') ?? 0;
+        // 1. Saldo Kas & Bank - dari jurnal_detail
+        $totalKasBank = DB::table('jurnal_detail')
+            ->join('akun', 'jurnal_detail.kode_akun', '=', 'akun.kode_akun')
+            ->where('akun.tipe_akun', 'Kas & Bank')
+            ->sum(DB::raw('jurnal_detail.debit - jurnal_detail.kredit'));
 
-        // 2. Simpanan Summary by Type
+        // 2. Summary Cards - Piutang & Utang
+        $totalPiutang = DB::table('jurnal_detail')
+            ->join('akun', 'jurnal_detail.kode_akun', '=', 'akun.kode_akun')
+            ->where('akun.tipe_akun', 'Piutang')
+            ->sum(DB::raw('jurnal_detail.debit - jurnal_detail.kredit'));
+
+        $totalUtang = DB::table('jurnal_detail')
+            ->join('akun', 'jurnal_detail.kode_akun', '=', 'akun.kode_akun')
+            ->whereIn('akun.tipe_akun', ['Utang Usaha', 'Kewajiban Lancar Lainnya', 'Kewajiban Jangka Panjang'])
+            ->sum(DB::raw('jurnal_detail.kredit - jurnal_detail.debit'));
+
+        // 3. Nilai Persediaan - dari jurnal_detail
+        $nilaiPersediaan = DB::table('jurnal_detail')
+            ->join('akun', 'jurnal_detail.kode_akun', '=', 'akun.kode_akun')
+            ->where('akun.tipe_akun', 'Persediaan')
+            ->sum(DB::raw('jurnal_detail.debit - jurnal_detail.kredit'));
+
+        // 4. Simpanan Summary by Type
         $simpananByType = collect([]);
         $totalSimpanan = 0;
         
@@ -113,28 +129,27 @@ class DashboardController extends Controller
         
         try {
             $pendapatanBiaya = DB::table('jurnal_detail')
-                ->join('jurnal', 'jurnal_detail.id_jurnal', '=', 'jurnal.id_jurnal')
+                ->join('jurnal_umum', 'jurnal_detail.id_jurnal', '=', 'jurnal_umum.id_jurnal')
                 ->join('akun', 'jurnal_detail.kode_akun', '=', 'akun.kode_akun')
                 ->select(
-                    DB::raw("DATE_FORMAT(jurnal.tanggal, '%Y-%m') as periode"),
-                    'akun.klasifikasi',
+                    DB::raw("DATE_FORMAT(jurnal_umum.tanggal, '%Y-%m') as periode"),
+                    'akun.tipe_akun',
                     DB::raw('SUM(jurnal_detail.kredit - jurnal_detail.debit) as saldo')
                 )
-                ->where('jurnal.tanggal', '>=', $sixMonthsAgo)
-                ->whereIn('akun.klasifikasi', ['4', '5']) // 4=Pendapatan, 5=Biaya
-                ->groupBy('periode', 'akun.klasifikasi')
+                ->where('jurnal_umum.tanggal', '>=', $sixMonthsAgo)
+                ->whereIn('akun.tipe_akun', ['Pendapatan', 'Pendapatan Lainnya', 'HPP', 'Beban', 'Beban Lainnya'])
+                ->groupBy('periode', 'akun.tipe_akun')
                 ->get();
 
             $currentDate = $sixMonthsAgo->copy();
             while ($currentDate <= $now) {
                 $periode = $currentDate->format('Y-m');
                 
-                $pendapatan = $pendapatanBiaya->where('periode', $periode)->where('klasifikasi', '4')->first();
-                $biaya = $pendapatanBiaya->where('periode', $periode)->where('klasifikasi', '5')->first();
+                $pendapatan = $pendapatanBiaya->where('periode', $periode)->whereIn('tipe_akun', ['Pendapatan', 'Pendapatan Lainnya']);
+                $biaya = $pendapatanBiaya->where('periode', $periode)->whereIn('tipe_akun', ['HPP', 'Beban', 'Beban Lainnya']);
                 
-                // Pendapatan is normally credit (positive), Biaya is normally debit (negative in our calc, so negate)
-                $pendapatanData[] = abs($pendapatan->saldo ?? 0);
-                $biayaData[] = abs($biaya->saldo ?? 0);
+                $pendapatanData[] = abs($pendapatan->sum('saldo'));
+                $biayaData[] = abs($biaya->sum('saldo'));
                 
                 $currentDate->addMonth();
             }
@@ -147,6 +162,7 @@ class DashboardController extends Controller
         }
 
         return view('dashboard.index', [
+            'totalKasBank' => $totalKasBank,
             'totalPiutang' => $totalPiutang,
             'totalUtang' => $totalUtang,
             'nilaiPersediaan' => $nilaiPersediaan,

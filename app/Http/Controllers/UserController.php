@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\User;
+use App\Models\Cabang;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 
@@ -21,6 +22,7 @@ class UserController extends Controller
             'admin' => 'Admin',
             'manajer' => 'Manajer',
             'staff' => 'Staff',
+            'kasir' => 'Kasir',
         ];
         
         // Filter roles based on current user's level
@@ -32,6 +34,7 @@ class UserController extends Controller
                 'admin' => 2,
                 'manajer' => 3,
                 'staff' => 4,
+                'kasir' => 5,
                 default => 99,
             };
             // Only show roles with lower privilege (higher level number)
@@ -48,7 +51,8 @@ class UserController extends Controller
     public function create()
     {
         $roles = $this->getAvailableRoles();
-        return view('users.create', compact('roles'));
+        $cabang = Cabang::orderBy('nama_cabang')->get();
+        return view('users.create', compact('roles', 'cabang'));
     }
 
     public function store(Request $request)
@@ -57,9 +61,10 @@ class UserController extends Controller
         
         $request->validate([
             'nama_user' => 'required|string|max:255|unique:users,nama_user',
-            'password' => 'required|string|min:6|confirmed',
+            'password' => 'required|string|min:8|confirmed',
             'role' => 'required|string|in:' . implode(',', $availableRoles),
             'jabatan' => 'nullable|string',
+            'id_cabang' => 'nullable|exists:cabang,id',
         ]);
 
         User::create([
@@ -67,6 +72,7 @@ class UserController extends Controller
             'password_hash' => Hash::make($request->password),
             'role' => $request->role,
             'jabatan' => $request->jabatan ?? '',
+            'id_cabang' => $request->id_cabang,
         ]);
 
         return redirect()->route('users.index')->with('success', 'User berhasil ditambahkan.');
@@ -80,6 +86,7 @@ class UserController extends Controller
         }
         
         $roles = $this->getAvailableRoles();
+        $cabang = Cabang::orderBy('nama_cabang')->get();
         
         // Include current user's role in options if not already there
         if (!isset($roles[$user->role])) {
@@ -88,11 +95,12 @@ class UserController extends Controller
                 'admin' => 'Admin',
                 'manajer' => 'Manajer',
                 'staff' => 'Staff',
+                'kasir' => 'Kasir',
             ];
             $roles[$user->role] = $roleLabels[$user->role] ?? ucfirst($user->role);
         }
         
-        return view('users.edit', compact('user', 'roles'));
+        return view('users.edit', compact('user', 'roles', 'cabang'));
     }
 
     public function update(Request $request, User $user)
@@ -110,15 +118,17 @@ class UserController extends Controller
         
         $request->validate([
             'nama_user' => 'required|string|max:255|unique:users,nama_user,' . $user->id_user . ',id_user',
-            'password' => 'nullable|string|min:6|confirmed',
+            'password' => 'nullable|string|min:8|confirmed',
             'role' => 'required|string|in:' . implode(',', $availableRoles),
             'jabatan' => 'nullable|string',
+            'id_cabang' => 'nullable|exists:cabang,id',
         ]);
 
         $data = [
             'nama_user' => $request->nama_user,
             'role' => $request->role,
             'jabatan' => $request->jabatan ?? '',
+            'id_cabang' => $request->id_cabang,
         ];
 
         if ($request->filled('password')) {
@@ -144,6 +154,23 @@ class UserController extends Controller
 
         $user->delete();
         return redirect()->route('users.index')->with('success', 'User berhasil dihapus.');
+    }
+
+    /**
+     * Reset password user ke password default.
+     */
+    public function resetPassword(User $user)
+    {
+        if (!auth()->user()->canEditUser($user)) {
+            return back()->with('error', 'Anda tidak memiliki izin untuk reset password user ini.');
+        }
+
+        $defaultPassword = 'password';
+        $user->update([
+            'password_hash' => Hash::make($defaultPassword),
+        ]);
+
+        return back()->with('success', "Password {$user->nama_user} berhasil direset ke '{$defaultPassword}'. Minta user segera mengganti password.");
     }
 }
 

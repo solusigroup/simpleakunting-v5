@@ -12,8 +12,22 @@ class Tenant extends BaseTenant implements TenantWithDatabase
     use HasDatabase, HasDomains;
 
     /**
+     * Override GeneratesIds trait — kita menggunakan custom string ID (e.g. 'demo'),
+     * bukan auto-increment. Trait GeneratesIds mendefinisikan getIncrementing()
+     * sebagai METHOD, jadi property $incrementing = false tidak berpengaruh.
+     */
+    public function getIncrementing(): bool
+    {
+        return false;
+    }
+
+    public function getKeyType(): string
+    {
+        return 'string';
+    }
+
+    /**
      * Custom columns on the tenants table.
-     * These are stored as actual columns, not in the JSON `data` column.
      */
     public static function getCustomColumns(): array
     {

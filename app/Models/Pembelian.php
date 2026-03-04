@@ -4,10 +4,11 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use App\Traits\LogsActivity;
 
 class Pembelian extends Model
 {
-    use HasFactory;
+    use HasFactory, LogsActivity, \App\Traits\HasCabang;
 
     protected $table = 'pembelian';
     protected $primaryKey = 'id_pembelian';
@@ -31,5 +32,10 @@ class Pembelian extends Model
     public function getNoFakturAttribute()
     {
         return $this->attributes['no_faktur_pembelian'];
+    }
+
+    public function posSession()
+    {
+        return $this->belongsTo(PosSession::class, 'id_pos_session');
     }
 }

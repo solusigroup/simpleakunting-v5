@@ -9,15 +9,18 @@ use App\Models\Persediaan;
 use App\Models\Jurnal;
 use App\Models\JurnalDetail;
 use App\Models\Akun;
+use App\Models\Cabang;
+use App\Models\UnitUsaha;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 
 class PembelianController extends Controller
 {
+    use \App\Traits\CheckClosedPeriod;
     public function index()
     {
-        $pembelian = Pembelian::with('pemasok')->orderBy('tanggal_faktur', 'desc')->get();
+        $pembelian = Pembelian::with('pemasok')->orderBy('tanggal_faktur', 'desc')->paginate(20);
         return view('pembelian.index', compact('pembelian'));
     }
 
@@ -33,15 +36,20 @@ class PembelianController extends Controller
         $nextNo = $lastFaktur ? (int)substr($lastFaktur->no_faktur_pembelian, 4) + 1 : 1;
         $noFaktur = 'PUR-' . str_pad($nextNo, 5, '0', STR_PAD_LEFT);
 
-        return view('pembelian.create', compact('pemasok', 'barang', 'akunKas', 'noFaktur'));
+        $cabang = Cabang::orderBy('nama_cabang')->get();
+        $unitUsaha = UnitUsaha::active()->orderBy('nama_unit')->get();
+
+        return view('pembelian.create', compact('pemasok', 'barang', 'akunKas', 'noFaktur', 'cabang', 'unitUsaha'));
     }
 
     public function store(Request $request)
     {
         $request->validate([
             'id_pemasok' => 'required|exists:pemasok,id_pemasok',
+            'id_cabang' => 'required|exists:cabang,id',
+            'id_unit_usaha' => 'required|exists:unit_usaha,id',
             'no_faktur' => 'required|unique:pembelian,no_faktur_pembelian',
-            'tanggal_faktur' => 'required|date',
+            'tanggal_faktur' => 'required|date|before_or_equal:today',
             'metode_pembayaran' => 'required|in:Tunai,Kredit',
             'akun_kas_bank' => 'required_if:metode_pembayaran,Tunai',
             'details' => 'required|array|min:1',
@@ -52,6 +60,14 @@ class PembelianController extends Controller
 
         try {
             DB::beginTransaction();
+
+            // C3: Cek periode tutup buku
+            $this->validatePeriodOpen($request->tanggal_faktur);
+
+            // H5: Generate no_faktur atomik
+            $lastFaktur = Pembelian::orderBy('id_pembelian', 'desc')->lockForUpdate()->first();
+            $nextNo = $lastFaktur ? (int)substr($lastFaktur->no_faktur_pembelian, 4) + 1 : 1;
+            $noFaktur = 'PUR-' . str_pad($nextNo, 5, '0', STR_PAD_LEFT);
 
             $totalPembelian = 0;
             $detailsData = [];
@@ -69,14 +85,17 @@ class PembelianController extends Controller
                 ];
             }
 
-            // 2. Buat Jurnal
-            $akunUtang = '2-10100'; // Contoh kode akun Utang Usaha
-            $akunPersediaanDefault = '1-10300'; // Contoh kode akun Persediaan
+            // H1: Dynamic account codes dari settings
+            $perusahaan = DB::table('perusahaan')->first();
+            $akunUtang = $perusahaan->akun_utang ?? '2-10100';
+            $akunPersediaanDefault = $perusahaan->akun_persediaan ?? '1-10200';
 
             $jurnal = Jurnal::create([
-                'no_transaksi' => $request->no_faktur,
+                'no_transaksi' => $noFaktur,
                 'tanggal' => $request->tanggal_faktur,
-                'deskripsi' => "Pembelian Faktur #{$request->no_faktur}",
+                'id_cabang' => $request->id_cabang,
+                'id_unit_usaha' => $request->id_unit_usaha,
+                'deskripsi' => "Pembelian Faktur #{$noFaktur}",
                 'sumber_jurnal' => 'Pembelian',
                 'is_locked' => 1
             ]);
@@ -106,7 +125,9 @@ class PembelianController extends Controller
             $pembelian = Pembelian::create([
                 'id_pemasok' => $request->id_pemasok,
                 'id_jurnal' => $jurnal->id_jurnal,
-                'no_faktur_pembelian' => $request->no_faktur, // Map to correct column
+                'id_cabang' => $request->id_cabang,
+                'id_unit_usaha' => $request->id_unit_usaha,
+                'no_faktur_pembelian' => $noFaktur,
                 'tanggal_faktur' => $request->tanggal_faktur,
                 'total' => $totalPembelian,
                 'keterangan' => $request->keterangan,
@@ -135,7 +156,7 @@ class PembelianController extends Controller
                     'id_barang' => $data['barang']->id_barang,
                     'tipe_transaksi' => 'IN',
                     'kuantitas' => $data['kuantitas'],
-                    'keterangan' => "Pembelian #{$request->no_faktur}",
+                    'keterangan' => "Pembelian #{$noFaktur}",
                     'created_at' => now(),
                     'updated_at' => now(),
                 ]);
@@ -153,7 +174,10 @@ class PembelianController extends Controller
         } catch (\Exception $e) {
             DB::rollBack();
             Log::error($e->getMessage());
-            return back()->with('error', 'Gagal menyimpan transaksi: ' . $e->getMessage())->withInput();
+            $msg = str_contains($e->getMessage(), 'Periode') || str_contains($e->getMessage(), 'Stok')
+                ? $e->getMessage()
+                : 'Gagal menyimpan transaksi. Silakan coba lagi.';
+            return back()->with('error', $msg)->withInput();
         }
     }
 

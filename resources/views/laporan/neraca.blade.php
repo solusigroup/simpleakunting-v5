@@ -11,15 +11,38 @@
     <div class="card mb-4">
         <div class="card-body">
             <form action="{{ route('laporan.neraca') }}" method="GET" class="row g-3 align-items-end">
-                <div class="col-md-4">
+                <div class="col-md-3">
                     <label for="per_tanggal" class="form-label">Per Tanggal</label>
                     <input type="date" class="form-control" id="per_tanggal" name="per_tanggal" value="{{ $perTanggal }}">
                 </div>
-                <div class="col-md-4">
-                    <label for="banding_tanggal" class="form-label">Bandingkan Dengan (Opsional)</label>
+                <div class="col-md-3">
+                    <label for="banding_tanggal" class="form-label">Bandingkan (Opsional)</label>
                     <input type="date" class="form-control" id="banding_tanggal" name="banding_tanggal" value="{{ $bandingTanggal }}">
                 </div>
-                <div class="col-md-4 d-flex gap-2 align-items-end">
+                <div class="col-md-3">
+                    <label for="id_cabang" class="form-label">Cabang</label>
+                    <select name="id_cabang" id="id_cabang" class="form-select">
+                        <option value="">Semua Cabang</option>
+                        @foreach($cabang as $c)
+                            <option value="{{ $c->id }}" {{ request('id_cabang', session('active_cabang')) == $c->id ? 'selected' : '' }}>
+                                {{ $c->nama_cabang }}
+                            </option>
+                        @endforeach
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <label for="id_unit_usaha" class="form-label">Unit Usaha</label>
+                    <select name="id_unit_usaha" id="id_unit_usaha" class="form-select">
+                        <option value="">Semua Unit</option>
+                        @foreach($unitUsaha as $u)
+                            <option value="{{ $u->id }}" data-cabang="{{ $u->id_cabang }}" 
+                                {{ request('id_unit_usaha', session('active_unit')) == $u->id ? 'selected' : '' }}>
+                                {{ $u->nama_unit }}
+                            </option>
+                        @endforeach
+                    </select>
+                </div>
+                <div class="col-md-12 d-flex gap-2 justify-content-end mt-2">
                     <button type="submit" class="btn btn-primary">Tampilkan</button>
                     <a href="{{ route('laporan.neraca') }}" class="btn btn-secondary">Reset</a>
                     <a href="{{ route('laporan.neraca.pdf', request()->all()) }}" class="btn btn-danger" target="_blank">
@@ -41,6 +64,32 @@
             @endif
         </p>
     </div>
+
+    <!-- Balance Check Alert -->
+    @if(!$isBalanced)
+    <div class="alert alert-danger d-flex align-items-center mb-4" role="alert" style="border-left: 4px solid #dc3545;">
+        <div style="font-size: 2rem; margin-right: 16px;">⚠️</div>
+        <div>
+            <h5 class="alert-heading mb-1" style="color: #dc3545;">NERACA TIDAK BALANCE!</h5>
+            <p class="mb-1">
+                Total Aset: <strong>Rp {{ number_format($totalAset, 2, ',', '.') }}</strong> |
+                Total Kewajiban & Ekuitas: <strong>Rp {{ number_format($totalKewajibanEkuitas, 2, ',', '.') }}</strong>
+            </p>
+            <p class="mb-0">
+                Selisih: <strong class="text-danger">Rp {{ number_format(abs($selisih), 2, ',', '.') }}</strong> — 
+                Periksa kembali jurnal yang tidak balance atau transaksi yang belum lengkap.
+            </p>
+        </div>
+    </div>
+    @else
+    <div class="alert alert-success d-flex align-items-center mb-4" role="alert" style="border-left: 4px solid #198754;">
+        <div style="font-size: 1.5rem; margin-right: 12px;">✅</div>
+        <div>
+            <strong>NERACA BALANCE</strong> — Total Aset = Total Kewajiban & Ekuitas = 
+            <strong>Rp {{ number_format($totalAset, 2, ',', '.') }}</strong>
+        </div>
+    </div>
+    @endif
 
     <!-- Report Content -->
     <div class="card">
@@ -198,3 +247,39 @@
         </div>
     </div>
 @endsection
+
+@push('scripts')
+<script>
+    document.getElementById('id_cabang').addEventListener('change', function() {
+        let cabangId = this.value;
+        let unitSelect = document.getElementById('id_unit_usaha');
+        let units = unitSelect.querySelectorAll('option');
+        
+        unitSelect.value = "";
+        units.forEach(opt => {
+            if (opt.value === "") return;
+            if (opt.getAttribute('data-cabang') == cabangId || !cabangId) {
+                opt.style.display = "";
+            } else {
+                opt.style.display = "none";
+            }
+        });
+    });
+
+    // Trigger on load
+    if (document.getElementById('id_cabang').value) {
+        let cabangId = document.getElementById('id_cabang').value;
+        let unitSelect = document.getElementById('id_unit_usaha');
+        let selectedUnit = "{{ request('id_unit_usaha', session('active_unit')) }}";
+        
+        unitSelect.querySelectorAll('option').forEach(opt => {
+            if (opt.value === "") return;
+            if (opt.getAttribute('data-cabang') == cabangId) {
+                opt.style.display = "";
+            } else {
+                opt.style.display = "none";
+            }
+        });
+    }
+</script>
+@endpush

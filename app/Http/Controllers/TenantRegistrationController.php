@@ -34,12 +34,12 @@ class TenantRegistrationController extends Controller
             'email' => $validated['email'] ?? null,
         ]);
 
-        // Create domain (subdomain)
-        $centralDomain = $request->getHost();
+        // Create domain (subdomain only — InitializeTenancyBySubdomain resolves by subdomain part)
         $tenant->domains()->create([
-            'domain' => $validated['tenant_id'] . '.' . $centralDomain,
+            'domain' => $validated['tenant_id'],
         ]);
 
+        $centralDomain = $request->getHost();
         return redirect()->route('central.tenants.index')
             ->with('success', "Tenant '{$validated['nama_perusahaan']}' berhasil dibuat! Akses via: {$validated['tenant_id']}.{$centralDomain}");
     }
@@ -56,12 +56,25 @@ class TenantRegistrationController extends Controller
     /**
      * Delete a tenant and its database.
      */
-    public function destroy(string $id)
+    public function destroy(Request $request, string $id)
     {
+        // Block in production
+        if (app()->environment('production')) {
+            return redirect()->route('central.tenants.index')
+                ->with('error', 'Penghapusan tenant tidak diizinkan di lingkungan production.');
+        }
+
         $tenant = Tenant::findOrFail($id);
+
+        // Double confirmation: user must type tenant ID
+        if ($request->input('confirm_name') !== $id) {
+            return redirect()->route('central.tenants.index')
+                ->with('error', "Konfirmasi gagal. Ketik tepat \"{$id}\" untuk menghapus tenant.");
+        }
+
         $tenant->delete();
 
         return redirect()->route('central.tenants.index')
-            ->with('success', "Tenant '{$id}' berhasil dihapus.");
+            ->with('success', "Tenant '{$id}' berhasil dihapus beserta database-nya.");
     }
 }

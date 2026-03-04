@@ -5,6 +5,7 @@
 .env.production
 .phpactor.json
 .phpunit.result.cache
+.sqlite
 /.fleet
 /.idea
 /.nova
@@ -19,6 +20,28 @@
 /storage/*.key
 /storage/pail
 /vendor
+/storage/framework/cache/data/
+/storage/framework/sessions/
+/storage/framework/views/
+/storage/logs/
+/storage/framework/sessions/*
+/storage/framework/views/*
+/storage/framework/cache/data/*
+/bootstrap/cache/*.php
+/node_modules
 Homestead.json
 Homestead.yaml
 Thumbs.db
+
+# AI & Agent Tools
+/.gemini
+/.agents
+/.agent
+/_agents
+/_agent
+
+# Runtime & temp
+*.cache
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*

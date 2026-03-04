@@ -40,6 +40,10 @@
             <div class="alert alert-success">{{ session('success') }}</div>
         @endif
 
+        @if(session('error'))
+            <div class="alert" style="background: rgba(220,53,69,0.15); border: 1px solid rgba(220,53,69,0.3); color: #ff6b6b;">{{ session('error') }}</div>
+        @endif
+
         <div class="actions">
             <a href="{{ route('central.register-tenant') }}">+ Tenant Baru</a>
             <a href="{{ route('central.landing') }}" class="secondary">← Beranda</a>
@@ -68,7 +72,8 @@
                         <td>{{ $tenant->nama_perusahaan ?? '-' }}</td>
                         <td>
                             @foreach($tenant->domains as $domain)
-                                <a href="http://{{ $domain->domain }}" class="domain-link" target="_blank">{{ $domain->domain }}</a>
+                                @php $fullDomain = $domain->domain . '.' . request()->getHost(); @endphp
+                                <a href="http://{{ $fullDomain }}" class="domain-link" target="_blank">{{ $fullDomain }}</a>
                             @endforeach
                         </td>
                         <td>
@@ -80,9 +85,10 @@
                         </td>
                         <td>{{ $tenant->created_at?->format('d M Y') }}</td>
                         <td>
-                            <form method="POST" action="{{ route('central.tenants.destroy', $tenant->id) }}" onsubmit="return confirm('Hapus tenant {{ $tenant->id }}? Database tenant juga akan dihapus!')">
+                            <form method="POST" action="{{ route('central.tenants.destroy', $tenant->id) }}" onsubmit="return confirmDelete(this, '{{ $tenant->id }}')">
                                 @csrf
                                 @method('DELETE')
+                                <input type="hidden" name="confirm_name" value="">
                                 <button type="submit" class="btn-delete">Hapus</button>
                             </form>
                         </td>
@@ -92,5 +98,22 @@
             </table>
         @endif
     </div>
+
+    <script>
+        function confirmDelete(form, tenantId) {
+            var input = prompt(
+                '⚠️ PERINGATAN: Menghapus tenant "' + tenantId + '" akan menghapus SELURUH database dan data!\n\n' +
+                'Tindakan ini TIDAK BISA dibatalkan.\n\n' +
+                'Ketik "' + tenantId + '" untuk konfirmasi:'
+            );
+            if (input === null) return false;
+            if (input !== tenantId) {
+                alert('Konfirmasi tidak cocok. Penghapusan dibatalkan.');
+                return false;
+            }
+            form.querySelector('input[name="confirm_name"]').value = input;
+            return true;
+        }
+    </script>
 </body>
 </html>

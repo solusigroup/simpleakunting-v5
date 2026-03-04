@@ -22,6 +22,6 @@ class PeriodeTutupBuku extends Model
 
     public function user()
     {
-        return $this->belongsTo(User::class, 'id_user', 'user_id'); // Match migration column
+        return $this->belongsTo(User::class, 'user_id', 'id_user');
     }
 }

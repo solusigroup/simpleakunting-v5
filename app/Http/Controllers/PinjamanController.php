@@ -11,12 +11,15 @@ use App\Models\Jurnal;
 use App\Models\JurnalDetail;
 use App\Models\Akun;
 use App\Models\ApprovalHistory;
+use App\Models\Cabang;
+use App\Models\UnitUsaha;
 use App\Services\PinjamanCalculator;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 
 class PinjamanController extends Controller
 {
+    use \App\Traits\CheckClosedPeriod;
     protected $calculator;
 
     public function __construct()
@@ -61,7 +64,10 @@ class PinjamanController extends Controller
         $anggotaList = Anggota::aktif()->get();
         $jenisPinjaman = JenisPinjaman::active()->get();
 
-        return view('pinjaman.create', compact('anggotaList', 'jenisPinjaman'));
+        $cabang = Cabang::orderBy('nama_cabang')->get();
+        $unitUsaha = UnitUsaha::active()->orderBy('nama_unit')->get();
+
+        return view('pinjaman.create', compact('anggotaList', 'jenisPinjaman', 'cabang', 'unitUsaha'));
     }
 
     /**
@@ -94,6 +100,8 @@ class PinjamanController extends Controller
         $validated = $request->validate([
             'id_anggota' => 'required|exists:anggota,id_anggota',
             'id_jenis_pinjaman' => 'required|exists:jenis_pinjaman,id_jenis_pinjaman',
+            'id_cabang' => 'required|exists:cabang,id',
+            'id_unit_usaha' => 'required|exists:unit_usaha,id',
             'jumlah_pinjaman' => 'required|numeric|min:1',
             'tenor' => 'required|integer|min:1',
             'metode_bunga' => 'required|in:flat,anuitas,efektif',
@@ -136,6 +144,8 @@ class PinjamanController extends Controller
                 'no_pinjaman' => $noPinjaman,
                 'id_anggota' => $validated['id_anggota'],
                 'id_jenis_pinjaman' => $validated['id_jenis_pinjaman'],
+                'id_cabang' => $validated['id_cabang'],
+                'id_unit_usaha' => $validated['id_unit_usaha'],
                 'tanggal_pengajuan' => now(),
                 'jumlah_pinjaman' => $validated['jumlah_pinjaman'],
                 'bunga_pertahun' => $jenisPinjaman->bunga_pertahun,
@@ -158,7 +168,8 @@ class PinjamanController extends Controller
                 ->with('success', 'Pengajuan pinjaman berhasil dibuat dengan nomor: ' . $noPinjaman);
         } catch (\Exception $e) {
             DB::rollBack();
-            return back()->withErrors(['error' => 'Terjadi kesalahan: ' . $e->getMessage()])->withInput();
+            \Illuminate\Support\Facades\Log::error('Pinjaman store error', ['error' => $e->getMessage(), 'user' => auth()->id()]);
+            return back()->withErrors(['error' => 'Terjadi kesalahan saat menyimpan pengajuan. Silakan coba lagi.'])->withInput();
         }
     }
 
@@ -264,7 +275,8 @@ class PinjamanController extends Controller
                 ->with('success', 'Pinjaman berhasil disubmit untuk approval.');
         } catch (\Exception $e) {
             DB::rollBack();
-            return back()->with('error', 'Gagal submit: ' . $e->getMessage());
+            \Illuminate\Support\Facades\Log::error('Pinjaman submit error', ['error' => $e->getMessage()]);
+            return back()->with('error', 'Gagal submit pengajuan. Silakan coba lagi.');
         }
     }
 
@@ -301,12 +313,14 @@ class PinjamanController extends Controller
         }
 
         $validated = $request->validate([
-            'tanggal_pencairan' => 'required|date',
+            'tanggal_pencairan' => 'required|date|before_or_equal:today',
             'akun_kas_bank' => 'required|exists:akun,kode_akun',
         ]);
 
         DB::beginTransaction();
         try {
+            // C5: Cek periode tutup buku
+            $this->validatePeriodOpen($validated['tanggal_pencairan']);
             // Calculate schedule
             $calculation = $this->calculator->calculate(
                 $pinjaman->jumlah_pinjaman,
@@ -336,6 +350,8 @@ class PinjamanController extends Controller
             $jurnal = Jurnal::create([
                 'no_transaksi' => $pinjaman->no_pinjaman . '-CAIR',
                 'tanggal' => $validated['tanggal_pencairan'],
+                'id_cabang' => $pinjaman->id_cabang,
+                'id_unit_usaha' => $pinjaman->id_unit_usaha,
                 'deskripsi' => 'Pencairan Pinjaman ' . $pinjaman->no_pinjaman . ' - ' . $anggota->nama_lengkap,
                 'sumber_jurnal' => 'Pencairan Pinjaman',
                 'is_locked' => false,
@@ -343,6 +359,9 @@ class PinjamanController extends Controller
 
             // Jurnal: Dr. Piutang Pinjaman, Cr. Kas/Bank, Cr. Pendapatan Provisi, Cr. Pendapatan Admin
             $netDisbursement = $pinjaman->jumlah_pinjaman - $pinjaman->provisi - $pinjaman->biaya_admin;
+
+            // H6: Dynamic account codes dari settings
+            $perusahaan = DB::table('perusahaan')->first();
 
             JurnalDetail::create([
                 'id_jurnal' => $jurnal->id_jurnal,
@@ -361,7 +380,7 @@ class PinjamanController extends Controller
             if ($pinjaman->provisi > 0) {
                 JurnalDetail::create([
                     'id_jurnal' => $jurnal->id_jurnal,
-                    'kode_akun' => $jenisPinjaman->akun_pendapatan_provisi ?? '4-1200',
+                    'kode_akun' => $jenisPinjaman->akun_pendapatan_provisi ?? $perusahaan->akun_pendapatan_provisi ?? '4-1200',
                     'debit' => 0,
                     'kredit' => $pinjaman->provisi,
                 ]);
@@ -370,7 +389,7 @@ class PinjamanController extends Controller
             if ($pinjaman->biaya_admin > 0) {
                 JurnalDetail::create([
                     'id_jurnal' => $jurnal->id_jurnal,
-                    'kode_akun' => $jenisPinjaman->akun_pendapatan_admin ?? '4-1300',
+                    'kode_akun' => $jenisPinjaman->akun_pendapatan_admin ?? $perusahaan->akun_pendapatan_admin ?? '4-1300',
                     'debit' => 0,
                     'kredit' => $pinjaman->biaya_admin,
                 ]);
@@ -392,7 +411,9 @@ class PinjamanController extends Controller
                 ->with('success', 'Pinjaman berhasil dicairkan.');
         } catch (\Exception $e) {
             DB::rollBack();
-            return back()->with('error', 'Gagal mencairkan pinjaman: ' . $e->getMessage());
+            \Illuminate\Support\Facades\Log::error('Pencairan error', ['error' => $e->getMessage()]);
+            $msg = str_contains($e->getMessage(), 'Periode') ? $e->getMessage() : 'Gagal mencairkan pinjaman. Silakan coba lagi.';
+            return back()->with('error', $msg);
         }
     }
 

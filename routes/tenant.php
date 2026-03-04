@@ -5,7 +5,6 @@ declare(strict_types=1);
 use Illuminate\Support\Facades\Route;
 use Stancl\Tenancy\Middleware\InitializeTenancyBySubdomain;
 use Stancl\Tenancy\Middleware\PreventAccessFromCentralDomains;
-
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\PelangganController;
@@ -27,7 +26,10 @@ use App\Http\Controllers\ManufacturingController;
 use App\Http\Controllers\AgricultureController;
 use App\Http\Controllers\AccountingPeriodeController;
 use App\Http\Controllers\CabangController;
+use App\Http\Controllers\UnitUsahaController;
 use App\Http\Controllers\KasController;
+use App\Http\Controllers\CabangSessionController;
+use App\Http\Controllers\PosController;
 
 /*
 |--------------------------------------------------------------------------
@@ -51,7 +53,7 @@ Route::middleware([
 
     Route::middleware('guest')->group(function () {
         Route::get('login', [AuthController::class, 'showLoginForm'])->name('login');
-        Route::post('login', [AuthController::class, 'login']);
+        Route::post('login', [AuthController::class, 'login'])->middleware('throttle:5,1');
     });
 
     Route::middleware('auth')->group(function () {
@@ -105,6 +107,22 @@ Route::middleware([
         });
 
         // =====================================================
+        // POINT OF SALES - Kasir, Staff, Manajer, Admin, Superuser
+        // =====================================================
+        Route::middleware('role:superuser,admin,manajer,staff,kasir')->group(function () {
+            Route::get('pos', [PosController::class, 'index'])->name('pos.index');
+            Route::get('pos/search', [PosController::class, 'searchProduct'])->name('pos.search');
+            Route::post('pos/sale', [PosController::class, 'storeSale'])->name('pos.store.sale');
+            Route::post('pos/purchase', [PosController::class, 'storePurchase'])->name('pos.store.purchase');
+            Route::get('pos/session', [PosController::class, 'sessionCreate'])->name('pos.session.create');
+            Route::post('pos/session/open', [PosController::class, 'sessionOpen'])->name('pos.session.open');
+            Route::post('pos/session/close', [PosController::class, 'sessionClose'])->name('pos.session.close');
+            Route::get('pos/receipt/{id}', [PosController::class, 'receipt'])->name('pos.receipt');
+            Route::get('pos/purchase-receipt/{id}', [PosController::class, 'purchaseReceipt'])->name('pos.purchase.receipt');
+            Route::get('pos/shift-report/{id}', [PosController::class, 'shiftReport'])->name('pos.shift.report');
+        });
+
+        // =====================================================
         // TRANSAKSI - All authenticated users
         // =====================================================
         Route::resource('penjualan', PenjualanController::class);
@@ -119,7 +137,7 @@ Route::middleware([
         // =====================================================
         // LAPORAN - Semua role (termasuk staff)
         // =====================================================
-        Route::middleware('role:superuser,admin,manajer,staff')->group(function () {
+        Route::middleware('role:superuser,admin,manajer,staff,kasir')->group(function () {
             Route::get('bukubesar', [BukuBesarController::class, 'index'])->name('bukubesar.index');
             Route::get('laporan', [LaporanController::class, 'index'])->name('laporan.index');
             Route::get('/laporan/neraca', [LaporanController::class, 'neraca'])->name('laporan.neraca');
@@ -130,6 +148,7 @@ Route::middleware([
             Route::get('/laporan/aruskas-tidak-langsung', [LaporanController::class, 'arusKasTidakLangsung'])->name('laporan.aruskas_tidak_langsung');
             Route::get('/laporan/perubahan-ekuitas', [LaporanController::class, 'perubahanEkuitas'])->name('laporan.perubahan_ekuitas');
             Route::get('/laporan/persediaan', [LaporanController::class, 'persediaan'])->name('laporan.persediaan');
+            Route::get('/laporan/mutasi-persediaan', [LaporanController::class, 'mutasiPersediaan'])->name('laporan.mutasi_persediaan');
         });
 
         // =====================================================
@@ -139,8 +158,15 @@ Route::middleware([
             Route::get('perusahaan', [PerusahaanController::class, 'edit'])->name('perusahaan.edit');
             Route::put('perusahaan', [PerusahaanController::class, 'update'])->name('perusahaan.update');
             Route::resource('users', UserController::class);
+            Route::post('users/{user}/reset-password', [UserController::class, 'resetPassword'])->name('users.reset-password');
             Route::resource('cabang', CabangController::class);
+            Route::resource('unit-usaha', UnitUsahaController::class);
+            Route::post('cabang/switch', [CabangSessionController::class, 'switch'])->name('cabang.switch');
+            Route::get('audit-trail', [\App\Http\Controllers\AuditTrailController::class, 'index'])->name('audit-trail.index');
         });
+
+        // API: Cascade dropdown unit usaha by cabang (all authenticated)
+        Route::get('api/unit-usaha/cabang/{cabangId}', [UnitUsahaController::class, 'getByCabang'])->name('api.unit-usaha.by-cabang');
 
         // =====================================================
         // KOPERASI SIMPAN PINJAM - All authenticated users

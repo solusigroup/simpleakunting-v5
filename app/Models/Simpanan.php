@@ -7,6 +7,8 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class Simpanan extends Model
 {
+    use \App\Traits\HasCabang;
+
     protected $table = 'simpanan';
     protected $primaryKey = 'id_simpanan';
 
@@ -21,6 +23,8 @@ class Simpanan extends Model
         'akun_kas_bank',
         'keterangan',
         'created_by',
+        'id_cabang',
+        'id_unit_usaha',
     ];
 
     protected $casts = [

@@ -4,10 +4,11 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use App\Traits\LogsActivity;
 
 class Persediaan extends Model
 {
-    use HasFactory;
+    use HasFactory, LogsActivity, \App\Traits\HasCabang;
 
     protected $table = 'master_persediaan';
     protected $primaryKey = 'id_barang';
@@ -26,11 +27,6 @@ class Persediaan extends Model
     public function pembelianDetails()
     {
         return $this->hasMany(PembelianDetail::class, 'id_barang');
-    }
-
-    public function cabang()
-    {
-        return $this->belongsTo(Cabang::class, 'id_cabang');
     }
 
     public function bom()

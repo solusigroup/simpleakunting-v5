@@ -65,7 +65,7 @@
                                     <option value="replace">Ganti semua data (HATI-HATI!)</option>
                                 </select>
                             </div>
-                            <button type="submit" class="btn btn-sm btn-warning w-100" onclick="return confirm('Yakin import data {{ $module['label'] }}?')">
+                            <button type="submit" class="btn btn-sm btn-warning w-100">
                                 <span data-feather="upload"></span> Import
                             </button>
                         </form>
@@ -120,5 +120,31 @@
 @push('scripts')
 <script>
     feather.replace();
+
+    // M7: Enhanced confirmation for replace mode
+    document.querySelectorAll('form[action*="import"]').forEach(function(form) {
+        form.addEventListener('submit', function(e) {
+            e.preventDefault();
+            const mode = form.querySelector('select[name="mode"]').value;
+            const moduleName = form.closest('.card').querySelector('.card-header strong').textContent.trim();
+
+            if (mode === 'replace') {
+                const confirmation = prompt(
+                    '⚠️ PERINGATAN: Mode "Ganti Semua Data" akan MENGHAPUS SELURUH data ' + moduleName + ' yang ada!\n\n' +
+                    'Pastikan Anda sudah melakukan backup data.\n\n' +
+                    'Ketik HAPUS untuk melanjutkan:'
+                );
+                if (confirmation !== 'HAPUS') {
+                    alert('Import dibatalkan. Ketik tepat "HAPUS" untuk konfirmasi.');
+                    return;
+                }
+            } else {
+                if (!confirm('Yakin import data ' + moduleName + '?')) {
+                    return;
+                }
+            }
+            form.submit();
+        });
+    });
 </script>
 @endpush

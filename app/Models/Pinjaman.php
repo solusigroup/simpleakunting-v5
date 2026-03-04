@@ -8,6 +8,8 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Pinjaman extends Model
 {
+    use \App\Traits\HasCabang;
+
     protected $table = 'pinjaman';
     protected $primaryKey = 'id_pinjaman';
 
@@ -35,6 +37,8 @@ class Pinjaman extends Model
         'akun_kas_bank',
         'keterangan',
         'created_by',
+        'id_cabang',
+        'id_unit_usaha',
     ];
 
     protected $casts = [

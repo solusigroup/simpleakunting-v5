@@ -8,11 +8,14 @@ use App\Models\Simpanan;
 use App\Models\Jurnal;
 use App\Models\JurnalDetail;
 use App\Models\Akun;
+use App\Models\Cabang;
+use App\Models\UnitUsaha;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 
 class SimpananController extends Controller
 {
+    use \App\Traits\CheckClosedPeriod;
     /**
      * Display a listing of the resource.
      */
@@ -55,7 +58,11 @@ class SimpananController extends Controller
             ->orWhere('nama_akun', 'like', '%Bank%')
             ->get();
 
-        return view('simpanan.create', compact('anggotaList', 'jenisSimpanan', 'akunKasBank'));
+        
+        $cabang = Cabang::orderBy('nama_cabang')->get();
+        $unitUsaha = UnitUsaha::active()->orderBy('nama_unit')->get();
+
+        return view('simpanan.create', compact('anggotaList', 'jenisSimpanan', 'akunKasBank', 'cabang', 'unitUsaha'));
     }
 
     /**
@@ -66,7 +73,9 @@ class SimpananController extends Controller
         $validated = $request->validate([
             'id_anggota' => 'required|exists:anggota,id_anggota',
             'id_jenis_simpanan' => 'required|exists:jenis_simpanan,id_jenis_simpanan',
-            'tanggal' => 'required|date',
+            'id_cabang' => 'required|exists:cabang,id',
+            'id_unit_usaha' => 'required|exists:unit_usaha,id',
+            'tanggal' => 'required|date|before_or_equal:today',
             'jenis_transaksi' => 'required|in:setor,tarik',
             'jumlah' => 'required|numeric|min:1',
             'akun_kas_bank' => 'required|exists:akun,kode_akun',
@@ -95,12 +104,16 @@ class SimpananController extends Controller
 
         DB::beginTransaction();
         try {
-            // Generate nomor transaksi
+            // C5: Cek periode tutup buku
+            $this->validatePeriodOpen($validated['tanggal']);
+
+            // H7: Generate nomor transaksi atomik
             $tahun = date('Y');
             $bulan = date('m');
             $prefix = "SIM-{$tahun}{$bulan}-";
             $lastSimpanan = Simpanan::where('no_transaksi', 'like', $prefix . '%')
                 ->orderBy('no_transaksi', 'desc')
+                ->lockForUpdate()
                 ->first();
             $newNumber = $lastSimpanan ? (int)substr($lastSimpanan->no_transaksi, -4) + 1 : 1;
             $validated['no_transaksi'] = $prefix . str_pad($newNumber, 4, '0', STR_PAD_LEFT);
@@ -113,6 +126,8 @@ class SimpananController extends Controller
             $jurnal = Jurnal::create([
                 'no_transaksi' => $validated['no_transaksi'],
                 'tanggal' => $validated['tanggal'],
+                'id_cabang' => $validated['id_cabang'],
+                'id_unit_usaha' => $validated['id_unit_usaha'],
                 'deskripsi' => ($validated['jenis_transaksi'] === 'setor' ? 'Setoran ' : 'Penarikan ') . 
                                $jenisSimpanan->nama_simpanan . ' - ' . $anggota->nama_lengkap,
                 'sumber_jurnal' => 'Simpanan',
@@ -159,7 +174,11 @@ class SimpananController extends Controller
                 ->with('success', 'Transaksi simpanan berhasil disimpan dengan nomor: ' . $validated['no_transaksi']);
         } catch (\Exception $e) {
             DB::rollBack();
-            return back()->withErrors(['error' => 'Terjadi kesalahan: ' . $e->getMessage()])->withInput();
+            \Illuminate\Support\Facades\Log::error('Simpanan store error', ['error' => $e->getMessage(), 'user' => auth()->id()]);
+            $msg = str_contains($e->getMessage(), 'Periode') || str_contains($e->getMessage(), 'Saldo')
+                ? $e->getMessage()
+                : 'Terjadi kesalahan saat menyimpan transaksi. Silakan coba lagi.';
+            return back()->withErrors(['error' => $msg])->withInput();
         }
     }
 
@@ -217,8 +236,9 @@ class SimpananController extends Controller
                 ->with('success', 'Transaksi simpanan berhasil dihapus.');
         } catch (\Exception $e) {
             DB::rollBack();
+            \Illuminate\Support\Facades\Log::error('Simpanan delete error', ['error' => $e->getMessage()]);
             return redirect()->route('simpanan.index')
-                ->with('error', 'Gagal menghapus transaksi: ' . $e->getMessage());
+                ->with('error', 'Gagal menghapus transaksi. Silakan coba lagi.');
         }
     }
 
@@ -235,7 +255,11 @@ class SimpananController extends Controller
             ->orWhere('nama_akun', 'like', '%Bank%')
             ->get();
 
-        return view('simpanan.setor', compact('anggotaList', 'jenisSimpanan', 'akunKasBank'));
+
+        $cabang = Cabang::orderBy('nama_cabang')->get();
+        $unitUsaha = UnitUsaha::active()->orderBy('nama_unit')->get();
+
+        return view('simpanan.setor', compact('anggotaList', 'jenisSimpanan', 'akunKasBank', 'cabang', 'unitUsaha'));
     }
 
     /**
@@ -251,7 +275,11 @@ class SimpananController extends Controller
             ->orWhere('nama_akun', 'like', '%Bank%')
             ->get();
 
-        return view('simpanan.tarik', compact('anggotaList', 'jenisSimpanan', 'akunKasBank'));
+
+        $cabang = Cabang::orderBy('nama_cabang')->get();
+        $unitUsaha = UnitUsaha::active()->orderBy('nama_unit')->get();
+
+        return view('simpanan.tarik', compact('anggotaList', 'jenisSimpanan', 'akunKasBank', 'cabang', 'unitUsaha'));
     }
 
     /**

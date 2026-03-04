@@ -83,6 +83,10 @@ class DatabaseController extends Controller
             abort(403, 'Akses ditolak.');
         }
 
+        if (!app()->environment('local')) {
+            return back()->with('error', 'Fitur ini hanya tersedia di environment local/development.');
+        }
+
         $request->validate([
             'confirmation' => 'required|in:RESET DATABASE',
         ]);
@@ -104,6 +108,10 @@ class DatabaseController extends Controller
     {
         if (!$this->isSuperuser()) {
             abort(403, 'Akses ditolak.');
+        }
+
+        if (!app()->environment('local')) {
+            return back()->with('error', 'Fitur ini hanya tersedia di environment local/development.');
         }
 
         $request->validate([

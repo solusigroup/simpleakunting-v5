@@ -22,6 +22,14 @@
                             <td>: {{ \Carbon\Carbon::parse($jurnal->tanggal)->format('d F Y') }}</td>
                         </tr>
                         <tr>
+                            <td><strong>Cabang</strong></td>
+                            <td>: {{ $jurnal->cabang->nama_cabang ?? '-' }}</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Unit Usaha</strong></td>
+                            <td>: {{ $jurnal->unitUsaha->nama_unit ?? '-' }}</td>
+                        </tr>
+                        <tr>
                             <td><strong>Keterangan</strong></td>
                             <td>: {{ $jurnal->deskripsi }}</td>
                         </tr>

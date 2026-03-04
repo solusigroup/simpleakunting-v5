@@ -56,13 +56,13 @@ class AccountingPeriodeController extends Controller
             $pendapatanDetails = JurnalDetail::whereHas('jurnal', function($q) use ($startDate, $endDate) {
                 $q->whereBetween('tanggal', [$startDate, $endDate]);
             })->whereHas('akun', function($q) {
-                $q->where('tipe_akun', 'like', 'Pendapatan%');
+                $q->whereIn('tipe_akun', ['Pendapatan', 'Pendapatan Lainnya']);
             })->get();
 
             $bebanDetails = JurnalDetail::whereHas('jurnal', function($q) use ($startDate, $endDate) {
                 $q->whereBetween('tanggal', [$startDate, $endDate]);
             })->whereHas('akun', function($q) {
-                $q->where('tipe_akun', 'like', 'Beban%');
+                $q->whereIn('tipe_akun', ['HPP', 'Beban', 'Beban Lainnya']);
             })->get();
 
             // Calculate Totals per Account to zero them out
@@ -91,7 +91,7 @@ class AccountingPeriodeController extends Controller
             $journalEntries = [];
 
             // Process Revenue
-            $revenueAccounts = Akun::where('tipe_akun', 'like', 'Pendapatan%')->get();
+            $revenueAccounts = Akun::whereIn('tipe_akun', ['Pendapatan', 'Pendapatan Lainnya'])->get();
             foreach ($revenueAccounts as $akun) {
                 // Get balance for this period
                 $kredit = JurnalDetail::where('kode_akun', $akun->kode_akun)
@@ -117,7 +117,7 @@ class AccountingPeriodeController extends Controller
             }
 
             // Process Expenses
-            $expenseAccounts = Akun::where('tipe_akun', 'like', 'Beban%')->get();
+            $expenseAccounts = Akun::whereIn('tipe_akun', ['HPP', 'Beban', 'Beban Lainnya'])->get();
             foreach ($expenseAccounts as $akun) {
                 $debit = JurnalDetail::where('kode_akun', $akun->kode_akun)
                     ->whereHas('jurnal', function($q) use ($startDate, $endDate) {
@@ -143,15 +143,10 @@ class AccountingPeriodeController extends Controller
 
             $labaBersih = $totalPendapatan - $totalBeban;
 
-            // 2. Create Closing Journal
-            // ID Akun Ikhtisar Laba Rugi
-            $akunIkhtisar = '3-90000'; // Example placeholder
-            
-            // ID Akun Laba Ditahan
-            $akunLabaDitahan = '3-20000'; // Example placeholder
-
-            // Need to verify these accounts exist or create them/ask user settings
-            // For now, I'll rely on seed data or assume they exist. To be safe, look them up.
+            // H6: Dynamic account codes dari settings
+            $perusahaan = DB::table('perusahaan')->first();
+            $akunIkhtisar = $perusahaan->akun_ikhtisar_laba_rugi ?? '3-90000';
+            $akunLabaDitahan = $perusahaan->akun_laba_ditahan ?? '3-20000';
             
             $jurnal = Jurnal::create([
                 'no_transaksi' => 'CLOSING-' . $request->tahun . '-' . $request->bulan,

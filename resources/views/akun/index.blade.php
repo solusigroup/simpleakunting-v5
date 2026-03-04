@@ -31,6 +31,8 @@
                     <th scope="col">Nama Akun</th>
                     <th scope="col">Tipe</th>
                     <th scope="col">Saldo Normal</th>
+                    <th scope="col" class="text-end">Saldo Awal</th>
+                    <th scope="col" class="text-end">Saldo Terkini</th>
                     <th scope="col">Aksi</th>
                 </tr>
             </thead>
@@ -45,6 +47,12 @@
                                 {{ $a->saldo_normal }}
                             </span>
                         </td>
+                        <td class="text-end">
+                            Rp {{ number_format($a->saldo_awal ?? 0, 0, ',', '.') }}
+                        </td>
+                        <td class="text-end fw-bold {{ $a->saldo_terkini < 0 ? 'text-danger' : '' }}">
+                            Rp {{ number_format($a->saldo_terkini, 0, ',', '.') }}
+                        </td>
                         <td>
                             <a href="{{ route('akun.edit', $a->kode_akun) }}" class="btn btn-sm btn-warning">Edit</a>
                             <form action="{{ route('akun.destroy', $a->kode_akun) }}" method="POST" class="d-inline" onsubmit="return confirm('Yakin ingin menghapus akun ini?')">
@@ -56,7 +64,7 @@
                     </tr>
                 @empty
                     <tr>
-                        <td colspan="5" class="text-center">Belum ada data akun.</td>
+                        <td colspan="7" class="text-center">Belum ada data akun.</td>
                     </tr>
                 @endforelse
             </tbody>

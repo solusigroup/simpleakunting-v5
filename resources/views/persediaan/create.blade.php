@@ -56,7 +56,7 @@
                             <select class="form-select @error('jenis_barang') is-invalid @enderror" id="jenis_barang" name="jenis_barang" required>
                                 <option value="">-- Pilih Kategori --</option>
                                 {{-- Barang Dagangan tersedia untuk semua jenis usaha kecuali jasa --}}
-                                <option value="barang_dagangan" {{ old('jenis_barang') == 'barang_dagangan' ? 'selected' : '' }}>Persediaan Barang Dagangan</option>
+                                <option value="barang_dagang" {{ old('jenis_barang') == 'barang_dagang' ? 'selected' : '' }}>Persediaan Barang Dagangan</option>
                                 
                                 @if(in_array($jenisUsaha ?? 'dagang', ['pertanian', 'multi']))
                                 <option value="aset_biologis" {{ old('jenis_barang') == 'aset_biologis' ? 'selected' : '' }}>Persediaan Aset Biologis (PSAK 69)</option>

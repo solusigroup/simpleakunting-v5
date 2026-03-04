@@ -35,6 +35,31 @@
                         @enderror
                     </div>
 
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label class="form-label">Cabang <span class="text-danger">*</span></label>
+                                <select name="id_cabang" id="id_cabang" class="form-select @error('id_cabang') is-invalid @enderror" required>
+                                    <option value="">Pilih Cabang...</option>
+                                    @foreach($cabang as $c)
+                                        <option value="{{ $c->id }}" {{ old('id_cabang', session('active_cabang') ?: auth()->user()->id_cabang) == $c->id ? 'selected' : '' }}>{{ $c->kode_cabang }} - {{ $c->nama_cabang }}</option>
+                                    @endforeach
+                                </select>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label class="form-label">Unit Usaha <span class="text-danger">*</span></label>
+                                <select name="id_unit_usaha" id="id_unit_usaha" class="form-select @error('id_unit_usaha') is-invalid @enderror" required>
+                                    <option value="">Pilih Unit...</option>
+                                    @foreach($unitUsaha as $u)
+                                        <option value="{{ $u->id }}" data-cabang="{{ $u->id_cabang }}" {{ old('id_unit_usaha', session('active_unit')) == $u->id ? 'selected' : '' }}>{{ $u->kode_unit }} - {{ $u->nama_unit }}</option>
+                                    @endforeach
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+
                     <div class="mb-3">
                         <label class="form-label">Jenis Pinjaman <span class="text-danger">*</span></label>
                         <select name="id_jenis_pinjaman" class="form-select @error('id_jenis_pinjaman') is-invalid @enderror" required id="jenisPinjamanSelect">
@@ -268,5 +293,26 @@
             alert('Gagal melakukan simulasi: ' + error.message);
         });
     });
+
+    // Cascade Cabang -> Unit Usaha
+    document.getElementById('id_cabang').addEventListener('change', function() {
+        let cabangId = this.value;
+        let unitSelect = document.getElementById('id_unit_usaha');
+        let units = unitSelect.querySelectorAll('option');
+        
+        unitSelect.value = "";
+        units.forEach(opt => {
+            if (opt.value === "") return;
+            if (opt.getAttribute('data-cabang') == cabangId || !cabangId) {
+                opt.style.display = "";
+            } else {
+                opt.style.display = "none";
+            }
+        });
+    });
+
+    if (document.getElementById('id_cabang').value) {
+        document.getElementById('id_cabang').dispatchEvent(new Event('change'));
+    }
 </script>
 @endpush

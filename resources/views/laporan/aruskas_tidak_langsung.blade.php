@@ -11,15 +11,38 @@
     <div class="card mb-4">
         <div class="card-body">
             <form action="{{ route('laporan.aruskas_tidak_langsung') }}" method="GET" class="row g-3 align-items-end">
-                <div class="col-md-4">
+                <div class="col-md-3">
                     <label for="start_date" class="form-label">Dari Tanggal</label>
                     <input type="date" class="form-control" id="start_date" name="start_date" value="{{ $startDate }}">
                 </div>
-                <div class="col-md-4">
+                <div class="col-md-3">
                     <label for="end_date" class="form-label">Sampai Tanggal</label>
                     <input type="date" class="form-control" id="end_date" name="end_date" value="{{ $endDate }}">
                 </div>
-                <div class="col-md-4">
+                <div class="col-md-3">
+                    <label for="id_cabang" class="form-label">Cabang</label>
+                    <select name="id_cabang" id="id_cabang" class="form-select">
+                        <option value="">Semua Cabang</option>
+                        @foreach($cabang as $c)
+                            <option value="{{ $c->id }}" {{ request('id_cabang', session('active_cabang')) == $c->id ? 'selected' : '' }}>
+                                {{ $c->nama_cabang }}
+                            </option>
+                        @endforeach
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <label for="id_unit_usaha" class="form-label">Unit Usaha</label>
+                    <select name="id_unit_usaha" id="id_unit_usaha" class="form-select">
+                        <option value="">Semua Unit</option>
+                        @foreach($unitUsaha as $u)
+                            <option value="{{ $u->id }}" data-cabang="{{ $u->id_cabang }}" 
+                                {{ request('id_unit_usaha', session('active_unit')) == $u->id ? 'selected' : '' }}>
+                                {{ $u->nama_unit }}
+                            </option>
+                        @endforeach
+                    </select>
+                </div>
+                <div class="col-md-12 d-flex gap-2 justify-content-end mt-2">
                     <button type="submit" class="btn btn-primary">Tampilkan</button>
                     <a href="{{ route('laporan.aruskas_tidak_langsung') }}" class="btn btn-secondary">Reset</a>
                 </div>
@@ -127,3 +150,38 @@
         </div>
     </div>
 @endsection
+
+@push('scripts')
+<script>
+    document.getElementById('id_cabang').addEventListener('change', function() {
+        let cabangId = this.value;
+        let unitSelect = document.getElementById('id_unit_usaha');
+        let units = unitSelect.querySelectorAll('option');
+        
+        unitSelect.value = "";
+        units.forEach(opt => {
+            if (opt.value === "") return;
+            if (opt.getAttribute('data-cabang') == cabangId || !cabangId) {
+                opt.style.display = "";
+            } else {
+                opt.style.display = "none";
+            }
+        });
+    });
+
+    // Trigger on load
+    if (document.getElementById('id_cabang').value) {
+        let cabangId = document.getElementById('id_cabang').value;
+        let unitSelect = document.getElementById('id_unit_usaha');
+        
+        unitSelect.querySelectorAll('option').forEach(opt => {
+            if (opt.value === "") return;
+            if (opt.getAttribute('data-cabang') == cabangId) {
+                opt.style.display = "";
+            } else {
+                opt.style.display = "none";
+            }
+        });
+    }
+</script>
+@endpush

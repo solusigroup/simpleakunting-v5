@@ -7,6 +7,8 @@ use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\Hash;
 
+use Illuminate\Support\Str;
+
 class DatabaseSeeder extends Seeder
 {
     use WithoutModelEvents;
@@ -18,12 +20,15 @@ class DatabaseSeeder extends Seeder
     {
         // Create default superuser if not exists
         if (!User::where('nama_user', 'admin')->exists()) {
+            $defaultPassword = Str::random(12);
             User::create([
                 'nama_user' => 'admin',
-                'password_hash' => Hash::make('admin123'),
+                'password_hash' => Hash::make($defaultPassword),
                 'role' => 'superuser',
                 'jabatan' => 'Administrator',
             ]);
+            $this->command->info("Default admin created. Password: {$defaultPassword}");
+            $this->command->warn("⚠️  Segera ganti password ini setelah login pertama!");
         }
 
         $this->call([

@@ -12,10 +12,12 @@ use Illuminate\Support\Facades\DB;
 class PembayaranController extends Controller
 {
     use \App\Traits\CheckSaldoTrait;
+    use \App\Traits\CheckClosedPeriod;
 
     public function index()
     {
-        $pembayaran = Jurnal::where('sumber_jurnal', 'Pengeluaran Kas')
+        $pembayaran = Jurnal::with(['cabang', 'unitUsaha', 'details'])
+            ->where('sumber_jurnal', 'Pengeluaran Kas')
             ->orderBy('tanggal', 'desc')
             ->orderBy('created_at', 'desc')
             ->paginate(20);
@@ -47,7 +49,7 @@ class PembayaranController extends Controller
     {
         $request->validate([
             'no_transaksi' => 'required|unique:jurnal_umum,no_transaksi',
-            'tanggal' => 'required|date',
+            'tanggal' => 'required|date|before_or_equal:today',
             'akun_kas' => 'required|exists:akun,kode_akun', // Kredit
             'id_pemasok' => 'nullable|exists:pemasok,id_pemasok',
             'keterangan' => 'required|string',
@@ -59,6 +61,17 @@ class PembayaranController extends Controller
         try {
             DB::beginTransaction();
 
+            // C3: Cek periode tutup buku
+            $this->validatePeriodOpen($request->tanggal);
+
+            // H5: Generate no_transaksi atomik
+            $lastTrans = Jurnal::where('sumber_jurnal', 'Pengeluaran Kas')->orderBy('id_jurnal', 'desc')->lockForUpdate()->first();
+            $nextNo = 1;
+            if ($lastTrans && preg_match('/CD-(\d+)/', $lastTrans->no_transaksi, $matches)) {
+                $nextNo = (int)$matches[1] + 1;
+            }
+            $noTransaksi = 'CD-' . str_pad($nextNo, 5, '0', STR_PAD_LEFT);
+
             $totalBayar = collect($request->details)->sum('jumlah');
 
             // Cek Saldo
@@ -69,7 +82,7 @@ class PembayaranController extends Controller
 
             // 1. Buat Jurnal Header
             $jurnal = Jurnal::create([
-                'no_transaksi' => $request->no_transaksi,
+                'no_transaksi' => $noTransaksi,
                 'tanggal' => $request->tanggal,
                 'deskripsi' => $request->keterangan,
                 'sumber_jurnal' => 'Pengeluaran Kas',
@@ -109,13 +122,16 @@ class PembayaranController extends Controller
 
         } catch (\Exception $e) {
             DB::rollBack();
-            return back()->with('error', 'Gagal menyimpan transaksi: ' . $e->getMessage())->withInput();
+            $msg = str_contains($e->getMessage(), 'Periode') || str_contains($e->getMessage(), 'Saldo')
+                ? $e->getMessage()
+                : 'Gagal menyimpan transaksi. Silakan coba lagi.';
+            return back()->with('error', $msg)->withInput();
         }
     }
 
     public function show($id)
     {
-        $jurnal = Jurnal::with('details.akun')->findOrFail($id);
+        $jurnal = Jurnal::with(['details.akun', 'cabang', 'unitUsaha'])->findOrFail($id);
         return view('pembayaran.show', compact('jurnal'));
     }
 }

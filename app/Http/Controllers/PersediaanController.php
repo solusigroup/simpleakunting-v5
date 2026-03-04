@@ -43,7 +43,7 @@ class PersediaanController extends Controller
             'akun_persediaan' => 'nullable|string|exists:akun,kode_akun',
             'akun_hpp' => 'nullable|string|exists:akun,kode_akun',
             'akun_penjualan' => 'nullable|string|exists:akun,kode_akun',
-            'jenis_barang' => 'nullable|string|in:barang_dagangan,aset_biologis,bahan_baku,barang_dalam_proses,barang_jadi',
+            'jenis_barang' => 'nullable|string|in:barang_dagang,aset_biologis,bahan_baku,barang_dalam_proses,barang_jadi',
         ]);
 
         $validatedData['stok_saat_ini'] = $validatedData['stok_awal'];
@@ -91,7 +91,7 @@ class PersediaanController extends Controller
             'akun_persediaan' => 'nullable|string|exists:akun,kode_akun',
             'akun_hpp' => 'nullable|string|exists:akun,kode_akun',
             'akun_penjualan' => 'nullable|string|exists:akun,kode_akun',
-            'jenis_barang' => 'nullable|string|in:barang_dagangan,aset_biologis,bahan_baku,barang_dalam_proses,barang_jadi',
+            'jenis_barang' => 'nullable|string|in:barang_dagang,aset_biologis,bahan_baku,barang_dalam_proses,barang_jadi',
         ]);
 
         DB::transaction(function () use ($validatedData, $persediaan) {

@@ -90,7 +90,7 @@
 
 @push('scripts')
 <script>
-    let akunData = {!! json_encode($akunBeban) !!};
+    let akunData = @json($akunBeban);
     let rowCount = 0;
 
     function formatRupiah(angka) {

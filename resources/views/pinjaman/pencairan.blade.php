@@ -30,6 +30,10 @@
                     <strong>{{ $pinjaman->jenisPinjaman->nama_pinjaman }}</strong>
                 </li>
                 <li class="list-group-item d-flex justify-content-between">
+                    <span>Unit:</span>
+                    <strong>{{ $pinjaman->unitUsaha->nama_unit ?? '-' }} ({{ $pinjaman->cabang->nama_cabang ?? '-' }})</strong>
+                </li>
+                <li class="list-group-item d-flex justify-content-between">
                     <span>Pokok:</span>
                     <strong class="text-primary fs-5">Rp {{ number_format($pinjaman->jumlah_pinjaman, 0, ',', '.') }}</strong>
                 </li>

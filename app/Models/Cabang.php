@@ -23,6 +23,11 @@ class Cabang extends Model
         return $this->hasMany(User::class, 'id_cabang');
     }
 
+    public function unitUsaha()
+    {
+        return $this->hasMany(UnitUsaha::class, 'id_cabang');
+    }
+
     public function inventories()
     {
         return $this->hasMany(Persediaan::class, 'id_cabang', 'id_barang'); // Note: This might need a pivot table or adjustment if inventory is strictly per branch. For now assuming simple relation or field.
