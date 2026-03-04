@@ -47,14 +47,14 @@
 
         <section class="hero">
             <h1>Platform Akuntansi <em>Multi-Tenant</em></h1>
-            <p>Kelola akuntansi banyak perusahaan dari satu platform. Setiap perusahaan mendapatkan database terpisah, keamanan tinggi, dan fitur lengkap.</p>
+            <p>Mengelola akuntansi banyak perusahaan dari satu platform. Setiap perusahaan mendapatkan database terpisah, keamanan tinggi, dan fitur lengkap.</p>
             <a href="{{ route('central.register-tenant') }}" class="cta-btn">Daftarkan Perusahaan Anda →</a>
         </section>
 
         <section class="features">
             <div class="feature-card">
                 <h3>📊 Akuntansi Lengkap</h3>
-                <p>Jurnal, Buku Besar, Neraca, Laba Rugi, Arus Kas, dan laporan keuangan lainnya sesuai SAK.</p>
+                <p>Point of Sales, Jurnal, Buku Besar, Neraca, Laba Rugi, Arus Kas, dan laporan keuangan lainnya sesuai SAK.</p>
             </div>
             <div class="feature-card">
                 <h3>🔒 Isolasi Data</h3>
@@ -67,7 +67,7 @@
         </section>
 
         <footer class="footer">
-            &copy; {{ date('Y') }} SimpleAkunting. All rights reserved.
+            &copy; {{ date('Y') }} SimpleAkunting dibuat oleh Kurniawan dengan ❤️ untuk membantu bisnis lebih berkembang. All rights reserved.
         </footer>
     </div>
 </body>
