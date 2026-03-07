@@ -208,7 +208,13 @@ if (config('app.tenancy_enabled')) {
             Route::resource('users', UserController::class);
             Route::post('users/{user}/reset-password', [UserController::class, 'resetPassword'])->name('users.reset-password');
             Route::resource('cabang', CabangController::class);
+            Route::resource('unit-usaha', UnitUsahaController::class);
+            Route::post('cabang/switch', [\App\Http\Controllers\CabangSessionController::class, 'switch'])->name('cabang.switch');
+            Route::get('audit-trail', [\App\Http\Controllers\AuditTrailController::class, 'index'])->name('audit-trail.index');
         });
+
+        // API: Cascade dropdown unit usaha by cabang (all authenticated)
+        Route::get('api/unit-usaha/cabang/{cabangId}', [UnitUsahaController::class, 'getByCabang'])->name('api.unit-usaha.by-cabang');
 
         // =====================================================
         // KOPERASI SIMPAN PINJAM - Staff level and above
