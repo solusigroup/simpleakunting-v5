@@ -69,6 +69,19 @@ return [
 
     /*
     |--------------------------------------------------------------------------
+    | Tenant Base Domain
+    |--------------------------------------------------------------------------
+    |
+    | Domain induk yang digunakan untuk membentuk subdomain tenant.
+    | Contoh: jika nilainya "simpleakunting-v5.test", maka tenant
+    | "demo" akan diakses melalui "demo.simpleakunting-v5.test".
+    |
+    */
+
+    'tenant_base_domain' => env('TENANT_BASE_DOMAIN', 'localhost'),
+
+    /*
+    |--------------------------------------------------------------------------
     | Application Timezone
     |--------------------------------------------------------------------------
     |
@@ -78,7 +91,7 @@ return [
     |
     */
 
-    'timezone' => 'UTC',
+    'timezone' => 'Asia/Jakarta',
 
     /*
     |--------------------------------------------------------------------------

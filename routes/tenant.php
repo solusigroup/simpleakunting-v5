@@ -123,16 +123,18 @@ Route::middleware([
         });
 
         // =====================================================
-        // TRANSAKSI - All authenticated users
+        // TRANSAKSI - Staff level and above
         // =====================================================
-        Route::resource('penjualan', PenjualanController::class);
-        Route::resource('pembelian', PembelianController::class);
-        Route::resource('jurnal', JurnalController::class);
-        Route::resource('penerimaan', PenerimaanController::class);
-        Route::resource('pembayaran', PembayaranController::class);
-        Route::get('kas', [KasController::class, 'index'])->name('kas.index');
-        Route::get('kas/transfer', [KasController::class, 'transfer'])->name('kas.transfer');
-        Route::post('kas/transfer', [KasController::class, 'storeTransfer'])->name('kas.storeTransfer');
+        Route::middleware('role:superuser,admin,manajer,staff')->group(function () {
+            Route::resource('penjualan', PenjualanController::class);
+            Route::resource('pembelian', PembelianController::class);
+            Route::resource('jurnal', JurnalController::class);
+            Route::resource('penerimaan', PenerimaanController::class);
+            Route::resource('pembayaran', PembayaranController::class);
+            Route::get('kas', [KasController::class, 'index'])->name('kas.index');
+            Route::get('kas/transfer', [KasController::class, 'transfer'])->name('kas.transfer');
+            Route::post('kas/transfer', [KasController::class, 'storeTransfer'])->name('kas.storeTransfer');
+        });
 
         // =====================================================
         // LAPORAN - Semua role (termasuk staff)
@@ -169,26 +171,27 @@ Route::middleware([
         Route::get('api/unit-usaha/cabang/{cabangId}', [UnitUsahaController::class, 'getByCabang'])->name('api.unit-usaha.by-cabang');
 
         // =====================================================
-        // KOPERASI SIMPAN PINJAM - All authenticated users
+        // KOPERASI SIMPAN PINJAM - Staff level and above
         // =====================================================
-        
-        Route::resource('anggota', \App\Http\Controllers\AnggotaController::class);
-        Route::get('anggota/{id}/kartu', [\App\Http\Controllers\AnggotaController::class, 'kartu'])->name('anggota.kartu');
+        Route::middleware('role:superuser,admin,manajer,staff')->group(function () {
+            Route::resource('anggota', \App\Http\Controllers\AnggotaController::class);
+            Route::get('anggota/{id}/kartu', [\App\Http\Controllers\AnggotaController::class, 'kartu'])->name('anggota.kartu');
 
-        Route::resource('simpanan', \App\Http\Controllers\SimpananController::class);
-        Route::get('simpanan-setor', [\App\Http\Controllers\SimpananController::class, 'setor'])->name('simpanan.setor');
-        Route::get('simpanan-tarik', [\App\Http\Controllers\SimpananController::class, 'tarik'])->name('simpanan.tarik');
-        Route::get('simpanan-kartu/{id_anggota}', [\App\Http\Controllers\SimpananController::class, 'kartu'])->name('simpanan.kartu');
+            Route::resource('simpanan', \App\Http\Controllers\SimpananController::class);
+            Route::get('simpanan-setor', [\App\Http\Controllers\SimpananController::class, 'setor'])->name('simpanan.setor');
+            Route::get('simpanan-tarik', [\App\Http\Controllers\SimpananController::class, 'tarik'])->name('simpanan.tarik');
+            Route::get('simpanan-kartu/{id_anggota}', [\App\Http\Controllers\SimpananController::class, 'kartu'])->name('simpanan.kartu');
 
-        Route::post('pinjaman/simulasi', [\App\Http\Controllers\PinjamanController::class, 'simulasi'])->name('pinjaman.simulasi');
-        Route::resource('pinjaman', \App\Http\Controllers\PinjamanController::class);
-        Route::post('pinjaman/{id}/submit', [\App\Http\Controllers\PinjamanController::class, 'submit'])->name('pinjaman.submit');
-        Route::get('pinjaman/{id}/pencairan', [\App\Http\Controllers\PinjamanController::class, 'pencairanForm'])->name('pinjaman.pencairan');
-        Route::post('pinjaman/{id}/cairkan', [\App\Http\Controllers\PinjamanController::class, 'cairkan'])->name('pinjaman.cairkan');
-        Route::get('pinjaman/{id}/angsuran', [\App\Http\Controllers\PinjamanController::class, 'angsuranForm'])->name('pinjaman.angsuran');
-        Route::post('pinjaman/{id}/bayar', [\App\Http\Controllers\PinjamanController::class, 'bayarAngsuran'])->name('pinjaman.bayar');
-        Route::get('pinjaman/{id}/pelunasan', [\App\Http\Controllers\PinjamanController::class, 'pelunasanForm'])->name('pinjaman.pelunasan');
-        Route::post('pinjaman/{id}/lunasi', [\App\Http\Controllers\PinjamanController::class, 'lunasi'])->name('pinjaman.lunasi');
+            Route::post('pinjaman/simulasi', [\App\Http\Controllers\PinjamanController::class, 'simulasi'])->name('pinjaman.simulasi');
+            Route::resource('pinjaman', \App\Http\Controllers\PinjamanController::class);
+            Route::post('pinjaman/{id}/submit', [\App\Http\Controllers\PinjamanController::class, 'submit'])->name('pinjaman.submit');
+            Route::get('pinjaman/{id}/pencairan', [\App\Http\Controllers\PinjamanController::class, 'pencairanForm'])->name('pinjaman.pencairan');
+            Route::post('pinjaman/{id}/cairkan', [\App\Http\Controllers\PinjamanController::class, 'cairkan'])->name('pinjaman.cairkan');
+            Route::get('pinjaman/{id}/angsuran', [\App\Http\Controllers\PinjamanController::class, 'angsuranForm'])->name('pinjaman.angsuran');
+            Route::post('pinjaman/{id}/bayar', [\App\Http\Controllers\PinjamanController::class, 'bayarAngsuran'])->name('pinjaman.bayar');
+            Route::get('pinjaman/{id}/pelunasan', [\App\Http\Controllers\PinjamanController::class, 'pelunasanForm'])->name('pinjaman.pelunasan');
+            Route::post('pinjaman/{id}/lunasi', [\App\Http\Controllers\PinjamanController::class, 'lunasi'])->name('pinjaman.lunasi');
+        });
 
         Route::middleware('role:superuser,admin,manajer')->group(function () {
             Route::get('approval', [\App\Http\Controllers\ApprovalController::class, 'inbox'])->name('approval.inbox');

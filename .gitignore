@@ -45,3 +45,12 @@ Thumbs.db
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
+
+# Development / debug files (do not deploy)
+composer-setup.php
+composer.phar
+database_schema.sql
+setup_db.sh
+toArray())
+laravel
+create_admin.php

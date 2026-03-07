@@ -9,6 +9,18 @@ use Illuminate\Support\Facades\DB;
 class DatabaseController extends Controller
 {
     /**
+     * Whitelist of allowed seeder classes.
+     * Only these seeders can be executed via the web interface.
+     */
+    private const ALLOWED_SEEDERS = [
+        'DatabaseSeeder',
+        'TenantDatabaseSeeder',
+        'Database\Seeders\DatabaseSeeder',
+        'Database\Seeders\TenantDatabaseSeeder',
+        'Database\Seeders\CoaSeeder',
+    ];
+
+    /**
      * Check if user is superuser
      */
     private function isSuperuser()
@@ -18,12 +30,28 @@ class DatabaseController extends Controller
     }
 
     /**
+     * Guard: block all destructive operations in production.
+     */
+    private function blockInProduction(): bool
+    {
+        return app()->environment('production');
+    }
+
+    /**
      * Show database management page
      */
     public function index()
     {
         if (!$this->isSuperuser()) {
             abort(403, 'Akses ditolak. Hanya superuser yang dapat mengakses fitur ini.');
+        }
+
+        if ($this->blockInProduction()) {
+            return view('database.index', [
+                'tableInfo' => [],
+                'dbName' => config('database.connections.mysql.database'),
+                'productionBlocked' => true,
+            ]);
         }
 
         // Get database info
@@ -50,6 +78,10 @@ class DatabaseController extends Controller
     {
         if (!$this->isSuperuser()) {
             abort(403, 'Akses ditolak.');
+        }
+
+        if ($this->blockInProduction()) {
+            return back()->with('error', 'Fitur ini tidak tersedia di environment production.');
         }
 
         $request->validate([
@@ -83,8 +115,8 @@ class DatabaseController extends Controller
             abort(403, 'Akses ditolak.');
         }
 
-        if (!app()->environment('local')) {
-            return back()->with('error', 'Fitur ini hanya tersedia di environment local/development.');
+        if ($this->blockInProduction()) {
+            return back()->with('error', 'Fitur ini tidak tersedia di environment production.');
         }
 
         $request->validate([
@@ -110,8 +142,8 @@ class DatabaseController extends Controller
             abort(403, 'Akses ditolak.');
         }
 
-        if (!app()->environment('local')) {
-            return back()->with('error', 'Fitur ini hanya tersedia di environment local/development.');
+        if ($this->blockInProduction()) {
+            return back()->with('error', 'Fitur ini tidak tersedia di environment production.');
         }
 
         $request->validate([
@@ -146,7 +178,7 @@ class DatabaseController extends Controller
     }
 
     /**
-     * Run seeders
+     * Run seeders (with whitelist validation)
      */
     public function seed(Request $request)
     {
@@ -154,7 +186,16 @@ class DatabaseController extends Controller
             abort(403, 'Akses ditolak.');
         }
 
+        if ($this->blockInProduction()) {
+            return back()->with('error', 'Fitur ini tidak tersedia di environment production.');
+        }
+
         $seeder = $request->input('seeder', 'DatabaseSeeder');
+
+        // Whitelist validation — prevent arbitrary class execution
+        if (!in_array($seeder, self::ALLOWED_SEEDERS)) {
+            abort(403, 'Seeder "' . e($seeder) . '" tidak diizinkan. Hanya seeder yang terdaftar yang dapat dijalankan.');
+        }
 
         try {
             if ($seeder === 'DatabaseSeeder') {

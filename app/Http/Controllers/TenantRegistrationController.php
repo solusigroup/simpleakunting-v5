@@ -2,10 +2,9 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Requests\StoreTenantRequest;
 use App\Models\Tenant;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Hash;
-use Illuminate\Support\Str;
 
 class TenantRegistrationController extends Controller
 {
@@ -18,30 +17,32 @@ class TenantRegistrationController extends Controller
     }
 
     /**
-     * Create a new tenant.
+     * Simpan tenant baru.
+     * Jika sampai di method ini, data dipastikan SUDAH VALID & AMAN
+     * berkat StoreTenantRequest.
+     *
+     * CATATAN: Tidak menggunakan DB::transaction() karena Tenant::create()
+     * dari stancl/tenancy secara internal membuat database baru, switch
+     * koneksi, dan menjalankan migrasi — yang akan mengacaukan transaksi luar.
      */
-    public function register(Request $request)
+    public function store(StoreTenantRequest $request)
     {
-        $validated = $request->validate([
-            'tenant_id' => ['required', 'string', 'max:50', 'alpha_dash', 'unique:tenants,id'],
-            'nama_perusahaan' => ['required', 'string', 'max:255'],
-            'email' => ['nullable', 'email', 'max:255'],
-        ]);
+        $validated = $request->validated();
 
         $tenant = Tenant::create([
-            'id' => Str::lower($validated['tenant_id']),
-            'nama_perusahaan' => $validated['nama_perusahaan'],
-            'email' => $validated['email'] ?? null,
+            'id'               => $validated['tenant_id'], // Sudah di-lowercase otomatis oleh Request
+            'nama_perusahaan'  => $validated['nama_perusahaan'],
+            'email'            => $validated['email'] ?? null,
         ]);
 
-        // Create domain (subdomain only — InitializeTenancyBySubdomain resolves by subdomain part)
         $tenant->domains()->create([
+            // Simpan subdomain saja — InitializeTenancyBySubdomain akan
+            // me-resolve subdomain dari request host secara otomatis.
             'domain' => $validated['tenant_id'],
         ]);
 
-        $centralDomain = $request->getHost();
         return redirect()->route('central.tenants.index')
-            ->with('success', "Tenant '{$validated['nama_perusahaan']}' berhasil dibuat! Akses via: {$validated['tenant_id']}.{$centralDomain}");
+            ->with('success', "Tenant '{$validated['nama_perusahaan']}' berhasil dibuat!");
     }
 
     /**

@@ -61,10 +61,17 @@ if (config('app.tenancy_enabled')) {
                 return view('central.landing');
             })->name('central.landing');
 
-            // Tenant Registration (admin only via central)
-            Route::middleware('web')->group(function () {
+            // Central Admin Login
+            Route::middleware(['web', 'guest'])->group(function () {
+                Route::get('login', [AuthController::class, 'showLoginForm'])->name('login');
+                Route::post('login', [AuthController::class, 'login'])->middleware('throttle:5,1');
+            });
+
+            // Central Admin Routes (auth + admin/superuser required)
+            Route::middleware(['web', 'auth', 'role:superuser,admin'])->group(function () {
+                Route::post('logout', [AuthController::class, 'logout'])->name('logout');
                 Route::get('register-tenant', [TenantRegistrationController::class, 'showForm'])->name('central.register-tenant');
-                Route::post('register-tenant', [TenantRegistrationController::class, 'register'])->name('central.register-tenant.store');
+                Route::post('register-tenant', [TenantRegistrationController::class, 'store'])->name('central.register-tenant.store');
                 Route::get('admin/tenants', [TenantRegistrationController::class, 'index'])->name('central.tenants.index');
                 Route::delete('admin/tenants/{id}', [TenantRegistrationController::class, 'destroy'])->name('central.tenants.destroy');
             });
@@ -84,9 +91,10 @@ if (config('app.tenancy_enabled')) {
 
     Route::middleware('guest')->group(function () {
         Route::get('login', [AuthController::class, 'showLoginForm'])->name('login');
-        Route::post('login', [AuthController::class, 'login']);
-        Route::get('register', [AuthController::class, 'showRegisterForm'])->name('register');
-        Route::post('register', [AuthController::class, 'register']);
+        Route::post('login', [AuthController::class, 'login'])->middleware('throttle:5,1');
+        // Self-registration disabled for security — users must be created by admin
+        // Route::get('register', [AuthController::class, 'showRegisterForm'])->name('register');
+        // Route::post('register', [AuthController::class, 'register']);
     });
 
     Route::middleware('auth')->group(function () {
@@ -161,16 +169,18 @@ if (config('app.tenancy_enabled')) {
         });
 
         // =====================================================
-        // TRANSAKSI - All authenticated users
+        // TRANSAKSI - Staff level and above
         // =====================================================
-        Route::resource('penjualan', PenjualanController::class);
-        Route::resource('pembelian', PembelianController::class);
-        Route::resource('jurnal', JurnalController::class);
-        Route::resource('penerimaan', PenerimaanController::class);
-        Route::resource('pembayaran', PembayaranController::class);
-        Route::get('kas', [KasController::class, 'index'])->name('kas.index');
-        Route::get('kas/transfer', [KasController::class, 'transfer'])->name('kas.transfer');
-        Route::post('kas/transfer', [KasController::class, 'storeTransfer'])->name('kas.storeTransfer');
+        Route::middleware('role:superuser,admin,manajer,staff')->group(function () {
+            Route::resource('penjualan', PenjualanController::class);
+            Route::resource('pembelian', PembelianController::class);
+            Route::resource('jurnal', JurnalController::class);
+            Route::resource('penerimaan', PenerimaanController::class);
+            Route::resource('pembayaran', PembayaranController::class);
+            Route::get('kas', [KasController::class, 'index'])->name('kas.index');
+            Route::get('kas/transfer', [KasController::class, 'transfer'])->name('kas.transfer');
+            Route::post('kas/transfer', [KasController::class, 'storeTransfer'])->name('kas.storeTransfer');
+        });
 
         // =====================================================
         // LAPORAN - Semua role (termasuk staff)
@@ -201,29 +211,30 @@ if (config('app.tenancy_enabled')) {
         });
 
         // =====================================================
-        // KOPERASI SIMPAN PINJAM - All authenticated users
+        // KOPERASI SIMPAN PINJAM - Staff level and above
         // =====================================================
-        
-        // Anggota
-        Route::resource('anggota', AnggotaController::class);
-        Route::get('anggota/{id}/kartu', [AnggotaController::class, 'kartu'])->name('anggota.kartu');
+        Route::middleware('role:superuser,admin,manajer,staff')->group(function () {
+            // Anggota
+            Route::resource('anggota', AnggotaController::class);
+            Route::get('anggota/{id}/kartu', [AnggotaController::class, 'kartu'])->name('anggota.kartu');
 
-        // Simpanan
-        Route::resource('simpanan', SimpananController::class);
-        Route::get('simpanan-setor', [SimpananController::class, 'setor'])->name('simpanan.setor');
-        Route::get('simpanan-tarik', [SimpananController::class, 'tarik'])->name('simpanan.tarik');
-        Route::get('simpanan-kartu/{id_anggota}', [SimpananController::class, 'kartu'])->name('simpanan.kartu');
+            // Simpanan
+            Route::resource('simpanan', SimpananController::class);
+            Route::get('simpanan-setor', [SimpananController::class, 'setor'])->name('simpanan.setor');
+            Route::get('simpanan-tarik', [SimpananController::class, 'tarik'])->name('simpanan.tarik');
+            Route::get('simpanan-kartu/{id_anggota}', [SimpananController::class, 'kartu'])->name('simpanan.kartu');
 
-        // Pinjaman - simulasi harus SEBELUM resource agar tidak tertangkap oleh {pinjaman}
-        Route::post('pinjaman/simulasi', [PinjamanController::class, 'simulasi'])->name('pinjaman.simulasi');
-        Route::resource('pinjaman', PinjamanController::class);
-        Route::post('pinjaman/{id}/submit', [PinjamanController::class, 'submit'])->name('pinjaman.submit');
-        Route::get('pinjaman/{id}/pencairan', [PinjamanController::class, 'pencairanForm'])->name('pinjaman.pencairan');
-        Route::post('pinjaman/{id}/cairkan', [PinjamanController::class, 'cairkan'])->name('pinjaman.cairkan');
-        Route::get('pinjaman/{id}/angsuran', [PinjamanController::class, 'angsuranForm'])->name('pinjaman.angsuran');
-        Route::post('pinjaman/{id}/bayar', [PinjamanController::class, 'bayarAngsuran'])->name('pinjaman.bayar');
-        Route::get('pinjaman/{id}/pelunasan', [PinjamanController::class, 'pelunasanForm'])->name('pinjaman.pelunasan');
-        Route::post('pinjaman/{id}/lunasi', [PinjamanController::class, 'lunasi'])->name('pinjaman.lunasi');
+            // Pinjaman - simulasi harus SEBELUM resource agar tidak tertangkap oleh {pinjaman}
+            Route::post('pinjaman/simulasi', [PinjamanController::class, 'simulasi'])->name('pinjaman.simulasi');
+            Route::resource('pinjaman', PinjamanController::class);
+            Route::post('pinjaman/{id}/submit', [PinjamanController::class, 'submit'])->name('pinjaman.submit');
+            Route::get('pinjaman/{id}/pencairan', [PinjamanController::class, 'pencairanForm'])->name('pinjaman.pencairan');
+            Route::post('pinjaman/{id}/cairkan', [PinjamanController::class, 'cairkan'])->name('pinjaman.cairkan');
+            Route::get('pinjaman/{id}/angsuran', [PinjamanController::class, 'angsuranForm'])->name('pinjaman.angsuran');
+            Route::post('pinjaman/{id}/bayar', [PinjamanController::class, 'bayarAngsuran'])->name('pinjaman.bayar');
+            Route::get('pinjaman/{id}/pelunasan', [PinjamanController::class, 'pelunasanForm'])->name('pinjaman.pelunasan');
+            Route::post('pinjaman/{id}/lunasi', [PinjamanController::class, 'lunasi'])->name('pinjaman.lunasi');
+        });
 
         // Approval Workflow - Manajer, Admin, Superuser
         Route::middleware('role:superuser,admin,manajer')->group(function () {
