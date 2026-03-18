@@ -38,14 +38,13 @@ class TenantDatabaseSeeder extends Seeder
 
         // 3. Create default admin user for the tenant
         if (User::count() === 0) {
-            $defaultPassword = Str::random(12);
             User::create([
                 'nama_user' => 'admin',
-                'password_hash' => Hash::make($defaultPassword),
+                'password_hash' => Hash::make('admin123'),
                 'role' => 'admin',
                 'jabatan' => 'Administrator',
             ]);
-            \Log::info("Tenant [{$tenant->id}] admin created. Password: {$defaultPassword}");
+            \Log::info("Tenant [{$tenant->id}] admin created. Default password: admin123");
         }
     }
 }
