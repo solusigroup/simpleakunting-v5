@@ -13,16 +13,12 @@
         .header { padding: 24px 0; display: flex; align-items: center; justify-content: space-between; }
         .logo { font-size: 1.5rem; font-weight: 700; color: #ff8c00; }
         .logo span { color: #fff; }
-        .nav a { color: #a0b4d0; text-decoration: none; margin-left: 28px; font-size: 0.95rem; transition: color 0.2s; }
-        .nav a:hover { color: #ff8c00; }
         
         /* Hero */
         .hero { text-align: center; padding: 80px 0 60px; }
         .hero h1 { font-size: 2.8rem; font-weight: 800; color: #fff; margin-bottom: 20px; line-height: 1.2; }
         .hero h1 em { color: #ff8c00; font-style: normal; }
         .hero p { font-size: 1.15rem; color: #8fa8c8; max-width: 600px; margin: 0 auto 40px; line-height: 1.7; }
-        .cta-btn { display: inline-block; padding: 14px 36px; background: linear-gradient(135deg, #ff8c00, #e67600); color: #fff; text-decoration: none; border-radius: 8px; font-weight: 600; font-size: 1rem; transition: transform 0.2s, box-shadow 0.2s; }
-        .cta-btn:hover { transform: translateY(-2px); box-shadow: 0 8px 25px rgba(255, 140, 0, 0.3); }
         
         /* Features */
         .features { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 24px; padding: 40px 0 80px; }
@@ -33,22 +29,19 @@
         
         /* Footer */
         .footer { text-align: center; padding: 24px 0; border-top: 1px solid rgba(255,255,255,0.06); color: #5a7090; font-size: 0.85rem; }
+        .footer a.admin-link { color: #3a4f6a; text-decoration: none; font-size: 0.75rem; transition: color 0.2s; }
+        .footer a.admin-link:hover { color: #8fa8c8; }
     </style>
 </head>
 <body>
     <div class="container">
         <header class="header">
             <div class="logo">Simple<span>Akunting</span></div>
-            <nav class="nav">
-                <a href="{{ route('central.register-tenant') }}">Daftar Perusahaan</a>
-                <a href="{{ route('central.tenants.index') }}">Admin Panel</a>
-            </nav>
         </header>
 
         <section class="hero">
             <h1>Platform Akuntansi <em>Multi-Tenant</em></h1>
             <p>Mengelola akuntansi banyak perusahaan dari satu platform. Setiap perusahaan mendapatkan database terpisah, keamanan tinggi, dan fitur lengkap.</p>
-            <a href="{{ route('central.register-tenant') }}" class="cta-btn">Daftarkan Perusahaan Anda →</a>
         </section>
 
         <section class="features">
@@ -68,7 +61,10 @@
 
         <footer class="footer">
             &copy; {{ date('Y') }} SimpleAkunting dibuat oleh Kurniawan dengan ❤️ untuk membantu bisnis lebih berkembang. All rights reserved.
+            <br>
+            <a href="{{ route('central.login') }}" class="admin-link">Login Administrator</a>
         </footer>
     </div>
 </body>
 </html>
+

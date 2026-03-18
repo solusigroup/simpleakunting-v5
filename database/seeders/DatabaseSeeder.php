@@ -2,7 +2,7 @@
 
 namespace Database\Seeders;
 
-use App\Models\User;
+use App\Models\CentralUser;
 use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\Hash;
@@ -18,23 +18,15 @@ class DatabaseSeeder extends Seeder
      */
     public function run(): void
     {
-        // Create default superuser if not exists
-        if (!User::where('nama_user', 'admin')->exists()) {
-            $defaultPassword = Str::random(12);
-            User::create([
-                'nama_user' => 'admin',
-                'password_hash' => Hash::make($defaultPassword),
+        // Create default central superuser if not exists
+        if (!CentralUser::where('nama_user', 'administrator')->exists()) {
+            CentralUser::create([
+                'nama_user' => 'administrator',
+                'password_hash' => Hash::make('5@8@12Yaa'),
                 'role' => 'superuser',
-                'jabatan' => 'Administrator',
+                'jabatan' => 'Central Administrator',
             ]);
-            $this->command->info("Default admin created. Password: {$defaultPassword}");
-            $this->command->warn("⚠️  Segera ganti password ini setelah login pertama!");
+            $this->command->info("Central superuser 'administrator' created successfully.");
         }
-
-        $this->call([
-            AkunSeeder::class,
-            PerusahaanSeeder::class,
-        ]);
     }
 }
-

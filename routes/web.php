@@ -62,18 +62,26 @@ if (config('app.tenancy_enabled')) {
             })->name('central.landing');
 
             // Central Admin Login
-            Route::middleware(['web', 'guest'])->group(function () {
-                Route::get('login', [AuthController::class, 'showLoginForm'])->name('login');
-                Route::post('login', [AuthController::class, 'login'])->middleware('throttle:5,1');
+            Route::middleware(['web', 'guest:central'])->group(function () {
+                Route::get('login', [\App\Http\Controllers\CentralAuthController::class, 'showLoginForm'])->name('central.login');
+                Route::post('login', [\App\Http\Controllers\CentralAuthController::class, 'login'])->middleware('throttle:5,1');
             });
 
-            // Central Admin Routes (auth + admin/superuser required)
-            Route::middleware(['web', 'auth', 'role:superuser,admin'])->group(function () {
-                Route::post('logout', [AuthController::class, 'logout'])->name('logout');
+            // Central Admin Routes (auth + superuser only)
+            Route::middleware(['web', 'auth:central', 'role:superuser'])->group(function () {
+                Route::post('logout', [\App\Http\Controllers\CentralAuthController::class, 'logout'])->name('central.logout');
                 Route::get('register-tenant', [TenantRegistrationController::class, 'showForm'])->name('central.register-tenant');
                 Route::post('register-tenant', [TenantRegistrationController::class, 'store'])->name('central.register-tenant.store');
                 Route::get('admin/tenants', [TenantRegistrationController::class, 'index'])->name('central.tenants.index');
                 Route::delete('admin/tenants/{id}', [TenantRegistrationController::class, 'destroy'])->name('central.tenants.destroy');
+
+                // Central User Management
+                Route::get('admin/users', [\App\Http\Controllers\CentralUserController::class, 'index'])->name('central.users.index');
+                Route::get('admin/users/create', [\App\Http\Controllers\CentralUserController::class, 'create'])->name('central.users.create');
+                Route::post('admin/users', [\App\Http\Controllers\CentralUserController::class, 'store'])->name('central.users.store');
+                Route::delete('admin/users/{id}', [\App\Http\Controllers\CentralUserController::class, 'destroy'])->name('central.users.destroy');
+                Route::get('admin/password', [\App\Http\Controllers\CentralUserController::class, 'editPassword'])->name('central.password.edit');
+                Route::put('admin/password', [\App\Http\Controllers\CentralUserController::class, 'updatePassword'])->name('central.password.update');
             });
 
         });

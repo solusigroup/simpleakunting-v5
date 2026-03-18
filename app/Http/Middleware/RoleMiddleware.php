@@ -19,7 +19,8 @@ class RoleMiddleware
         $user = $request->user();
 
         if (!$user) {
-            return redirect()->route('login');
+            $isCentralDomain = in_array($request->getHost(), config('tenancy.central_domains', []));
+            return redirect()->route($isCentralDomain ? 'central.login' : 'login');
         }
 
         // Superuser always has access
