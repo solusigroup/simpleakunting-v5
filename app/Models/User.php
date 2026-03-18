@@ -67,7 +67,7 @@ class User extends Authenticatable
     protected function casts(): array
     {
         return [
-            'password_hash' => 'hashed',
+            // No automated hashing cast, as it's done explicitly in controllers/seeders
         ];
     }
 

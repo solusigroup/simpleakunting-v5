@@ -46,7 +46,7 @@ class CentralUser extends Authenticatable
     protected function casts(): array
     {
         return [
-            'password_hash' => 'hashed',
+            // No automated hashing cast
         ];
     }
 
