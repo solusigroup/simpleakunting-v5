@@ -15,6 +15,8 @@ return Application::configure(basePath: dirname(__DIR__))
             'role' => \App\Http\Middleware\RoleMiddleware::class,
         ]);
 
+        $middleware->trustProxies(at: '*');
+
         $middleware->redirectUsersTo(function (\Illuminate\Http\Request $request) {
             if (in_array($request->getHost(), config('tenancy.central_domains', []))) {
                 return route('central.tenants.index');
