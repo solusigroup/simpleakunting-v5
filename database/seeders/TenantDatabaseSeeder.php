@@ -40,11 +40,11 @@ class TenantDatabaseSeeder extends Seeder
         if (User::count() === 0) {
             User::create([
                 'nama_user' => 'admin',
-                'password_hash' => Hash::make('admin123'),
+                'password_hash' => Hash::make('password'),
                 'role' => 'admin',
                 'jabatan' => 'Administrator',
             ]);
-            \Log::info("Tenant [{$tenant->id}] admin created. Default password: admin123");
+            \Log::info("Tenant [{$tenant->id}] admin created. Default password: password");
         }
     }
 }
