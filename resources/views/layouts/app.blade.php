@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en" class="dark-mode">
+<html lang="id">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -385,6 +385,12 @@
         @endif
 
         <div class="header-actions">
+            <!-- Theme Toggle -->
+            <button class="btn-sidebar-toggle me-2" id="themeToggle" title="Ganti Tema">
+                <span id="themeToggleLightIcon" data-feather="sun" style="display: none;"></span>
+                <span id="themeToggleDarkIcon" data-feather="moon"></span>
+            </button>
+
             <span class="text-white d-none d-md-inline" style="opacity: 0.8; font-size: 0.875rem;">
                 {{ Auth::user()->nama_user }}
             </span>
@@ -931,11 +937,44 @@
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/feather-icons@4.28.0/dist/feather.min.js"></script>
     <script>
+        // Theme Management (Inline to prevent flash)
+        (function() {
+            const savedTheme = localStorage.getItem('theme') || 'light';
+            if (savedTheme === 'dark') {
+                document.documentElement.classList.add('dark-mode');
+            }
+        })();
+
         (function () {
             'use strict'
             
             // Initialize Feather Icons
             feather.replace({ 'aria-hidden': 'true' });
+
+            // Theme Toggle Logic
+            const themeToggle = document.getElementById('themeToggle');
+            const themeToggleLightIcon = document.getElementById('themeToggleLightIcon');
+            const themeToggleDarkIcon = document.getElementById('themeToggleDarkIcon');
+
+            function updateThemeIcons() {
+                if (document.documentElement.classList.contains('dark-mode')) {
+                    themeToggleLightIcon.style.display = 'inline-block';
+                    themeToggleDarkIcon.style.display = 'none';
+                } else {
+                    themeToggleLightIcon.style.display = 'none';
+                    themeToggleDarkIcon.style.display = 'inline-block';
+                }
+            }
+            updateThemeIcons();
+
+            themeToggle.addEventListener('click', function() {
+                document.documentElement.classList.toggle('dark-mode');
+                const isDark = document.documentElement.classList.contains('dark-mode');
+                localStorage.setItem('theme', isDark ? 'dark' : 'light');
+                updateThemeIcons();
+                // Re-replace icons to ensure they render correctly
+                feather.replace({ 'aria-hidden': 'true' });
+            });
 
             // Sidebar Toggle
             const sidebarToggle = document.getElementById('sidebarToggle');
