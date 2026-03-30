@@ -361,7 +361,7 @@
         </div>
         
         <!-- Cabang/Unit Selector (Admin/Superuser) -->
-        @if(auth()->user()->hasRole('superuser', 'admin'))
+        @if(auth()->user()->hasRole(['superuser', 'admin']))
         <div class="d-none d-lg-flex align-items-center gap-2 mx-auto">
             <form action="{{ route('cabang.switch') }}" method="POST" id="formSwitchCabang" class="d-flex align-items-center gap-2">
                 @csrf
@@ -462,7 +462,7 @@
             @endphp
 
             <!-- Manufacturing -->
-            @if($showManufacturing && auth()->user()->hasRole('superuser','admin','manajer'))
+            @if($showManufacturing && auth()->user()->hasRole(['superuser','admin','manajer']))
             @php
                 $isMfgActive = request()->routeIs('manufacturing.*');
             @endphp
@@ -491,7 +491,7 @@
             @endif
 
             <!-- Agriculture (PSAK 69) -->
-            @if($showAgriculture && auth()->user()->hasRole('superuser','admin','manajer'))
+            @if($showAgriculture && auth()->user()->hasRole(['superuser','admin','manajer']))
             @php
                 $isAgriActive = request()->routeIs('agriculture.*');
             @endphp
@@ -854,6 +854,18 @@
                 </div>
             </div>
             @endif
+
+            <!-- Help & Documentation -->
+            <div class="sidebar-section mt-4">
+                <ul class="sidebar-nav">
+                    <li class="sidebar-nav-item">
+                        <a class="sidebar-nav-link {{ request()->routeIs('guide.*') ? 'active' : '' }}" href="{{ route('guide.index') }}">
+                            <span data-feather="help-circle"></span>
+                            Panduan Pengoperasian
+                        </a>
+                    </li>
+                </ul>
+            </div>
         </div>
     </aside>
 

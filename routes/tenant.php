@@ -30,6 +30,7 @@ use App\Http\Controllers\UnitUsahaController;
 use App\Http\Controllers\KasController;
 use App\Http\Controllers\CabangSessionController;
 use App\Http\Controllers\PosController;
+use App\Http\Controllers\GuideController;
 
 /*
 |--------------------------------------------------------------------------
@@ -262,5 +263,10 @@ Route::middleware([
             Route::post('import-export/import/{module}', [\App\Http\Controllers\ImportExportController::class, 'import'])->name('import-export.import');
             Route::get('import-export/export-all', [\App\Http\Controllers\ImportExportController::class, 'exportAll'])->name('import-export.export-all');
         });
+
+        // =====================================================
+        // PANDUAN PENGOPERASIAN - All authenticated users
+        // =====================================================
+        Route::get('guide', [GuideController::class, 'index'])->name('guide.index');
     });
 });

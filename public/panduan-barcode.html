@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Panduan Penggunaan Barcode - SimpleAkunting v5</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f8f9fa;
+        }
+        .container {
+            background-color: #ffffff;
+            padding: 40px;
+            border-radius: 8px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #2c3e50;
+            text-align: center;
+            border-bottom: 2px solid #3498db;
+            padding-bottom: 10px;
+            margin-bottom: 30px;
+        }
+        h2 {
+            color: #34495e;
+            margin-top: 30px;
+            border-left: 4px solid #3498db;
+            padding-left: 10px;
+        }
+        h3 {
+            color: #2980b9;
+        }
+        p {
+            margin-bottom: 15px;
+        }
+        ul, ol {
+            margin-bottom: 20px;
+        }
+        li {
+            margin-bottom: 8px;
+        }
+        .alert {
+            padding: 15px;
+            background-color: #e8f4f8;
+            border-left: 4px solid #3498db;
+            margin-bottom: 20px;
+        }
+        .tip {
+            background-color: #fff3cd;
+            border-left-color: #ffc107;
+            padding: 15px;
+            margin-bottom: 20px;
+        }
+        .highlight {
+            font-weight: bold;
+            color: #e74c3c;
+        }
+        .code-style {
+            background-color: #f4f4f4;
+            padding: 2px 5px;
+            border-radius: 4px;
+            font-family: monospace;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Panduan Penggunaan Fitur Barcode</h1>
+        
+        <div class="alert">
+            <strong>Info Penting:</strong> Panduan ini menjelaskan cara mengoperasikan fitur pemindai (scanner) barcode pada aplikasi SimpleAkunting v5, baik pada menu POS (Point of Sales) maupun Master Persediaan.
+        </div>
+
+        <h2>Bagian 1: Menggunakan Barcode di Kasir (POS)</h2>
+        <p>Aplikasi telah dilengkapi dengan fitur <strong>"Auto-Add"</strong>. Barang yang di-scan akan otomatis masuk ke keranjang.</p>
+        
+        <h3>A. Persiapan (Kondisi Prasyarat)</h3>
+        <ol>
+            <li><strong>Data Tersedia:</strong> Pastikan kolom <span class="code-style">barcode</span> di <strong>Master -> Persediaan</strong> sudah terisi sesuai dengan fisik barang.</li>
+            <li><strong>Scanner Terhubung:</strong> Pastikan mesin scanner Anda terhubung dengan komputer kasir (via USB). Scanner bekerja layaknya keyboard dengan mengetikkan angka secara sangat cepat.</li>
+        </ol>
+
+        <h3>B. Langkah Penggunaan di Lapangan</h3>
+        <ol>
+            <li>Buka menu <strong>Point of Sales (POS)</strong> dan mulai sesi/shift kasir Anda seperti biasa.</li>
+            <li>Arahkan perhatian ke kotak pencarian kiri atas bertuliskan <strong>"🔍 Scan barcode atau ketik nama produk..."</strong>.</li>
+            <li><strong>Kursor Otomatis Ada di Kotak (Autofocus):</strong> Secara default aplikasi menempatkan kursor pada kotak tersebut, tapi jika kebetulan kursor hilang, kliklah kotak input tersebut terlebih dahulu.</li>
+            <li><strong>Tembak Barcode:</strong> Arahkan dan tembak barcode barang menggunakan scanner fisik.</li>
+            <li><strong>Otomatis ke Keranjang (Auto-Add):</strong> Begitu barcode ditembakkan, produk Anda akan segera terpilih, <strong>langsung pindah ke kotak keranjang kanan</strong>, dan kotak input pencarian akan seketika kosong & siap men-scan barang berikutnya secara estafet tanpa memencet 'Enter'!</li>
+        </ol>
+
+        <div class="tip">
+            <strong>💡 Tips Cepat Kasir (Double Scan):</strong>
+            <ul>
+                <li>Jika pelanggan membeli barang yang sama dalam jumlah banyak (misal: 6 botol air mineral), Anda tidak perlu mengetik secara manual. Cukup scan barcode botol tersebut 6 kali berturut-turut! Sistem akan otomatis menambah Qty di keranjang menjadi 6 buah.</li>
+                <li>Aplikasi sudah punya fitur anti nge-refresh halaman secara tidak sengaja oleh scanner bawaan pabrik.</li>
+            </ul>
+        </div>
+
+        <hr style="margin: 40px 0; border: 0; border-top: 1px solid #eee;">
+
+        <h2>Bagian 2: Input Barcode ke Master Persediaan</h2>
+        <p>Hal ini wajib dilakukan satu kali per produk agar scanner bisa mendeteksi produk tersebut saat di kasir.</p>
+
+        <h3>Skenario A: Menambah Barang Baru</h3>
+        <ol>
+            <li>Buka menu <strong>Master -> Persediaan</strong>.</li>
+            <li>Klik tombol <strong>"Tambah Barang"</strong> di pojok kanan atas.</li>
+            <li>Lihat di form isian pada kolom bernama <strong>"Barcode"</strong>.</li>
+            <li>Klik ke dalam kolom tersebut hingga kursor berkedip-kedip, kemudian <strong>tembak barcode fisik</strong> dengan menggunakan scanner. Angkanya akan langsung masuk! <em>(Anda juga bisa mengetik manual kalau perlu)</em>.</li>
+            <li>Lanjutkan isi nama barang, harga, status persediaan, dll seperti langkah normal.</li>
+            <li>Klik tombol <strong>Simpan</strong>.</li>
+        </ol>
+
+        <h3>Skenario B: Memasukkan Barcode ke Barang yang Sudah Ada</h3>
+        <ol>
+            <li>Buka menu <strong>Master -> Persediaan</strong>.</li>
+            <li>Cari nama barang yang barcodenya akan ditambahkan dari dalam tabel daftar.</li>
+            <li>Klik ikon <strong>Edit</strong> (biasanya berlambang pensil / tulisan edit) di barang tersebut.</li>
+            <li>Cari dan klik ke dalam kotak kolom <strong>Barcode</strong>. Saat kursor berkedip, scan barcodenya!</li>
+            <li>Klik <strong>Update / Simpan</strong>.</li>
+        </ol>
+
+        <div class="alert" style="background-color: #fcf1f1; border-left-color: #e74c3c;">
+            <strong>Perhatian Khusus Saat Input:</strong>
+            <ul>
+                <li>Pastikan kursor mouse Anda selalu sedang berada dalam kolom yang tepat (kolom Barcode) sebelum memencet pelatuk scanner.</li>
+                <li><strong>Barcode Tidak Boleh Sama (Unik):</strong> Sistem canggih Anda memiliki proteksi *Anti Ganda*. Bila ada barcode diregistrasi di 2 barang yang berbeda, sistem akan menolak disaat tombol simpan ditekan untuk menghindarkan keteledoran selisih stok di POS!</li>
+            </ul>
+        </div>
+
+    </div>
+</body>
+</html>
