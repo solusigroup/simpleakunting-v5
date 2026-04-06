@@ -77,7 +77,7 @@
                 font-size: 0.875rem;
                 border: 1px solid var(--color-border, #dee2e6);
                 border-radius: var(--radius-sm, 6px);
-                background: var(--color-white, #fff);
+                background: var(--color-bg, #fff);
                 color: var(--color-text, #333);
                 cursor: pointer;
                 transition: border-color 0.2s, box-shadow 0.2s;
@@ -115,7 +115,7 @@
                 top: calc(100% + 4px);
                 left: 0;
                 right: 0;
-                background: var(--color-white, #fff);
+                background: var(--color-bg-card, #fff);
                 border: 1px solid var(--color-border, #dee2e6);
                 border-radius: var(--radius-sm, 6px);
                 box-shadow: 0 8px 24px rgba(0,0,0,0.12);
@@ -129,10 +129,11 @@
             }
             .searchable-select-search {
                 padding: 8px;
-                border-bottom: 1px solid var(--color-border-light, #eee);
+                border-bottom: 1px solid var(--color-border, #eee);
                 position: sticky;
                 top: 0;
-                background: var(--color-white, #fff);
+                background: var(--color-bg-card, #fff);
+                z-index: 1;
             }
             .searchable-select-search input {
                 width: 100%;
@@ -142,6 +143,8 @@
                 font-size: 0.8125rem;
                 outline: none;
                 transition: border-color 0.2s;
+                background: var(--color-bg, #fff);
+                color: var(--color-text, #333);
             }
             .searchable-select-search input:focus {
                 border-color: var(--color-primary, #8b5cf6);
