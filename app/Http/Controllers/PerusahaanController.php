@@ -49,6 +49,9 @@ class PerusahaanController extends Controller
             'pos_akun_utang_default' => 'nullable|string|max:20',
         ]);
 
+        $oldPerusahaan = DB::table('perusahaan')->find(1);
+        $jenisUsahaChanged = !$oldPerusahaan || $oldPerusahaan->jenis_usaha !== $request->jenis_usaha;
+
         DB::table('perusahaan')->updateOrInsert(
             ['id' => 1],
             [
@@ -82,6 +85,13 @@ class PerusahaanController extends Controller
             ]
         );
 
-        return redirect()->route('perusahaan.edit')->with('success', 'Profil perusahaan berhasil diperbarui.');
+        if ($jenisUsahaChanged) {
+            \Illuminate\Support\Facades\Artisan::call('db:seed', [
+                '--class' => 'Database\\Seeders\\CoaTemplateSeeder'
+            ]);
+        }
+
+        return redirect()->route('perusahaan.edit')->with('success', 'Profil perusahaan berhasil diperbarui' . ($jenisUsahaChanged ? ' dan template COA telah disesuaikan.' : '.'));
+
     }
 }
