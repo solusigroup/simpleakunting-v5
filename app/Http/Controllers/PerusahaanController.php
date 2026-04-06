@@ -87,7 +87,8 @@ class PerusahaanController extends Controller
 
         if ($jenisUsahaChanged) {
             \Illuminate\Support\Facades\Artisan::call('db:seed', [
-                '--class' => 'Database\\Seeders\\CoaTemplateSeeder'
+                '--class' => 'Database\\Seeders\\CoaTemplateSeeder',
+                '--force' => true
             ]);
         }
 
