@@ -31,6 +31,16 @@ class CoaTemplateSeeder extends Seeder
         if (in_array($jenisUsaha, ['pertanian', 'multi'])) {
             $this->seedPsak69Coa();
         }
+
+        // Add Simpan Pinjam accounts if needed
+        if (in_array($jenisUsaha, ['simpan_pinjam', 'serba_usaha', 'multi'])) {
+            $this->seedSimpanPinjamCoa();
+        }
+
+        // Add Jasa accounts if needed
+        if (in_array($jenisUsaha, ['jasa', 'multi'])) {
+            $this->seedJasaCoa();
+        }
     }
 
     /**
@@ -197,6 +207,56 @@ class CoaTemplateSeeder extends Seeder
             ['kode_akun' => '6-3000', 'nama_akun' => 'Kerugian Penilaian Wajar', 'tipe_akun' => 'Header', 'saldo_normal' => 'Debit'],
             ['kode_akun' => '6-3100', 'nama_akun' => 'Kerugian Perubahan Nilai Wajar', 'tipe_akun' => 'Beban Lainnya', 'saldo_normal' => 'Debit'],
             ['kode_akun' => '6-3200', 'nama_akun' => 'Kerugian Kematian Ternak/Tanaman', 'tipe_akun' => 'Beban Lainnya', 'saldo_normal' => 'Debit'],
+        ];
+
+        $this->insertAccounts($accounts);
+    }
+
+    /**
+     * Seed additional COA for Simpan Pinjam / Koperasi
+     */
+    private function seedSimpanPinjamCoa(): void
+    {
+        $accounts = [
+            // PIUTANG PINJAMAN
+            ['kode_akun' => '1-1320', 'nama_akun' => 'Piutang Pinjaman Anggota', 'tipe_akun' => 'Piutang Usaha', 'saldo_normal' => 'Debit'],
+            ['kode_akun' => '1-1330', 'nama_akun' => 'Piutang Bunga Pinjaman', 'tipe_akun' => 'Piutang Usaha', 'saldo_normal' => 'Debit'],
+            
+            // LIABILITAS SIMPANAN (Jangka Pendek)
+            ['kode_akun' => '2-1600', 'nama_akun' => 'Simpanan Sukarela Anggota', 'tipe_akun' => 'Liabilitas Lancar Lainnya', 'saldo_normal' => 'Kredit'],
+            
+            // EKUITAS KOPERASI
+            ['kode_akun' => '3-1500', 'nama_akun' => 'Simpanan Pokok Anggota', 'tipe_akun' => 'Ekuitas', 'saldo_normal' => 'Kredit'],
+            ['kode_akun' => '3-1600', 'nama_akun' => 'Simpanan Wajib Anggota', 'tipe_akun' => 'Ekuitas', 'saldo_normal' => 'Kredit'],
+            ['kode_akun' => '3-1700', 'nama_akun' => 'Cadangan Koperasi', 'tipe_akun' => 'Ekuitas', 'saldo_normal' => 'Kredit'],
+            ['kode_akun' => '3-1800', 'nama_akun' => 'SHU Tahun Berjalan', 'tipe_akun' => 'Ekuitas', 'saldo_normal' => 'Kredit'],
+            ['kode_akun' => '3-1900', 'nama_akun' => 'SHU Tahun Lalu Belum Dibagi', 'tipe_akun' => 'Ekuitas', 'saldo_normal' => 'Kredit'],
+            
+            // PENDAPATAN PINJAMAN
+            ['kode_akun' => '4-3000', 'nama_akun' => 'Pendapatan Jasa Pinjaman', 'tipe_akun' => 'Pendapatan', 'saldo_normal' => 'Kredit'],
+            ['kode_akun' => '4-3100', 'nama_akun' => 'Pendapatan Administrasi Pinjaman', 'tipe_akun' => 'Pendapatan', 'saldo_normal' => 'Kredit'],
+            ['kode_akun' => '4-3200', 'nama_akun' => 'Pendapatan Provisi / Lain-lain', 'tipe_akun' => 'Pendapatan', 'saldo_normal' => 'Kredit'],
+            
+            // BEBAN KOPERASI
+            ['kode_akun' => '6-2000', 'nama_akun' => 'Beban Rapat Anggota (RAT)', 'tipe_akun' => 'Beban', 'saldo_normal' => 'Debit'],
+            ['kode_akun' => '6-2100', 'nama_akun' => 'Beban Bagi Hasil Simpanan', 'tipe_akun' => 'Beban', 'saldo_normal' => 'Debit'],
+        ];
+
+        $this->insertAccounts($accounts);
+    }
+
+    /**
+     * Seed additional COA for Jasa
+     */
+    private function seedJasaCoa(): void
+    {
+        $accounts = [
+            // PENDAPATAN JASA
+            ['kode_akun' => '4-4000', 'nama_akun' => 'Pendapatan Jasa', 'tipe_akun' => 'Pendapatan', 'saldo_normal' => 'Kredit'],
+            ['kode_akun' => '4-4100', 'nama_akun' => 'Diskon Jasa', 'tipe_akun' => 'Pendapatan', 'saldo_normal' => 'Debit'],
+
+            // BEBAN OPERASIONAL JASA
+            ['kode_akun' => '6-2200', 'nama_akun' => 'Beban Bahan / Material Jasa', 'tipe_akun' => 'Beban', 'saldo_normal' => 'Debit'],
         ];
 
         $this->insertAccounts($accounts);
