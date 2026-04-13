@@ -39,10 +39,14 @@
         .form-group { margin-bottom: 20px; }
         .form-label { display: block; color: #374151; font-size: 0.8rem; font-weight: 600; margin-bottom: 8px; text-transform: uppercase; letter-spacing: 0.5px; }
         .input-wrap { position: relative; }
-        .input-wrap svg { position: absolute; left: 14px; top: 50%; transform: translateY(-50%); color: #9ca3af; width: 18px; height: 18px; }
+        .input-wrap > svg { position: absolute; left: 14px; top: 50%; transform: translateY(-50%); color: #9ca3af; width: 18px; height: 18px; pointer-events: none; }
         .form-input { width: 100%; padding: 12px 14px 12px 44px; background: #f9fafb; border: 1.5px solid #e5e7eb; border-radius: 10px; color: #1a1a2e; font-size: 0.95rem; font-family: inherit; outline: none; transition: border-color 0.2s, box-shadow 0.2s; }
         .form-input:focus { border-color: #ff8c00; box-shadow: 0 0 0 3px rgba(255,140,0,0.1); background: #fff; }
         .form-input::placeholder { color: #9ca3af; }
+
+        .btn-toggle-password { position: absolute; right: 12px; top: 50%; transform: translateY(-50%); background: none; border: none; cursor: pointer; padding: 4px; color: #9ca3af; display: flex; align-items: center; justify-content: center; z-index: 5; border-radius: 6px; transition: color 0.2s, background 0.2s; }
+        .btn-toggle-password:hover { color: #ff8c00; background: rgba(255,140,0,0.08); }
+        .btn-toggle-password svg { width: 18px; height: 18px; }
 
         .btn-login { width: 100%; padding: 14px; background: linear-gradient(135deg, #ff8c00, #e67600); color: #fff; border: none; border-radius: 10px; font-size: 1rem; font-weight: 600; font-family: inherit; cursor: pointer; transition: transform 0.2s, box-shadow 0.2s; display: flex; align-items: center; justify-content: center; gap: 8px; margin-top: 8px; }
         .btn-login:hover { transform: translateY(-2px); box-shadow: 0 8px 25px rgba(255,140,0,0.3); }
@@ -133,7 +137,11 @@
                                 <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
                             </svg>
                             <input type="password" class="form-input" id="password" name="password"
-                                placeholder="Masukkan password" required>
+                                placeholder="Masukkan password" required style="padding-right: 44px;">
+                            <button type="button" class="btn-toggle-password" onclick="togglePassword('password', this)" title="Tampilkan/Sembunyikan Password">
+                                <svg class="icon-eye" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>
+                                <svg class="icon-eye-off" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:none;"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"></path><line x1="1" y1="1" x2="23" y2="23"></line></svg>
+                            </button>
                         </div>
                     </div>
 
@@ -156,5 +164,25 @@
             </div>
         </div>
     </div>
+
+    <script>
+        function togglePassword(fieldId, btn) {
+            const input = document.getElementById(fieldId);
+            const eyeIcon = btn.querySelector('.icon-eye');
+            const eyeOffIcon = btn.querySelector('.icon-eye-off');
+
+            if (input.type === 'password') {
+                input.type = 'text';
+                eyeIcon.style.display = 'none';
+                eyeOffIcon.style.display = '';
+                btn.style.color = '#ff8c00';
+            } else {
+                input.type = 'password';
+                eyeIcon.style.display = '';
+                eyeOffIcon.style.display = 'none';
+                btn.style.color = '';
+            }
+        }
+    </script>
 </body>
 </html>

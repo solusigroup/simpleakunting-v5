@@ -47,7 +47,7 @@ class ImportExportController extends Controller
         'persediaan' => [
             'label' => 'Persediaan',
             'table' => 'master_persediaan',
-            'columns' => ['kode_barang', 'nama_barang', 'satuan', 'harga_beli', 'harga_jual', 'stok_awal', 'stok_akhir']
+            'columns' => ['kode_barang', 'nama_barang', 'satuan', 'harga_beli', 'harga_jual', 'stok_awal', 'stok_saat_ini']
         ],
         'akun' => [
             'label' => 'Chart of Accounts (COA)',
@@ -172,22 +172,56 @@ class ImportExportController extends Controller
         $file = $request->file('file');
         
         try {
-            $handle = fopen($file->getPathname(), 'r');
+            $pathname = $file->getPathname();
+            $handle = fopen($pathname, 'r');
+            
+            // Read first line to detect delimiter and handle BOM
+            $firstLine = fgets($handle);
             
             // Skip BOM if present
-            $bom = fread($handle, 3);
-            if ($bom !== chr(0xEF).chr(0xBB).chr(0xBF)) {
-                rewind($handle);
-            }
+            $firstLine = preg_replace('/^\xEF\xBB\xBF/', '', $firstLine);
             
-            // Read header
-            $header = fgetcsv($handle);
+            // Simple delimiter detection: comma vs semicolon
+            $commaCount = substr_count($firstLine, ',');
+            $semicolonCount = substr_count($firstLine, ';');
+            $delimiter = ($semicolonCount > $commaCount) ? ';' : ',';
+            
+            // Parse header from first line
+            $header = str_getcsv($firstLine, $delimiter);
+            
+            // Clean headers: trim and remove any remaining invisible characters
+            $header = array_map(function($h) {
+                // Remove non-printable characters and trim
+                return trim(preg_replace('/[[:^print:]]/', '', $h));
+            }, $header);
+
+            // Column aliases: map old/alternative column names to current DB column names
+            $columnAliases = [
+                'stok_akhir' => 'stok_saat_ini',
+                'kode_pelanggan' => 'kode_pelanggan',
+            ];
+
+            // Remap headers using aliases
+            $header = array_map(function($h) use ($columnAliases) {
+                return $columnAliases[$h] ?? $h;
+            }, $header);
             
             // Validate header
             $expectedColumns = $config['columns'];
-            if (array_diff($expectedColumns, $header) || array_diff($header, $expectedColumns)) {
+            
+            // Check if all expected columns are present
+            $missingColumns = array_diff($expectedColumns, $header);
+            $extraColumns = array_diff($header, $expectedColumns);
+            
+            if (!empty($missingColumns)) {
                 fclose($handle);
-                return back()->with('error', 'Kolom CSV tidak sesuai. Header yang diharapkan: ' . implode(', ', $expectedColumns));
+                $errorMsg = 'Kolom CSV tidak sesuai.';
+                $errorMsg .= ' Kolom yang kurang: ' . implode(', ', $missingColumns) . '.';
+                if (!empty($extraColumns)) {
+                    $errorMsg .= ' Kolom tidak dikenal: ' . implode(', ', $extraColumns) . '.';
+                }
+                $errorMsg .= ' Kolom yang diharapkan: ' . implode(', ', $expectedColumns) . '.';
+                return back()->with('error', $errorMsg);
             }
 
             DB::beginTransaction();
@@ -201,7 +235,7 @@ class ImportExportController extends Controller
             $errors = [];
             $lineNumber = 1;
 
-            while (($row = fgetcsv($handle)) !== false) {
+            while (($row = fgetcsv($handle, 0, $delimiter)) !== false) {
                 $lineNumber++;
                 
                 // Skip empty rows
@@ -212,25 +246,35 @@ class ImportExportController extends Controller
                 try {
                     $data = [];
                     foreach ($header as $i => $col) {
+                        // Only include columns that are in the expected list
+                        if (!in_array($col, $expectedColumns)) {
+                            continue;
+                        }
                         $value = trim($row[$i] ?? '');
                         
                         // Handle empty values
                         if ($value === '' || $value === 'contoh_' . $col) {
-                            $value = null;
+                            // Default numeric columns to 0 instead of null
+                            if (preg_match('/stok|harga|jumlah|saldo|total|bunga|tenor|provisi|biaya/i', $col)) {
+                                $value = 0;
+                            } else {
+                                $value = null;
+                            }
                         }
                         
                         // Convert date formats (DD-MM-YYYY or DD/MM/YYYY) to MySQL format (YYYY-MM-DD)
                         if ($value !== null && preg_match('/tanggal|date/i', $col)) {
-                            if (preg_match('/^(\d{2})[-\/](\d{2})[-\/](\d{4})$/', $value, $matches)) {
+                            if (preg_match('/^(\d{2})[\/\-](\d{2})[\/\-](\d{4})$/', $value, $matches)) {
                                 // DD-MM-YYYY or DD/MM/YYYY
                                 $value = $matches[3] . '-' . $matches[2] . '-' . $matches[1];
-                            } elseif (preg_match('/^(\d{4})[-\/](\d{2})[-\/](\d{2})$/', $value)) {
+                            } elseif (preg_match('/^(\d{4})[\/\-](\d{2})[\/\-](\d{2})$/', $value)) {
                                 // Already in YYYY-MM-DD format, keep as is
                             }
                         }
                         
                         $data[$col] = $value;
                     }
+
 
                     // Add timestamps
                     $data['created_at'] = now();
