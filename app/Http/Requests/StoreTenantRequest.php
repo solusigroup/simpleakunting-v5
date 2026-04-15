@@ -65,6 +65,18 @@ class StoreTenantRequest extends FormRequest
                 'email:rfc,dns',  // validasi lebih ketat: RFC + pengecekan DNS MX record
                 'max:255',
             ],
+
+            'admin_username' => [
+                'required',
+                'string',
+                'max:50',
+            ],
+
+            'admin_password' => [
+                'required',
+                'string',
+                'min:8',
+            ],
         ];
     }
 
@@ -86,6 +98,12 @@ class StoreTenantRequest extends FormRequest
 
             'email.email' => 'Format email tidak valid atau domain email tidak ditemukan.',
             'email.max'   => 'Email maksimal :max karakter.',
+
+            'admin_username.required' => 'Username admin wajib diisi.',
+            'admin_username.max'      => 'Username admin maksimal :max karakter.',
+
+            'admin_password.required' => 'Password admin wajib diisi.',
+            'admin_password.min'      => 'Password admin minimal :min karakter.',
         ];
     }
 
@@ -98,6 +116,8 @@ class StoreTenantRequest extends FormRequest
             'tenant_id'       => 'ID Tenant / Subdomain',
             'nama_perusahaan' => 'Nama Perusahaan',
             'email'           => 'Email',
+            'admin_username'  => 'Username Admin',
+            'admin_password'  => 'Password Admin',
         ];
     }
 
@@ -129,8 +149,12 @@ class StoreTenantRequest extends FormRequest
             $merges['nama_perusahaan'] = trim((string) $this->nama_perusahaan);
         }
 
-        if ($this->has('email')) {
+        if ($this->has('email') && $this->email !== null) {
             $merges['email'] = trim(strtolower((string) $this->email));
+        }
+
+        if ($this->has('admin_username')) {
+            $merges['admin_username'] = trim(strtolower((string) $this->admin_username));
         }
 
         if (!empty($merges)) {

@@ -38,13 +38,24 @@ class TenantDatabaseSeeder extends Seeder
 
         // 3. Create default admin user for the tenant
         if (User::count() === 0) {
+            $adminUsername = $tenant->admin_username ?? 'admin';
+            $adminPassword = $tenant->admin_password ?? 'password';
+
             User::create([
-                'nama_user' => 'admin',
-                'password_hash' => Hash::make('password'),
+                'nama_user' => $adminUsername,
+                'password_hash' => Hash::make($adminPassword),
                 'role' => 'admin',
                 'jabatan' => 'Administrator',
             ]);
-            \Log::info("Tenant [{$tenant->id}] admin created. Default password: password");
+            \Log::info("Tenant [{$tenant->id}] admin created with custom credentials.");
+            
+            // Hapus plaintext password dari data Json di schema central untuk keamanan
+            if ($tenant->admin_password) {
+                // Di stancl/tenancy, kita bisa update_keys pada JSON column 'data' dengan menyimpan null
+                // Atau cukup null-kan model property dan simpan ulang.
+                $tenant->admin_password = null;
+                $tenant->save();
+            }
         }
     }
 }

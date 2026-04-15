@@ -33,6 +33,8 @@ class TenantRegistrationController extends Controller
             'id'               => $validated['tenant_id'], // Sudah di-lowercase otomatis oleh Request
             'nama_perusahaan'  => $validated['nama_perusahaan'],
             'email'            => $validated['email'] ?? null,
+            'admin_username'   => $validated['admin_username'],
+            'admin_password'   => $validated['admin_password'],
         ]);
 
         $tenant->domains()->create([

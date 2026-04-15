@@ -57,6 +57,19 @@
                 <input type="email" id="email" name="email" value="{{ old('email') }}" placeholder="admin@perusahaan.com">
             </div>
 
+            <hr style="border: 0; border-top: 1px solid rgba(255,255,255,0.1); margin: 30px 0;">
+
+            <div class="form-group">
+                <label for="admin_username">Username Admin</label>
+                <input type="text" id="admin_username" name="admin_username" value="{{ old('admin_username') }}" placeholder="Contoh: admin" required>
+                <div class="hint">Digunakan untuk login pertama kali.</div>
+            </div>
+
+            <div class="form-group">
+                <label for="admin_password">Password Admin</label>
+                <input type="password" id="admin_password" name="admin_password" placeholder="Minimal 8 karakter" required>
+            </div>
+
             <button type="submit" class="btn">Buat Tenant →</button>
         </form>
 
