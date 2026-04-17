@@ -43,7 +43,12 @@
         .badge-superuser { background: rgba(255,140,0,0.2); color: #ff8c00; }
         .domain-link { color: #5b9fff; text-decoration: none; }
         .domain-link:hover { text-decoration: underline; }
-        .btn-delete { background: none; border: 1px solid rgba(220,53,69,0.4); color: #ff6b6b; padding: 6px 14px; border-radius: 6px; cursor: pointer; font-size: 0.8rem; font-family: inherit; }
+        .btn-view, .btn-edit, .btn-delete { display: inline-block; padding: 6px 14px; border-radius: 6px; cursor: pointer; font-size: 0.8rem; font-family: inherit; text-decoration: none; border: 1px solid transparent; transition: all 0.2s; }
+        .btn-view { border-color: rgba(91, 159, 255, 0.4); color: #5b9fff; }
+        .btn-view:hover { background: rgba(91, 159, 255, 0.15); }
+        .btn-edit { border-color: rgba(255, 140, 0, 0.4); color: #ff8c00; }
+        .btn-edit:hover { background: rgba(255, 140, 0, 0.15); }
+        .btn-delete { background: none; border-color: rgba(220,53,69,0.4); color: #ff6b6b; }
         .btn-delete:hover { background: rgba(220,53,69,0.15); }
         .empty { text-align: center; padding: 48px; color: #5a7090; }
 

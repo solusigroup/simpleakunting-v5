@@ -80,4 +80,65 @@ class TenantRegistrationController extends Controller
         return redirect()->route('central.tenants.index')
             ->with('success', "Tenant '{$id}' berhasil dihapus beserta database-nya.");
     }
+
+    /**
+     * Tampilkan detail tenant.
+     */
+    public function show($id)
+    {
+        $tenant = Tenant::with('domains')->findOrFail($id);
+        return view('central.admin.tenants_show', compact('tenant'));
+    }
+
+    /**
+     * Form edit tenant.
+     */
+    public function edit($id)
+    {
+        $tenant = Tenant::with('domains')->findOrFail($id);
+        return view('central.admin.tenants_edit', compact('tenant'));
+    }
+
+    /**
+     * Update data tenant & sinkronisasi ke user admin di tenant DB.
+     */
+    public function update(Request $request, $id)
+    {
+        $tenant = Tenant::findOrFail($id);
+
+        $validated = $request->validate([
+            'nama_perusahaan' => 'required|string|max:255',
+            'email'           => 'nullable|email|max:255',
+            'is_active'       => 'required|boolean',
+            'admin_username'  => 'required|string|max:50',
+            'admin_password'  => 'nullable|string|min:8',
+        ]);
+
+        // 1. Update Central Metadata
+        $tenant->update([
+            'nama_perusahaan' => $validated['nama_perusahaan'],
+            'email'           => $validated['email'],
+            'is_active'       => $validated['is_active'],
+            'admin_username'  => $validated['admin_username'],
+        ]);
+
+        // 2. Sinkronisasi ke Database Tenant
+        $tenant->run(function () use ($validated) {
+            $user = \App\Models\User::where('role', 'admin')->first();
+            if ($user) {
+                $updateData = [
+                    'nama_user' => $validated['admin_username'],
+                ];
+                
+                if (!empty($validated['admin_password'])) {
+                    $updateData['password_hash'] = \Illuminate\Support\Facades\Hash::make($validated['admin_password']);
+                }
+
+                $user->update($updateData);
+            }
+        });
+
+        return redirect()->route('central.tenants.index')
+            ->with('success', "Tenant '{$id}' berhasil diperbarui dan disinkronkan.");
+    }
 }

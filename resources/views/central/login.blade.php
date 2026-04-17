@@ -4,6 +4,14 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Central Admin Login - Simple Akunting v5</title>
+
+    <!-- PWA Meta Tags -->
+    <link rel="manifest" href="/manifest.json">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="SimpleAkunting">
+    <link rel="apple-touch-icon" href="{{ asset('images/favicon.png') }}">
+    <meta name="theme-color" content="#ff8c00">
     <link rel="icon" type="image/x-icon" href="{{ asset('favicon.ico') }}">
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -100,5 +108,14 @@
             &copy; {{ date('Y') }} Simple Akunting v5
         </div>
     </div>
+    <script>
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('/sw.js')
+                    .then(reg => console.log('Service Worker registered'))
+                    .catch(err => console.error('Service Worker registration failed', err));
+            });
+        }
+    </script>
 </body>
 </html>

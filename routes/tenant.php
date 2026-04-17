@@ -46,6 +46,7 @@ Route::middleware([
     'web',
     InitializeTenancyBySubdomain::class,
     PreventAccessFromCentralDomains::class,
+    \App\Http\Middleware\CheckTenantActive::class,
 ])->group(function () {
 
     Route::get('/', function () {

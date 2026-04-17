@@ -45,13 +45,17 @@
                         @endif
                     </td>
                     <td>{{ $tenant->created_at?->format('d M Y') }}</td>
-                    <td>
-                        <form method="POST" action="{{ route('central.tenants.destroy', $tenant->id) }}" onsubmit="return confirmDelete(this, '{{ $tenant->id }}')">
-                            @csrf
-                            @method('DELETE')
-                            <input type="hidden" name="confirm_name" value="">
-                            <button type="submit" class="btn-delete">Hapus</button>
-                        </form>
+                    <td class="table-actions">
+                        <div class="d-flex gap-2 justify-content-end">
+                            <a href="{{ route('central.tenants.show', $tenant->id) }}" class="btn-view">Lihat</a>
+                            <a href="{{ route('central.tenants.edit', $tenant->id) }}" class="btn-edit">Edit</a>
+                            <form method="POST" action="{{ route('central.tenants.destroy', $tenant->id) }}" onsubmit="return confirmDelete(this, '{{ $tenant->id }}')">
+                                @csrf
+                                @method('DELETE')
+                                <input type="hidden" name="confirm_name" value="">
+                                <button type="submit" class="btn-delete">Hapus</button>
+                            </form>
+                        </div>
                     </td>
                 </tr>
                 @endforeach

@@ -73,6 +73,9 @@ if (config('app.tenancy_enabled')) {
                 Route::get('register-tenant', [TenantRegistrationController::class, 'showForm'])->name('central.register-tenant');
                 Route::post('register-tenant', [TenantRegistrationController::class, 'store'])->name('central.register-tenant.store');
                 Route::get('admin/tenants', [TenantRegistrationController::class, 'index'])->name('central.tenants.index');
+                Route::get('admin/tenants/{id}', [TenantRegistrationController::class, 'show'])->name('central.tenants.show');
+                Route::get('admin/tenants/{id}/edit', [TenantRegistrationController::class, 'edit'])->name('central.tenants.edit');
+                Route::put('admin/tenants/{id}', [TenantRegistrationController::class, 'update'])->name('central.tenants.update');
                 Route::delete('admin/tenants/{id}', [TenantRegistrationController::class, 'destroy'])->name('central.tenants.destroy');
 
                 // Central User Management
