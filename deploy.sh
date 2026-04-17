@@ -1,7 +1,7 @@
 #!/bin/bash
 set -e
 
-echo "🚀 Memulai proses deployment..."
+echo "🚀 Bismillah Memulai proses deployment..."
 
 # 1. Masuk ke mode pemeliharaan
 echo "🚧 Mengaktifkan mode pemeliharaan..."
@@ -49,4 +49,4 @@ php artisan queue:restart
 echo "✅ Deployment selesai! Mengaktifkan aplikasi kembali..."
 php artisan up
 
-echo "🌟 Aplikasi sudah LIVE kembali dengan versi terbaru."
+echo "🌟 Alhamdulilah Aplikasi sudah LIVE kembali dengan versi terbaru."
