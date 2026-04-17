@@ -20,6 +20,7 @@ use App\Http\Controllers\BukuBesarController;
 use App\Http\Controllers\LaporanController;
 use App\Http\Controllers\PerusahaanController;
 use App\Http\Controllers\UserController;
+use App\Http\Controllers\RoleController; 
 use App\Http\Controllers\PenerimaanController;
 use App\Http\Controllers\PembayaranController;
 use App\Http\Controllers\ManufacturingController;
@@ -163,6 +164,7 @@ Route::middleware([
             Route::put('perusahaan', [PerusahaanController::class, 'update'])->name('perusahaan.update');
             Route::resource('users', UserController::class);
             Route::post('users/{user}/reset-password', [UserController::class, 'resetPassword'])->name('users.reset-password');
+            Route::resource('roles', RoleController::class);
             Route::resource('cabang', CabangController::class);
             Route::resource('unit-usaha', UnitUsahaController::class);
             Route::post('cabang/switch', [CabangSessionController::class, 'switch'])->name('cabang.switch');

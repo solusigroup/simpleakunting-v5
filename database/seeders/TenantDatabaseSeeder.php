@@ -17,6 +17,9 @@ class TenantDatabaseSeeder extends Seeder
      */
     public function run(): void
     {
+        // 0. Seed Roles and Permissions
+        $this->call(PermissionSeeder::class);
+
         // 1. Seed Chart of Accounts (CoA)
         $this->call(AkunSeeder::class);
 
@@ -45,6 +48,7 @@ class TenantDatabaseSeeder extends Seeder
                 'nama_user' => $adminUsername,
                 'password_hash' => Hash::make($adminPassword),
                 'role' => 'admin',
+                'role_id' => \App\Models\Role::where('name', 'admin')->value('id'),
                 'jabatan' => 'Administrator',
             ]);
             \Log::info("Tenant [{$tenant->id}] admin created with custom credentials.");

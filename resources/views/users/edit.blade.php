@@ -38,13 +38,13 @@
                             <input type="password" class="form-control" id="password_confirmation" name="password_confirmation">
                         </div>
                         <div class="mb-3">
-                            <label for="role" class="form-label">Role</label>
-                            <select class="form-select @error('role') is-invalid @enderror" id="role" name="role" required>
-                                @foreach($roles as $value => $label)
-                                    <option value="{{ $value }}" {{ old('role', $user->role) == $value ? 'selected' : '' }}>{{ $label }}</option>
+                            <label for="role_id" class="form-label">Role</label>
+                            <select class="form-select @error('role_id') is-invalid @enderror" id="role_id" name="role_id" required>
+                                @foreach($roles as $r)
+                                    <option value="{{ $r->id }}" {{ old('role_id', $user->role_id) == $r->id ? 'selected' : '' }}>{{ $r->display_name }}</option>
                                 @endforeach
                             </select>
-                            @error('role')
+                            @error('role_id')
                                 <div class="invalid-feedback">{{ $message }}</div>
                             @enderror
                         </div>

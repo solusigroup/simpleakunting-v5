@@ -819,6 +819,12 @@
                             </a>
                         </li>
                         <li class="sidebar-nav-item">
+                            <a class="sidebar-nav-link {{ request()->routeIs('roles.*') ? 'active' : '' }}" href="{{ route('roles.index') }}">
+                                <span data-feather="key"></span>
+                                Manajemen Role
+                            </a>
+                        </li>
+                        <li class="sidebar-nav-item">
                             <a class="sidebar-nav-link {{ request()->routeIs('cabang.*') ? 'active' : '' }}" href="{{ route('cabang.index') }}">
                                 <span data-feather="map-pin"></span>
                                 Kantor Cabang

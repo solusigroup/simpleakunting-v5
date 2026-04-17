@@ -13,33 +13,24 @@ class UserController extends Controller
      * Get available roles based on current user's role.
      * Users can only create/edit users with lower privilege.
      */
-    private function getAvailableRoles(): array
+    private function getAvailableRoles()
     {
         $currentUser = auth()->user();
         
-        $allRoles = [
-            'superuser' => 'Superuser',
-            'admin' => 'Admin',
-            'manajer' => 'Manajer',
-            'staff' => 'Staff',
-            'kasir' => 'Kasir',
-        ];
-        
-        // Filter roles based on current user's level
+        // Roles with lower privilege (higher level number)
         $currentLevel = $currentUser->getRoleLevel();
         
-        return collect($allRoles)->filter(function ($label, $role) use ($currentLevel) {
-            $roleLevel = match($role) {
+        return \App\Models\Role::all()->filter(function ($role) use ($currentLevel) {
+            $roleLevel = match($role->name) {
                 'superuser' => 1,
                 'admin' => 2,
                 'manajer' => 3,
                 'staff' => 4,
                 'kasir' => 5,
-                default => 99,
+                default => 6, // Custom roles are level 6
             };
-            // Only show roles with lower privilege (higher level number)
             return $roleLevel > $currentLevel;
-        })->toArray();
+        });
     }
 
     public function index()
@@ -57,20 +48,23 @@ class UserController extends Controller
 
     public function store(Request $request)
     {
-        $availableRoles = array_keys($this->getAvailableRoles());
+        $availableRoleIds = $this->getAvailableRoles()->pluck('id')->toArray();
         
         $request->validate([
             'nama_user' => 'required|string|max:255|unique:users,nama_user',
             'password' => 'required|string|min:8|confirmed',
-            'role' => 'required|string|in:' . implode(',', $availableRoles),
+            'role_id' => 'required|exists:roles,id|in:' . implode(',', $availableRoleIds),
             'jabatan' => 'nullable|string',
             'id_cabang' => 'nullable|exists:cabang,id',
         ]);
 
+        $role = \App\Models\Role::find($request->role_id);
+
         User::create([
             'nama_user' => $request->nama_user,
             'password_hash' => Hash::make($request->password),
-            'role' => $request->role,
+            'role_id' => $role->id,
+            'role' => $role->name, // Keep legacy string for compatibility
             'jabatan' => $request->jabatan ?? '',
             'id_cabang' => $request->id_cabang,
         ]);
@@ -110,23 +104,28 @@ class UserController extends Controller
             return back()->with('error', 'Anda tidak memiliki izin untuk mengedit user ini.');
         }
         
-        $availableRoles = array_keys($this->getAvailableRoles());
+        $availableRoles = $this->getAvailableRoles();
+        $availableRoleIds = $availableRoles->pluck('id')->toArray();
+        
         // Include current role as valid option
-        if (!in_array($user->role, $availableRoles)) {
-            $availableRoles[] = $user->role;
+        if ($user->role_id && !in_array($user->role_id, $availableRoleIds)) {
+            $availableRoleIds[] = $user->role_id;
         }
         
         $request->validate([
             'nama_user' => 'required|string|max:255|unique:users,nama_user,' . $user->id_user . ',id_user',
             'password' => 'nullable|string|min:8|confirmed',
-            'role' => 'required|string|in:' . implode(',', $availableRoles),
+            'role_id' => 'required|exists:roles,id|in:' . implode(',', $availableRoleIds),
             'jabatan' => 'nullable|string',
             'id_cabang' => 'nullable|exists:cabang,id',
         ]);
 
+        $role = \App\Models\Role::find($request->role_id);
+
         $data = [
             'nama_user' => $request->nama_user,
-            'role' => $request->role,
+            'role_id' => $role->id,
+            'role' => $role->name, // Keep legacy string for compatibility
             'jabatan' => $request->jabatan ?? '',
             'id_cabang' => $request->id_cabang,
         ];

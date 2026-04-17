@@ -32,6 +32,7 @@ class User extends Authenticatable
         'nama_user',
         'password_hash',
         'role',
+        'role_id',
         'jabatan',
         'id_cabang',
     ];
@@ -80,7 +81,35 @@ class User extends Authenticatable
     public function hasRole(array|string $roles): bool
     {
         $roles = is_array($roles) ? $roles : [$roles];
-        return in_array($this->role, $roles);
+        
+        // Check legacy role string
+        if (in_array($this->role, $roles)) {
+            return true;
+        }
+
+        // Check dynamic role name
+        if ($this->role_id && $this->role_relation) {
+            return in_array($this->role_relation->name, $roles);
+        }
+
+        return false;
+    }
+
+    /**
+     * Check if user has a specific permission.
+     */
+    public function hasPermission(string $permission): bool
+    {
+        // Superuser has all permissions
+        if ($this->isSuperuser()) {
+            return true;
+        }
+
+        if (!$this->role_id || !$this->role_relation) {
+            return false;
+        }
+
+        return $this->role_relation->permissions()->where('name', $permission)->exists();
     }
 
     /**
@@ -239,5 +268,10 @@ class User extends Authenticatable
     public function cabang()
     {
         return $this->belongsTo(Cabang::class, 'id_cabang');
+    }
+
+    public function role_relation()
+    {
+        return $this->belongsTo(Role::class, 'role_id');
     }
 }

@@ -49,14 +49,14 @@
                             </div>
                         </div>
                         <div class="mb-3">
-                            <label for="role" class="form-label">Role</label>
-                            <select class="form-select @error('role') is-invalid @enderror" id="role" name="role" required>
+                            <label for="role_id" class="form-label">Role</label>
+                            <select class="form-select @error('role_id') is-invalid @enderror" id="role_id" name="role_id" required>
                                 <option value="">-- Pilih Role --</option>
-                                @foreach($roles as $value => $label)
-                                    <option value="{{ $value }}" {{ old('role') == $value ? 'selected' : '' }}>{{ $label }}</option>
+                                @foreach($roles as $r)
+                                    <option value="{{ $r->id }}" {{ old('role_id') == $r->id ? 'selected' : '' }}>{{ $r->display_name }}</option>
                                 @endforeach
                             </select>
-                            @error('role')
+                            @error('role_id')
                                 <div class="invalid-feedback">{{ $message }}</div>
                             @enderror
                         </div>
