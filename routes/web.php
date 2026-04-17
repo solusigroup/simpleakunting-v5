@@ -50,46 +50,74 @@ use Illuminate\Support\Facades\Route;
 // CENTRAL ROUTES (only when multi-tenant is enabled)
 // =====================================================
 if (config('app.tenancy_enabled')) {
+    $centralDomains = config('tenancy.central_domains', []);
 
-    // Scope central routes to central domains so tenant routes
-    // loaded later by TenancyServiceProvider don't override them
-    foreach (config('tenancy.central_domains', []) as $domain) {
-        Route::domain($domain)->group(function () {
+    foreach ($centralDomains as $index => $domain) {
+        $isPrimary = ($index === 0);
+
+        Route::domain($domain)->group(function () use ($isPrimary) {
 
             // Central landing page
-            Route::get('/', function () {
+            $route = Route::get('/', function () {
                 return view('central.landing');
-            })->name('central.landing');
+            });
+            if ($isPrimary) $route->name('central.landing');
 
             // Central Admin Login
-            Route::middleware(['web', 'guest:central'])->group(function () {
-                Route::get('login', [\App\Http\Controllers\CentralAuthController::class, 'showLoginForm'])->name('central.login');
+            Route::middleware(['web', 'guest:central'])->group(function () use ($isPrimary) {
+                $rLogin = Route::get('login', [\App\Http\Controllers\CentralAuthController::class, 'showLoginForm']);
+                if ($isPrimary) $rLogin->name('central.login');
+
                 Route::post('login', [\App\Http\Controllers\CentralAuthController::class, 'login'])->middleware('throttle:5,1');
             });
 
             // Central Admin Routes (auth + superuser only)
-            Route::middleware(['web', 'auth:central', 'role:superuser'])->group(function () {
-                Route::post('logout', [\App\Http\Controllers\CentralAuthController::class, 'logout'])->name('central.logout');
-                Route::get('register-tenant', [TenantRegistrationController::class, 'showForm'])->name('central.register-tenant');
-                Route::post('register-tenant', [TenantRegistrationController::class, 'store'])->name('central.register-tenant.store');
-                Route::get('admin/tenants', [TenantRegistrationController::class, 'index'])->name('central.tenants.index');
-                Route::get('admin/tenants/{id}', [TenantRegistrationController::class, 'show'])->name('central.tenants.show');
-                Route::get('admin/tenants/{id}/edit', [TenantRegistrationController::class, 'edit'])->name('central.tenants.edit');
-                Route::put('admin/tenants/{id}', [TenantRegistrationController::class, 'update'])->name('central.tenants.update');
-                Route::delete('admin/tenants/{id}', [TenantRegistrationController::class, 'destroy'])->name('central.tenants.destroy');
+            Route::middleware(['web', 'auth:central', 'role:superuser'])->group(function () use ($isPrimary) {
+                $rLogout = Route::post('logout', [\App\Http\Controllers\CentralAuthController::class, 'logout']);
+                if ($isPrimary) $rLogout->name('central.logout');
+
+                $rRegT = Route::get('register-tenant', [TenantRegistrationController::class, 'showForm']);
+                if ($isPrimary) $rRegT->name('central.register-tenant');
+
+                $rStoreT = Route::post('register-tenant', [TenantRegistrationController::class, 'store']);
+                if ($isPrimary) $rStoreT->name('central.register-tenant.store');
+
+                $rIdxT = Route::get('admin/tenants', [TenantRegistrationController::class, 'index']);
+                if ($isPrimary) $rIdxT->name('central.tenants.index');
+
+                $rShowT = Route::get('admin/tenants/{id}', [TenantRegistrationController::class, 'show']);
+                if ($isPrimary) $rShowT->name('central.tenants.show');
+
+                $rEditT = Route::get('admin/tenants/{id}/edit', [TenantRegistrationController::class, 'edit']);
+                if ($isPrimary) $rEditT->name('central.tenants.edit');
+
+                $rUpdT = Route::put('admin/tenants/{id}', [TenantRegistrationController::class, 'update']);
+                if ($isPrimary) $rUpdT->name('central.tenants.update');
+
+                $rDelT = Route::delete('admin/tenants/{id}', [TenantRegistrationController::class, 'destroy']);
+                if ($isPrimary) $rDelT->name('central.tenants.destroy');
 
                 // Central User Management
-                Route::get('admin/users', [\App\Http\Controllers\CentralUserController::class, 'index'])->name('central.users.index');
-                Route::get('admin/users/create', [\App\Http\Controllers\CentralUserController::class, 'create'])->name('central.users.create');
-                Route::post('admin/users', [\App\Http\Controllers\CentralUserController::class, 'store'])->name('central.users.store');
-                Route::delete('admin/users/{id}', [\App\Http\Controllers\CentralUserController::class, 'destroy'])->name('central.users.destroy');
-                Route::get('admin/password', [\App\Http\Controllers\CentralUserController::class, 'editPassword'])->name('central.password.edit');
-                Route::put('admin/password', [\App\Http\Controllers\CentralUserController::class, 'updatePassword'])->name('central.password.update');
-            });
+                $rIdxU = Route::get('admin/users', [\App\Http\Controllers\CentralUserController::class, 'index']);
+                if ($isPrimary) $rIdxU->name('central.users.index');
 
+                $rCreU = Route::get('admin/users/create', [\App\Http\Controllers\CentralUserController::class, 'create']);
+                if ($isPrimary) $rCreU->name('central.users.create');
+
+                $rStoreU = Route::post('admin/users', [\App\Http\Controllers\CentralUserController::class, 'store']);
+                if ($isPrimary) $rStoreU->name('central.users.store');
+
+                $rDelU = Route::delete('admin/users/{id}', [\App\Http\Controllers\CentralUserController::class, 'destroy']);
+                if ($isPrimary) $rDelU->name('central.users.destroy');
+
+                $rEdiP = Route::get('admin/password', [\App\Http\Controllers\CentralUserController::class, 'editPassword']);
+                if ($isPrimary) $rEdiP->name('central.password.edit');
+
+                $rUpdP = Route::put('admin/password', [\App\Http\Controllers\CentralUserController::class, 'updatePassword']);
+                if ($isPrimary) $rUpdP->name('central.password.update');
+            });
         });
     }
-
 } else {
 
     // =====================================================
