@@ -5,7 +5,11 @@ echo "🚀 Bismillah Memulai proses deployment..."
 
 # 1. Masuk ke mode pemeliharaan
 echo "🚧 Mengaktifkan mode pemeliharaan..."
-php artisan down --message="Aplikasi sedang dalam pembaruan rutin. Mohon tunggu beberapa menit." || true
+php artisan down || true
+
+# 1a. Pastikan izin akses folder benar (Permissions Fix)
+echo "🔒 Mengatur ulang izin akses folder storage & cache..."
+chmod -R 775 storage bootstrap/cache
 
 # 2. Update kode dari repository
 echo "📥 Menarik kode terbaru dari Git..."
