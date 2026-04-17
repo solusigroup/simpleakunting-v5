@@ -72,13 +72,15 @@ class AuthController extends Controller
 
     public function logout(Request $request)
     {
-        AuditTrail::log('logout', 'User logout: ' . Auth::user()->nama_user);
+        if (Auth::check()) {
+            AuditTrail::log('logout', 'User logout: ' . Auth::user()->nama_user);
+        }
 
         Auth::logout();
 
         $request->session()->invalidate();
         $request->session()->regenerateToken();
 
-        return redirect('/');
+        return redirect()->route('login');
     }
 }
