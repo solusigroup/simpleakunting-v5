@@ -44,9 +44,9 @@ use App\Http\Controllers\GuideController;
 */
 
 Route::middleware([
-    'web',
     InitializeTenancyBySubdomain::class,
     PreventAccessFromCentralDomains::class,
+    'web',
     \App\Http\Middleware\CheckTenantActive::class,
 ])->group(function () {
 
