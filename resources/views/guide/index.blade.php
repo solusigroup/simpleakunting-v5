@@ -244,16 +244,27 @@
                     <p>Modul untuk mencatat proses produksi barang (barang mentah menjadi barang jadi).</p>
                     <div class="p-4 bg-muted rounded-4 bg-light border border-light">
                         <h6 class="fw-bold small text-muted text-uppercase mb-3">Feature Utama:</h6>
-                        <div class="d-flex flex-column gap-2 small">
-                            <div class="d-flex align-items-center gap-2">
-                                <span class="badge bg-secondary rounded-pill">BoM</span>
-                                <span><strong>Bill of Materials:</strong> Formula bahan baku yang dibutuhkan untuk memproduksi 1 unit produk.</span>
+                        <div class="row g-3 small">
+                            <div class="col-md-6">
+                                <div class="d-flex align-items-start gap-2">
+                                    <span class="badge bg-secondary rounded-pill">BoM</span>
+                                    <span><strong>Bill of Materials:</strong> Formula bahan baku yang dibutuhkan untuk memproduksi 1 unit produk.</span>
+                                </div>
                             </div>
-                            <div class="d-flex align-items-center gap-2">
-                                <span class="badge bg-secondary rounded-pill">Prod</span>
-                                <span><strong>Produksi:</strong> Pencatatan harian proses produksi untuk memotong stok bahan baku dan menambah stok barang jadi.</span>
+                            <div class="col-md-6">
+                                <div class="d-flex align-items-start gap-2">
+                                    <span class="badge bg-secondary rounded-pill">Prod</span>
+                                    <span><strong>Produksi:</strong> Pencatatan harian proses produksi untuk memotong stok bahan baku dan menambah stok barang jadi.</span>
+                                </div>
                             </div>
                         </div>
+
+                        <h6 class="fw-bold small text-muted text-uppercase mt-4 mb-3">Laporan Manufaktur:</h6>
+                        <ul class="list-unstyled d-flex flex-column gap-2 mb-0 small">
+                            <li><span class="text-primary">📊</span> <strong>Biaya Produksi:</strong> Analisis detail biaya material per nomor produksi dan biaya per unit.</li>
+                            <li><span class="text-primary">📊</span> <strong>Penggunaan Material:</strong> Rekapitulasi total bahan baku yang keluar untuk produksi dalam periode tertentu.</li>
+                            <li><span class="text-primary">📊</span> <strong>WIP Valuation:</strong> Penilaian nilai stok yang masih dalam proses produksi (belum selesai).</li>
+                        </ul>
                     </div>
                 </div>
             </div>
@@ -267,15 +278,33 @@
                     <p>Pencatatan aset biologis sesuai standar akuntansi internasional (Fair Value).</p>
                     <div class="row g-3">
                         <div class="col-sm-6">
-                            <div class="p-3 border rounded-3 bg-success bg-opacity-10 border-success border-opacity-25">
+                            <div class="p-3 border rounded-3 bg-success bg-opacity-10 border-success border-opacity-25 h-100">
                                 <h6 class="fw-bold mb-1 small text-success">Pendaftaran Aset</h6>
-                                <p class="extra-small mb-0 opacity-75">Input bibit/hewan baru ke dalam sistem sebagai aset.</p>
+                                <p class="extra-small mb-0 opacity-75">Input bibit/hewan baru ke dalam sistem sebagai aset biologis.</p>
                             </div>
                         </div>
                         <div class="col-sm-6">
-                            <div class="p-3 border rounded-3 bg-success bg-opacity-10 border-success border-opacity-25">
+                            <div class="p-3 border rounded-3 bg-success bg-opacity-10 border-success border-opacity-25 h-100">
                                 <h6 class="fw-bold mb-1 small text-success">Revaluasi Wajar</h6>
                                 <p class="extra-small mb-0 opacity-75">Update kenaikan nilai aset akibat pertumbuhan tanpa perlu transaksi jual beli.</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="mt-4 p-4 rounded-4 border border-success border-opacity-10" style="background-color: rgba(25, 135, 84, 0.05);">
+                        <h6 class="fw-bold small text-success text-uppercase mb-3">Laporan PSAK 69:</h6>
+                        <div class="row g-3 small">
+                            <div class="col-md-6">
+                                <strong>1. Rekonsiliasi:</strong> Melacak mutasi saldo awal ke saldo akhir aset.
+                            </div>
+                            <div class="col-md-6">
+                                <strong>2. Perubahan Nilai Wajar:</strong> Riwayat keuntungan/kerugian dari pertumbuhan aset.
+                            </div>
+                            <div class="col-md-6">
+                                <strong>3. Produksi & Panen:</strong> Klasifikasi aset berdasarkan siklus hidupnya.
+                            </div>
+                            <div class="col-md-6">
+                                <strong>4. Pengungkapan:</strong> Ringkasan lengkap untuk Catatan atas Laporan Keuangan.
                             </div>
                         </div>
                     </div>
