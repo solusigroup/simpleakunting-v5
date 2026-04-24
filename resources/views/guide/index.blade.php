@@ -20,6 +20,8 @@
                     <a class="nav-link p-0 text-dark fw-medium" href="#agri">🌱 Pertanian</a>
                     <a class="nav-link p-0 text-dark fw-medium" href="#report">📊 Laporan & Analisis</a>
                     <a class="nav-link p-0 text-dark fw-medium" href="#admin">⚙️ Administrasi</a>
+                    <li><hr class="dropdown-divider my-2"></li>
+                    <a class="nav-link p-0 text-dark fw-medium" href="#schema">🔗 Skema & Koneksi Modul</a>
                     <a class="nav-link p-0 text-dark fw-medium" href="#sitemap">🗺️ Site Map</a>
                 </nav>
             </div>
@@ -346,6 +348,117 @@
                                 </tr>
                             </tbody>
                         </table>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Skema & Koneksi Modul -->
+        <section id="schema" class="mb-5 pt-2">
+            <div class="card border-0 shadow-sm rounded-4 border-top border-4 border-primary">
+                <div class="card-body p-4 p-md-5">
+                    <h2 class="fw-bold mb-4">🔗 Skema & Koneksi Modul</h2>
+                    <p class="text-muted">Memahami bagaimana data mengalir dan saling terhubung antar modul di Simple Akunting v5.</p>
+                    
+                    <div class="alert alert-info border-0 rounded-4 p-4 mb-5 bg-opacity-10" style="background-color: rgba(13, 202, 240, 0.1);">
+                        <h6 class="fw-bold text-info mb-2">Konsep "Single Entry - Multi Effect"</h6>
+                        <p class="mb-0 small text-dark opacity-75">Anda cukup menginput satu transaksi (misal: Penjualan), dan sistem akan otomatis memperbarui Stok, mencatat Jurnal Akuntansi, mengupdate Saldo Piutang, dan menyusun Laporan Keuangan secara real-time.</p>
+                    </div>
+
+                    <div class="row g-4">
+                        <div class="col-12">
+                            <div class="p-4 rounded-4 border border-light bg-light bg-opacity-50">
+                                <h5 class="fw-bold mb-4">Alur Integrasi Utama</h5>
+                                
+                                <div class="d-flex flex-column gap-4">
+                                    <!-- Connection 1 -->
+                                    <div class="d-flex gap-3 align-items-start">
+                                        <div class="bg-primary text-white rounded-circle flex-shrink-0 d-flex align-items-center justify-content-center" style="width: 40px; height: 40px;">
+                                            <span data-feather="database"></span>
+                                        </div>
+                                        <div>
+                                            <h6 class="fw-bold mb-1">Master Data ➔ Modul Operasional</h6>
+                                            <p class="small text-muted mb-0">Akun (COA) menentukan ke mana angka diposting, sementara Master Persediaan menyediakan data barang untuk seluruh modul transaksi.</p>
+                                        </div>
+                                    </div>
+
+                                    <!-- Connection 2 -->
+                                    <div class="d-flex gap-3 align-items-start">
+                                        <div class="bg-warning text-white rounded-circle flex-shrink-0 d-flex align-items-center justify-content-center" style="width: 40px; height: 40px;">
+                                            <span data-feather="repeat"></span>
+                                        </div>
+                                        <div>
+                                            <h6 class="fw-bold mb-1">Transaksi ➔ Inventori & Akuntansi</h6>
+                                            <p class="small text-muted mb-0">Modul Penjualan, Pembelian, POS, dan Manufaktur secara otomatis melakukan <strong>potong/tambah stok</strong> dan membentuk <strong>Jurnal Otomatis</strong> ke dalam Buku Besar.</p>
+                                        </div>
+                                    </div>
+
+                                    <!-- Connection 3 -->
+                                    <div class="d-flex gap-3 align-items-start">
+                                        <div class="bg-success text-white rounded-circle flex-shrink-0 d-flex align-items-center justify-content-center" style="width: 40px; height: 40px;">
+                                            <span data-feather="trending-up"></span>
+                                        </div>
+                                        <div>
+                                            <h6 class="fw-bold mb-1">Modul Khusus (Pertanian/Koperasi) ➔ Akuntansi</h6>
+                                            <p class="small text-muted mb-0">Revaluasi Aset Biologis dan Perhitungan Bunga Simpan Pinjam diintegrasikan langsung ke sistem Akuntansi pusat untuk memastikan laporan konsolidasi yang akurat.</p>
+                                        </div>
+                                    </div>
+
+                                    <!-- Connection 4 -->
+                                    <div class="d-flex gap-3 align-items-start">
+                                        <div class="bg-danger text-white rounded-circle flex-shrink-0 d-flex align-items-center justify-content-center" style="width: 40px; height: 40px;">
+                                            <span data-feather="pie-chart"></span>
+                                        </div>
+                                        <div>
+                                            <h6 class="fw-bold mb-1">Jurnal Umum ➔ Laporan Keuangan</h6>
+                                            <p class="small text-muted mb-0">Pusat dari seluruh data adalah Jurnal. Laporan Neraca, Laba Rugi, dan Arus Kas ditarik langsung dari akumulasi transaksi di Jurnal Umum.</p>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="mt-5">
+                        <h6 class="fw-bold mb-3">Tabel Konektivitas Modul</h6>
+                        <div class="table-responsive">
+                            <table class="table table-sm table-bordered small">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th>Modul Sumber</th>
+                                        <th>Modul Terhubung</th>
+                                        <th>Efek Otomatis</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr>
+                                        <td><strong>Penjualan / POS</strong></td>
+                                        <td>Persediaan, Piutang, Jurnal</td>
+                                        <td>Stok Berkurang, Piutang Bertambah, Pendapatan Dicatat.</td>
+                                    </tr>
+                                    <tr>
+                                        <td><strong>Pembelian</strong></td>
+                                        <td>Persediaan, Hutang, Jurnal</td>
+                                        <td>Stok Bertambah, Hutang Bertambah, Persediaan Dicatat.</td>
+                                    </tr>
+                                    <tr>
+                                        <td><strong>Manufaktur</strong></td>
+                                        <td>Persediaan, Jurnal</td>
+                                        <td>Bahan Baku Berkurang (-), Barang Jadi Bertambah (+), Biaya WIP Dicatat.</td>
+                                    </tr>
+                                    <tr>
+                                        <td><strong>Pertanian</strong></td>
+                                        <td>Jurnal, Laporan PSAK 69</td>
+                                        <td>Nilai Aset Terupdate, Selisih Nilai Wajar Dicatat di Laba Rugi.</td>
+                                    </tr>
+                                    <tr>
+                                        <td><strong>Simpan Pinjam</strong></td>
+                                        <td>Kas & Bank, Jurnal</td>
+                                        <td>Uang Tunai Terupdate, Beban Bunga / Pendapatan Jasa Dicatat.</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
                     </div>
                 </div>
             </div>
