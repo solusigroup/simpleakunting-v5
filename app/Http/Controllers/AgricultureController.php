@@ -227,4 +227,165 @@ class AgricultureController extends Controller
             return back()->with('error', 'Gagal melakukan revaluasi: ' . $e->getMessage());
         }
     }
+
+    // =====================================================
+    // LAPORAN PSAK 69
+    // =====================================================
+
+    /**
+     * Laporan Rekonsiliasi Aset Biologis
+     * Menampilkan saldo awal, penambahan, pengurangan, revaluasi, dan saldo akhir.
+     */
+    public function rekonsiliasi(Request $request)
+    {
+        $tahun = $request->input('tahun', date('Y'));
+
+        $assets = AsetBiologis::with(['cabang', 'revaluasiLogs' => function ($q) use ($tahun) {
+            $q->whereYear('tanggal_revaluasi', $tahun);
+        }])->orderBy('jenis')->orderBy('nama_aset')->get();
+
+        // Hitung ringkasan per jenis
+        $ringkasan = $assets->groupBy('jenis')->map(function ($group, $jenis) use ($tahun) {
+            $totalPerolehan = $group->sum('nilai_perolehan');
+            $totalNilaiWajar = $group->sum('nilai_wajar');
+            $totalGain = 0;
+            $totalLoss = 0;
+
+            foreach ($group as $asset) {
+                foreach ($asset->revaluasiLogs as $log) {
+                    if ($log->selisih_nilai > 0) {
+                        $totalGain += $log->selisih_nilai;
+                    } else {
+                        $totalLoss += abs($log->selisih_nilai);
+                    }
+                }
+            }
+
+            $penambahan = $group->filter(function ($a) use ($tahun) {
+                return \Carbon\Carbon::parse($a->tanggal_perolehan)->year == $tahun;
+            })->sum('nilai_perolehan');
+
+            $pengurangan = $group->whereIn('status', ['dijual', 'mati'])->sum('nilai_perolehan');
+
+            return (object) [
+                'jenis' => ucfirst($jenis),
+                'jumlah_aset' => $group->count(),
+                'saldo_awal' => $totalPerolehan - $penambahan,
+                'penambahan' => $penambahan,
+                'pengurangan' => $pengurangan,
+                'keuntungan_revaluasi' => $totalGain,
+                'kerugian_revaluasi' => $totalLoss,
+                'saldo_akhir' => $totalNilaiWajar,
+            ];
+        });
+
+        $perusahaan = DB::table('perusahaan')->first();
+
+        return view('agriculture.laporan.rekonsiliasi', compact('assets', 'ringkasan', 'tahun', 'perusahaan'));
+    }
+
+    /**
+     * Laporan Perubahan Nilai Wajar
+     * Menampilkan riwayat revaluasi seluruh aset biologis.
+     */
+    public function perubahanNilaiWajar(Request $request)
+    {
+        $tahun = $request->input('tahun', date('Y'));
+
+        $logs = LogRevaluasiAset::with('asetBiologis')
+            ->whereYear('tanggal_revaluasi', $tahun)
+            ->orderBy('tanggal_revaluasi', 'desc')
+            ->get();
+
+        $totalGain = $logs->where('selisih_nilai', '>', 0)->sum('selisih_nilai');
+        $totalLoss = $logs->where('selisih_nilai', '<', 0)->sum('selisih_nilai');
+        $netChange = $totalGain + $totalLoss;
+
+        $perusahaan = DB::table('perusahaan')->first();
+
+        return view('agriculture.laporan.perubahan_nilai_wajar', compact('logs', 'totalGain', 'totalLoss', 'netChange', 'tahun', 'perusahaan'));
+    }
+
+    /**
+     * Laporan Produksi dan Panen
+     * Menampilkan aset berdasarkan status siklus hidup.
+     */
+    public function produksiPanen(Request $request)
+    {
+        $tahun = $request->input('tahun', date('Y'));
+
+        $assets = AsetBiologis::with('cabang')
+            ->orderBy('status')
+            ->orderBy('jenis')
+            ->orderBy('nama_aset')
+            ->get();
+
+        $statusGroups = $assets->groupBy('status');
+
+        $summary = [
+            'aktif'  => $statusGroups->get('aktif', collect()),
+            'panen'  => $statusGroups->get('panen', collect()),
+            'dijual' => $statusGroups->get('dijual', collect()),
+            'mati'   => $statusGroups->get('mati', collect()),
+        ];
+
+        $perusahaan = DB::table('perusahaan')->first();
+
+        return view('agriculture.laporan.produksi_panen', compact('assets', 'summary', 'tahun', 'perusahaan'));
+    }
+
+    /**
+     * Laporan Pengungkapan Aset Biologis (Disclosure)
+     * Ringkasan lengkap sesuai PSAK 69 untuk catatan atas laporan keuangan.
+     */
+    public function pengungkapan(Request $request)
+    {
+        $tahun = $request->input('tahun', date('Y'));
+
+        $assets = AsetBiologis::with(['cabang', 'revaluasiLogs'])->get();
+
+        // Ringkasan per jenis
+        $byJenis = $assets->groupBy('jenis')->map(function ($group, $jenis) {
+            return (object) [
+                'jenis' => ucfirst($jenis),
+                'jumlah' => $group->count(),
+                'total_perolehan' => $group->sum('nilai_perolehan'),
+                'total_nilai_wajar' => $group->sum('nilai_wajar'),
+                'total_estimasi_biaya_jual' => $group->sum('estimasi_biaya_jual'),
+                'unrealized_gain_loss' => $group->sum('nilai_wajar') - $group->sum('nilai_perolehan'),
+            ];
+        });
+
+        // Ringkasan per status
+        $byStatus = $assets->groupBy('status')->map(function ($group, $status) {
+            return (object) [
+                'status' => ucfirst($status),
+                'jumlah' => $group->count(),
+                'total_nilai_wajar' => $group->sum('nilai_wajar'),
+            ];
+        });
+
+        // Ringkasan per lokasi/cabang
+        $byCabang = $assets->groupBy(function ($a) {
+            return $a->cabang ? $a->cabang->nama_cabang : 'Tanpa Cabang';
+        })->map(function ($group, $cabang) {
+            return (object) [
+                'cabang' => $cabang,
+                'jumlah' => $group->count(),
+                'total_nilai_wajar' => $group->sum('nilai_wajar'),
+            ];
+        });
+
+        // Total revaluasi
+        $totalRevaluasi = LogRevaluasiAset::whereYear('tanggal_revaluasi', $tahun)->count();
+        $totalGain = LogRevaluasiAset::whereYear('tanggal_revaluasi', $tahun)->where('selisih_nilai', '>', 0)->sum('selisih_nilai');
+        $totalLoss = LogRevaluasiAset::whereYear('tanggal_revaluasi', $tahun)->where('selisih_nilai', '<', 0)->sum('selisih_nilai');
+
+        $perusahaan = DB::table('perusahaan')->first();
+
+        return view('agriculture.laporan.pengungkapan', compact(
+            'assets', 'byJenis', 'byStatus', 'byCabang',
+            'totalRevaluasi', 'totalGain', 'totalLoss', 'tahun', 'perusahaan'
+        ));
+    }
 }

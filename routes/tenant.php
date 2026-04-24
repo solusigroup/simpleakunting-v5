@@ -237,6 +237,12 @@ Route::middleware([
             Route::put('agriculture/{id}', [AgricultureController::class, 'update'])->name('agriculture.update');
             Route::delete('agriculture/{id}', [AgricultureController::class, 'destroy'])->name('agriculture.destroy');
             Route::post('agriculture/{id}/revaluation', [AgricultureController::class, 'revaluation'])->name('agriculture.revaluation');
+
+            // Laporan PSAK 69
+            Route::get('agriculture/laporan/rekonsiliasi', [AgricultureController::class, 'rekonsiliasi'])->name('agriculture.laporan.rekonsiliasi');
+            Route::get('agriculture/laporan/perubahan-nilai-wajar', [AgricultureController::class, 'perubahanNilaiWajar'])->name('agriculture.laporan.perubahan_nilai_wajar');
+            Route::get('agriculture/laporan/produksi-panen', [AgricultureController::class, 'produksiPanen'])->name('agriculture.laporan.produksi_panen');
+            Route::get('agriculture/laporan/pengungkapan', [AgricultureController::class, 'pengungkapan'])->name('agriculture.laporan.pengungkapan');
         });
 
         // =====================================================

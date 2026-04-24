@@ -517,9 +517,38 @@
                 <div class="collapse {{ $isAgriActive ? 'show' : '' }}" id="agriMenu">
                     <ul class="sidebar-nav sidebar-submenu">
                         <li class="sidebar-nav-item">
-                            <a class="sidebar-nav-link {{ request()->routeIs('agriculture.*') ? 'active' : '' }}" href="{{ route('agriculture.index') }}">
+                            <a class="sidebar-nav-link {{ request()->routeIs('agriculture.index') || request()->routeIs('agriculture.create') || request()->routeIs('agriculture.edit') ? 'active' : '' }}" href="{{ route('agriculture.index') }}">
                                 <span data-feather="feather"></span>
                                 Aset Biologis
+                            </a>
+                        </li>
+
+                        <!-- Laporan PSAK 69 -->
+                        <li class="sidebar-nav-item mt-2">
+                            <span class="sidebar-nav-link text-secondary small">📊 Laporan PSAK 69</span>
+                        </li>
+                        <li class="sidebar-nav-item">
+                            <a class="sidebar-nav-link {{ request()->routeIs('agriculture.laporan.rekonsiliasi') ? 'active' : '' }}" href="{{ route('agriculture.laporan.rekonsiliasi') }}">
+                                <span data-feather="git-merge"></span>
+                                Rekonsiliasi
+                            </a>
+                        </li>
+                        <li class="sidebar-nav-item">
+                            <a class="sidebar-nav-link {{ request()->routeIs('agriculture.laporan.perubahan_nilai_wajar') ? 'active' : '' }}" href="{{ route('agriculture.laporan.perubahan_nilai_wajar') }}">
+                                <span data-feather="trending-up"></span>
+                                Perubahan Nilai Wajar
+                            </a>
+                        </li>
+                        <li class="sidebar-nav-item">
+                            <a class="sidebar-nav-link {{ request()->routeIs('agriculture.laporan.produksi_panen') ? 'active' : '' }}" href="{{ route('agriculture.laporan.produksi_panen') }}">
+                                <span data-feather="sunrise"></span>
+                                Produksi & Panen
+                            </a>
+                        </li>
+                        <li class="sidebar-nav-item">
+                            <a class="sidebar-nav-link {{ request()->routeIs('agriculture.laporan.pengungkapan') ? 'active' : '' }}" href="{{ route('agriculture.laporan.pengungkapan') }}">
+                                <span data-feather="file-text"></span>
+                                Pengungkapan
                             </a>
                         </li>
                     </ul>
