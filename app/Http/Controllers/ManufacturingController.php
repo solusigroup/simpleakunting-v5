@@ -188,4 +188,82 @@ class ManufacturingController extends Controller
             return back()->with('error', 'Gagal mencatat produksi: ' . $e->getMessage());
         }
     }
+
+    // =====================================================
+    // LAPORAN MANUFAKTUR
+    // =====================================================
+
+    /**
+     * Laporan Biaya Produksi
+     * Menampilkan rincian biaya untuk setiap nomor produksi.
+     */
+    public function laporanBiayaProduksi(Request $request)
+    {
+        $startDate = $request->input('start_date', date('Y-m-01'));
+        $endDate = $request->input('end_date', date('Y-m-d'));
+        $idCabang = $request->input('id_cabang');
+
+        $query = Produksi::with(['bom.barangJadi', 'cabang', 'details.material'])
+            ->whereBetween('tanggal', [$startDate, $endDate])
+            ->where('status', 'completed');
+
+        if ($idCabang) {
+            $query->where('id_cabang', $idCabang);
+        }
+
+        $productions = $query->get();
+        $cabangs = Cabang::all();
+        $perusahaan = DB::table('perusahaan')->first();
+
+        return view('manufacturing.laporan.biaya_produksi', compact('productions', 'startDate', 'endDate', 'idCabang', 'cabangs', 'perusahaan'));
+    }
+
+    /**
+     * Laporan Penggunaan Material
+     * Menampilkan total kuantitas material yang digunakan dalam periode tertentu.
+     */
+    public function laporanPenggunaanMaterial(Request $request)
+    {
+        $startDate = $request->input('start_date', date('Y-m-01'));
+        $endDate = $request->input('end_date', date('Y-m-d'));
+
+        $materialUsage = ProduksiDetail::select(
+                'material_id',
+                DB::raw('SUM(kuantitas_digunakan) as total_qty'),
+                DB::raw('SUM(total_biaya) as total_cost')
+            )
+            ->whereHas('produksi', function($q) use ($startDate, $endDate) {
+                $q->whereBetween('tanggal', [$startDate, $endDate])
+                  ->where('status', 'completed');
+            })
+            ->with('material')
+            ->groupBy('material_id')
+            ->get();
+
+        $perusahaan = DB::table('perusahaan')->first();
+
+        return view('manufacturing.laporan.penggunaan_material', compact('materialUsage', 'startDate', 'endDate', 'perusahaan'));
+    }
+
+    /**
+     * Laporan WIP Valuation (Work In Process)
+     * Menampilkan nilai produksi yang masih dalam status 'draft' atau 'process'.
+     */
+    public function laporanWipValuation(Request $request)
+    {
+        $wipProductions = Produksi::with(['bom.barangJadi', 'cabang', 'details'])
+            ->whereIn('status', ['draft', 'process'])
+            ->get();
+
+        $totalWipValue = 0;
+        foreach ($wipProductions as $p) {
+            $p->total_value = $p->details->sum('total_biaya');
+            $totalWipValue += $p->total_value;
+        }
+
+        $perusahaan = DB::table('perusahaan')->first();
+
+        return view('manufacturing.laporan.wip_valuation', compact('wipProductions', 'totalWipValue', 'perusahaan'));
+    }
 }
+

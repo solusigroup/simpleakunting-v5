@@ -310,6 +310,11 @@ if (config('app.tenancy_enabled')) {
             Route::get('manufacturing/production', [ManufacturingController::class, 'productionIndex'])->name('manufacturing.production.index');
             Route::get('manufacturing/production/create', [ManufacturingController::class, 'productionCreate'])->name('manufacturing.production.create');
             Route::post('manufacturing/production', [ManufacturingController::class, 'productionStore'])->name('manufacturing.production.store');
+
+            // Laporan Manufaktur
+            Route::get('manufacturing/laporan/biaya-produksi', [ManufacturingController::class, 'laporanBiayaProduksi'])->name('manufacturing.laporan.biaya_produksi');
+            Route::get('manufacturing/laporan/penggunaan-material', [ManufacturingController::class, 'laporanPenggunaanMaterial'])->name('manufacturing.laporan.penggunaan_material');
+            Route::get('manufacturing/laporan/wip-valuation', [ManufacturingController::class, 'laporanWipValuation'])->name('manufacturing.laporan.wip_valuation');
         });
 
         // =====================================================

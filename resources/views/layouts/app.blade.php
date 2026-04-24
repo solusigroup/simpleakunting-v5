@@ -499,6 +499,29 @@
                                 Produksi
                             </a>
                         </li>
+
+                        <!-- Laporan Manufaktur -->
+                        <li class="sidebar-nav-item mt-2">
+                            <span class="sidebar-nav-link text-secondary small">📊 Laporan Manufaktur</span>
+                        </li>
+                        <li class="sidebar-nav-item">
+                            <a class="sidebar-nav-link {{ request()->routeIs('manufacturing.laporan.biaya_produksi') ? 'active' : '' }}" href="{{ route('manufacturing.laporan.biaya_produksi') }}">
+                                <span data-feather="dollar-sign"></span>
+                                Biaya Produksi
+                            </a>
+                        </li>
+                        <li class="sidebar-nav-item">
+                            <a class="sidebar-nav-link {{ request()->routeIs('manufacturing.laporan.penggunaan_material') ? 'active' : '' }}" href="{{ route('manufacturing.laporan.penggunaan_material') }}">
+                                <span data-feather="package"></span>
+                                Penggunaan Material
+                            </a>
+                        </li>
+                        <li class="sidebar-nav-item">
+                            <a class="sidebar-nav-link {{ request()->routeIs('manufacturing.laporan.wip_valuation') ? 'active' : '' }}" href="{{ route('manufacturing.laporan.wip_valuation') }}">
+                                <span data-feather="clock"></span>
+                                WIP Valuation
+                            </a>
+                        </li>
                     </ul>
                 </div>
             </div>
