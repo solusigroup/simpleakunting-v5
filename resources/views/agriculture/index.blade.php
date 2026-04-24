@@ -47,15 +47,15 @@
                 <td>Rp {{ number_format($asset->nilai_perolehan, 2) }}</td>
                 <td>Rp {{ number_format($asset->nilai_wajar, 2) }}</td>
                 <td>
-                    <div class="btn-group btn-group-sm" role="group">
-                        <button type="button" class="btn btn-outline-info" data-bs-toggle="modal" data-bs-target="#revaluationModal{{ $asset->id }}" title="Revaluasi">
-                            <i class="bi bi-arrow-repeat"></i>
+                    <div class="d-flex gap-1 flex-nowrap">
+                        <button type="button" class="btn btn-sm btn-outline-info" data-bs-toggle="modal" data-bs-target="#revaluationModal{{ $asset->id }}" title="Revaluasi">
+                            <span data-feather="refresh-cw" style="width:14px;height:14px"></span> Revaluasi
                         </button>
-                        <a href="{{ route('agriculture.edit', $asset->id) }}" class="btn btn-outline-warning" title="Edit">
-                            <i class="bi bi-pencil"></i>
+                        <a href="{{ route('agriculture.edit', $asset->id) }}" class="btn btn-sm btn-outline-warning" title="Edit">
+                            <span data-feather="edit-2" style="width:14px;height:14px"></span> Edit
                         </a>
-                        <button type="button" class="btn btn-outline-danger" data-bs-toggle="modal" data-bs-target="#deleteModal{{ $asset->id }}" title="Hapus">
-                            <i class="bi bi-trash"></i>
+                        <button type="button" class="btn btn-sm btn-outline-danger" data-bs-toggle="modal" data-bs-target="#deleteModal{{ $asset->id }}" title="Hapus">
+                            <span data-feather="trash-2" style="width:14px;height:14px"></span> Hapus
                         </button>
                     </div>
 
@@ -106,7 +106,7 @@
                                 </div>
                                 <div class="modal-body">
                                     <p>Apakah Anda yakin ingin menghapus aset <strong>{{ $asset->nama_aset }}</strong> ({{ $asset->kode_aset }})?</p>
-                                    <p class="text-danger"><small><i class="bi bi-exclamation-triangle"></i> Semua log revaluasi dan jurnal terkait akan ikut dihapus.</small></p>
+                                    <p class="text-danger"><small>⚠️ Semua log revaluasi dan jurnal terkait akan ikut dihapus.</small></p>
                                 </div>
                                 <div class="modal-footer">
                                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Batal</button>
