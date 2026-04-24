@@ -20,6 +20,7 @@
                     <a class="nav-link p-0 text-dark fw-medium" href="#agri">🌱 Pertanian</a>
                     <a class="nav-link p-0 text-dark fw-medium" href="#report">📊 Laporan & Analisis</a>
                     <a class="nav-link p-0 text-dark fw-medium" href="#admin">⚙️ Administrasi</a>
+                    <a class="nav-link p-0 text-dark fw-medium" href="#sitemap">🗺️ Site Map</a>
                 </nav>
             </div>
         </div>
@@ -345,6 +346,120 @@
                                 </tr>
                             </tbody>
                         </table>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Site Map -->
+        <section id="sitemap" class="mb-5 pt-2">
+            <div class="card border-0 shadow-sm rounded-4 border-top border-4 border-dark">
+                <div class="card-body p-4 p-md-5">
+                    <h2 class="fw-bold mb-4">🗺️ Site Map</h2>
+                    <p class="text-muted mb-4">Peta navigasi seluruh modul dan fitur yang tersedia dalam Simple Akunting v5.</p>
+                    
+                    <div class="row g-4">
+                        <!-- Column 1 -->
+                        <div class="col-md-4">
+                            <div class="mb-4">
+                                <h6 class="fw-bold text-dark border-bottom pb-2">🏠 CORE</h6>
+                                <ul class="list-unstyled small ps-2 d-flex flex-column gap-1">
+                                    <li>• Dashboard</li>
+                                    <li>• Master Data
+                                        <ul class="ps-3 list-unstyled opacity-75">
+                                            <li>- Pelanggan</li>
+                                            <li>- Pemasok</li>
+                                            <li>- Persediaan</li>
+                                            <li>- Akun (COA)</li>
+                                        </ul>
+                                    </li>
+                                </ul>
+                            </div>
+                            <div class="mb-4">
+                                <h6 class="fw-bold text-dark border-bottom pb-2">💸 TRANSAKSI</h6>
+                                <ul class="list-unstyled small ps-2 d-flex flex-column gap-1">
+                                    <li>• Penjualan</li>
+                                    <li>• Pembelian</li>
+                                    <li>• Jurnal Umum</li>
+                                    <li>• Kas & Bank
+                                        <ul class="ps-3 list-unstyled opacity-75">
+                                            <li>- Penerimaan</li>
+                                            <li>- Pembayaran</li>
+                                            <li>- Mutasi Kas</li>
+                                        </ul>
+                                    </li>
+                                </ul>
+                            </div>
+                        </div>
+
+                        <!-- Column 2 -->
+                        <div class="col-md-4">
+                            <div class="mb-4">
+                                <h6 class="fw-bold text-dark border-bottom pb-2">🏭 OPERASIONAL</h6>
+                                <ul class="list-unstyled small ps-2 d-flex flex-column gap-1">
+                                    <li>• Manufaktur
+                                        <ul class="ps-3 list-unstyled opacity-75">
+                                            <li>- Bill of Materials</li>
+                                            <li>- Produksi</li>
+                                            <li>- Lap. Biaya Produksi</li>
+                                            <li>- Lap. Penggunaan Mat.</li>
+                                            <li>- Lap. WIP Valuation</li>
+                                        </ul>
+                                    </li>
+                                    <li>• Pertanian (PSAK 69)
+                                        <ul class="ps-3 list-unstyled opacity-75">
+                                            <li>- Aset Biologis</li>
+                                            <li>- Lap. Rekonsiliasi</li>
+                                            <li>- Lap. Perubahan NW</li>
+                                            <li>- Lap. Prod & Panen</li>
+                                            <li>- Lap. Pengungkapan</li>
+                                        </ul>
+                                    </li>
+                                </ul>
+                            </div>
+                        </div>
+
+                        <!-- Column 3 -->
+                        <div class="col-md-4">
+                            <div class="mb-4">
+                                <h6 class="fw-bold text-dark border-bottom pb-2">🛒 SALES & SPECIAL</h6>
+                                <ul class="list-unstyled small ps-2 d-flex flex-column gap-1">
+                                    <li>• Point of Sales
+                                        <ul class="ps-3 list-unstyled opacity-75">
+                                            <li>- Kasir</li>
+                                            <li>- Shift Sesi</li>
+                                        </ul>
+                                    </li>
+                                    <li>• Simpan Pinjam
+                                        <ul class="ps-3 list-unstyled opacity-75">
+                                            <li>- Anggota</li>
+                                            <li>- Simpanan</li>
+                                            <li>- Pinjaman</li>
+                                        </ul>
+                                    </li>
+                                </ul>
+                            </div>
+                            <div class="mb-4">
+                                <h6 class="fw-bold text-dark border-bottom pb-2">📊 REPORTING & ADMIN</h6>
+                                <ul class="list-unstyled small ps-2 d-flex flex-column gap-1">
+                                    <li>• Laporan Utama
+                                        <ul class="ps-3 list-unstyled opacity-75">
+                                            <li>- Neraca</li>
+                                            <li>- Laba Rugi</li>
+                                            <li>- Arus Kas</li>
+                                            <li>- Buku Besar</li>
+                                        </ul>
+                                    </li>
+                                    <li>• Administrasi
+                                        <ul class="ps-3 list-unstyled opacity-75">
+                                            <li>- User Management</li>
+                                            <li>- Profil Perusahaan</li>
+                                            <li>- Audit Trail</li>
+                                        </ul>
+                                    </li>
+                                </ul>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
