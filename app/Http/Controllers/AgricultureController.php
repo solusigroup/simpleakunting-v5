@@ -78,6 +78,77 @@ class AgricultureController extends Controller
         }
     }
 
+    public function edit($id)
+    {
+        $asset = AsetBiologis::findOrFail($id);
+        $cabang = Cabang::all();
+        return view('agriculture.edit', compact('asset', 'cabang'));
+    }
+
+    public function update(Request $request, $id)
+    {
+        $request->validate([
+            'nama_aset' => 'required|string',
+            'jenis' => 'required|in:tanaman,hewan',
+            'tanggal_perolehan' => 'required|date',
+            'nilai_perolehan' => 'required|numeric|min:0',
+            'nilai_wajar' => 'required|numeric|min:0',
+            'id_cabang' => 'nullable|exists:cabang,id',
+        ]);
+
+        try {
+            $asset = AsetBiologis::findOrFail($id);
+
+            $asset->update([
+                'nama_aset' => $request->nama_aset,
+                'jenis' => $request->jenis,
+                'tanggal_perolehan' => $request->tanggal_perolehan,
+                'nilai_perolehan' => $request->nilai_perolehan,
+                'nilai_wajar' => $request->nilai_wajar,
+                'estimasi_biaya_jual' => $request->estimasi_biaya_jual ?? 0,
+                'id_cabang' => $request->id_cabang,
+                'lokasi' => $request->lokasi,
+                'umur_bulan' => $request->umur_bulan ?? 0,
+            ]);
+
+            return redirect()->route('agriculture.index')->with('success', 'Aset biologis berhasil diperbarui.');
+
+        } catch (\Exception $e) {
+            return back()->with('error', 'Gagal memperbarui aset: ' . $e->getMessage())->withInput();
+        }
+    }
+
+    public function destroy($id)
+    {
+        try {
+            DB::beginTransaction();
+
+            $asset = AsetBiologis::findOrFail($id);
+
+            // Hapus log revaluasi terkait
+            $asset->revaluasiLogs()->delete();
+
+            // Hapus jurnal revaluasi terkait (opsional, jika ada)
+            $jurnals = Jurnal::where('sumber_jurnal', 'Revaluasi')
+                ->where('deskripsi', 'like', "%{$asset->nama_aset}%")
+                ->get();
+
+            foreach ($jurnals as $jurnal) {
+                JurnalDetail::where('id_jurnal', $jurnal->id_jurnal)->delete();
+                $jurnal->delete();
+            }
+
+            $asset->delete();
+
+            DB::commit();
+            return redirect()->route('agriculture.index')->with('success', 'Aset biologis berhasil dihapus.');
+
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return back()->with('error', 'Gagal menghapus aset: ' . $e->getMessage());
+        }
+    }
+
     public function revaluation(Request $request, $id)
     {
         $request->validate([

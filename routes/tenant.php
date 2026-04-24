@@ -233,6 +233,9 @@ Route::middleware([
             Route::get('agriculture', [AgricultureController::class, 'index'])->name('agriculture.index');
             Route::get('agriculture/create', [AgricultureController::class, 'create'])->name('agriculture.create');
             Route::post('agriculture', [AgricultureController::class, 'store'])->name('agriculture.store');
+            Route::get('agriculture/{id}/edit', [AgricultureController::class, 'edit'])->name('agriculture.edit');
+            Route::put('agriculture/{id}', [AgricultureController::class, 'update'])->name('agriculture.update');
+            Route::delete('agriculture/{id}', [AgricultureController::class, 'destroy'])->name('agriculture.destroy');
             Route::post('agriculture/{id}/revaluation', [AgricultureController::class, 'revaluation'])->name('agriculture.revaluation');
         });
 

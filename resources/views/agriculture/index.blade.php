@@ -15,6 +15,12 @@
 @if(session('success'))
     <div class="alert alert-success">{{ session('success') }}</div>
 @endif
+@if(session('error'))
+    <div class="alert alert-danger">{{ session('error') }}</div>
+@endif
+@if(session('info'))
+    <div class="alert alert-info">{{ session('info') }}</div>
+@endif
 
 <div class="table-responsive">
     <table class="table table-striped table-sm">
@@ -27,7 +33,7 @@
                 <th>Lokasi</th>
                 <th>Nilai Perolehan</th>
                 <th>Nilai Wajar</th>
-                <th>Revaluasi</th>
+                <th>Aksi</th>
             </tr>
         </thead>
         <tbody>
@@ -41,9 +47,17 @@
                 <td>Rp {{ number_format($asset->nilai_perolehan, 2) }}</td>
                 <td>Rp {{ number_format($asset->nilai_wajar, 2) }}</td>
                 <td>
-                    <button type="button" class="btn btn-xs btn-outline-info" data-bs-toggle="modal" data-bs-target="#revaluationModal{{ $asset->id }}">
-                        Revaluasi
-                    </button>
+                    <div class="btn-group btn-group-sm" role="group">
+                        <button type="button" class="btn btn-outline-info" data-bs-toggle="modal" data-bs-target="#revaluationModal{{ $asset->id }}" title="Revaluasi">
+                            <i class="bi bi-arrow-repeat"></i>
+                        </button>
+                        <a href="{{ route('agriculture.edit', $asset->id) }}" class="btn btn-outline-warning" title="Edit">
+                            <i class="bi bi-pencil"></i>
+                        </a>
+                        <button type="button" class="btn btn-outline-danger" data-bs-toggle="modal" data-bs-target="#deleteModal{{ $asset->id }}" title="Hapus">
+                            <i class="bi bi-trash"></i>
+                        </button>
+                    </div>
 
                     <!-- Modal Revaluasi -->
                     <div class="modal fade" id="revaluationModal{{ $asset->id }}" tabindex="-1" aria-hidden="true">
@@ -79,6 +93,30 @@
                                     </div>
                                 </div>
                             </form>
+                        </div>
+                    </div>
+
+                    <!-- Modal Hapus -->
+                    <div class="modal fade" id="deleteModal{{ $asset->id }}" tabindex="-1" aria-hidden="true">
+                        <div class="modal-dialog">
+                            <div class="modal-content bg-white text-dark">
+                                <div class="modal-header">
+                                    <h5 class="modal-title text-dark">Konfirmasi Hapus</h5>
+                                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                </div>
+                                <div class="modal-body">
+                                    <p>Apakah Anda yakin ingin menghapus aset <strong>{{ $asset->nama_aset }}</strong> ({{ $asset->kode_aset }})?</p>
+                                    <p class="text-danger"><small><i class="bi bi-exclamation-triangle"></i> Semua log revaluasi dan jurnal terkait akan ikut dihapus.</small></p>
+                                </div>
+                                <div class="modal-footer">
+                                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Batal</button>
+                                    <form action="{{ route('agriculture.destroy', $asset->id) }}" method="POST" class="d-inline">
+                                        @csrf
+                                        @method('DELETE')
+                                        <button type="submit" class="btn btn-danger">Hapus</button>
+                                    </form>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </td>
