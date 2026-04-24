@@ -24,6 +24,11 @@ class ProduksiDetail extends Model
         return $this->belongsTo(Produksi::class, 'produksi_id');
     }
 
+    public function produksi()
+    {
+        return $this->belongsTo(Produksi::class, 'produksi_id');
+    }
+
     public function material()
     {
         return $this->belongsTo(Persediaan::class, 'material_id', 'id_barang');
