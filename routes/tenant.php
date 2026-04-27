@@ -131,6 +131,8 @@ Route::middleware([
         Route::middleware('role:superuser,admin,manajer,staff')->group(function () {
             Route::resource('penjualan', PenjualanController::class);
             Route::resource('pembelian', PembelianController::class);
+            Route::get('jurnal/kas/create', [JurnalController::class, 'createKas'])->name('jurnal.createKas');
+            Route::post('jurnal/kas', [JurnalController::class, 'storeKas'])->name('jurnal.storeKas');
             Route::resource('jurnal', JurnalController::class);
             Route::resource('penerimaan', PenerimaanController::class);
             Route::resource('pembayaran', PembayaranController::class);

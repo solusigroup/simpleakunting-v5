@@ -10,6 +10,10 @@
             <p class="page-subtitle">Daftar semua transaksi jurnal</p>
         </div>
         <div>
+            <a href="{{ route('jurnal.createKas') }}" class="btn btn-success btn-sm" style="margin-right: 8px;">
+                <span data-feather="plus" style="width: 16px; height: 16px; margin-right: 4px;"></span>
+                Buat Jurnal Kas
+            </a>
             <a href="{{ route('jurnal.create') }}" class="btn btn-primary btn-sm">
                 <span data-feather="plus" style="width: 16px; height: 16px; margin-right: 4px;"></span>
                 Buat Jurnal Manual
