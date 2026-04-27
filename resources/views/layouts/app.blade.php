@@ -638,9 +638,15 @@
                             </a>
                         </li>
                         <li class="sidebar-nav-item">
-                            <a class="sidebar-nav-link {{ request()->routeIs('jurnal.*') ? 'active' : '' }}" href="{{ route('jurnal.index') }}">
+                            <a class="sidebar-nav-link {{ request()->routeIs('jurnal.*') && !request()->routeIs('jurnal.createKas') ? 'active' : '' }}" href="{{ route('jurnal.index') }}">
                                 <span data-feather="file-text"></span>
                                 Jurnal Umum
+                            </a>
+                        </li>
+                        <li class="sidebar-nav-item">
+                            <a class="sidebar-nav-link {{ request()->routeIs('jurnal.createKas') ? 'active' : '' }}" href="{{ route('jurnal.createKas') }}">
+                                <span data-feather="plus-square"></span>
+                                Jurnal Kas (KM/KK)
                             </a>
                         </li>
                     </ul>
