@@ -930,6 +930,8 @@ class LaporanController extends Controller
             'totalPendapatan', 'totalBeban', 'shuBersih', 'persenAnggota', 'shuAnggota',
             'anggota', 'totalKontribusi', 'cabang', 'unitUsaha'
         ));
+    }
+
     public function neracaLajur(Request $request)
     {
         $endDate = $request->input('end_date', date('Y-m-d'));
