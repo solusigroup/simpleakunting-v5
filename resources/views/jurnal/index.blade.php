@@ -47,9 +47,19 @@
                             </td>
                             <td>
                                 <div class="action-buttons">
-                                    <a href="{{ route('jurnal.show', $j->id_jurnal) }}" class="btn btn-sm btn-primary">
-                                        Detail
+                                    <a href="{{ route('jurnal.show', $j->id_jurnal) }}" class="btn btn-sm btn-info" title="Detail">
+                                        <span data-feather="eye" style="width: 14px; height: 14px;"></span>
                                     </a>
+                                    <a href="{{ route('jurnal.edit', $j->id_jurnal) }}" class="btn btn-sm btn-primary" title="Edit">
+                                        <span data-feather="edit" style="width: 14px; height: 14px;"></span>
+                                    </a>
+                                    <form action="{{ route('jurnal.destroy', $j->id_jurnal) }}" method="POST" style="display: inline-block;" onsubmit="return confirm('Apakah Anda yakin ingin menghapus jurnal ini? Tindakan ini tidak dapat dibatalkan.')">
+                                        @csrf
+                                        @method('DELETE')
+                                        <button type="submit" class="btn btn-sm btn-danger" title="Hapus">
+                                            <span data-feather="trash-2" style="width: 14px; height: 14px;"></span>
+                                        </button>
+                                    </form>
                                 </div>
                             </td>
                         </tr>

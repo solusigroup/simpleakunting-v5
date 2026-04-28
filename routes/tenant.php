@@ -155,6 +155,7 @@ Route::middleware([
             Route::get('/laporan/aruskas-tidak-langsung', [LaporanController::class, 'arusKasTidakLangsung'])->name('laporan.aruskas_tidak_langsung');
             Route::get('/laporan/perubahan-ekuitas', [LaporanController::class, 'perubahanEkuitas'])->name('laporan.perubahan_ekuitas');
             Route::get('/laporan/persediaan', [LaporanController::class, 'persediaan'])->name('laporan.persediaan');
+            Route::get('/laporan/neraca-lajur', [LaporanController::class, 'neracaLajur'])->name('laporan.neraca_lajur');
             Route::get('/laporan/mutasi-persediaan', [LaporanController::class, 'mutasiPersediaan'])->name('laporan.mutasi_persediaan');
         });
 

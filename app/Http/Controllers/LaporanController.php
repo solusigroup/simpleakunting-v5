@@ -930,5 +930,104 @@ class LaporanController extends Controller
             'totalPendapatan', 'totalBeban', 'shuBersih', 'persenAnggota', 'shuAnggota',
             'anggota', 'totalKontribusi', 'cabang', 'unitUsaha'
         ));
+    public function neracaLajur(Request $request)
+    {
+        $endDate = $request->input('end_date', date('Y-m-d'));
+        $cabangId = $request->input('id_cabang', session('active_cabang'));
+        $unitId = $request->input('id_unit_usaha', session('active_unit'));
+
+        $perusahaan = DB::table('perusahaan')->find(1);
+        $akun = Akun::orderBy('kode_akun')->get();
+
+        $data = $akun->map(function ($a) use ($endDate, $cabangId, $unitId) {
+            // 1. Neraca Saldo (Trial Balance) - Kolom 1-2
+            $nsQuery = JurnalDetail::where('kode_akun', $a->kode_akun)
+                ->whereHas('jurnal', function ($q) use ($endDate, $cabangId, $unitId) {
+                    $q->where('tanggal', '<=', $endDate)
+                      ->where('sumber_jurnal', '!=', 'Penyesuaian')
+                      ->where('sumber_jurnal', '!=', 'Closing');
+                    if ($cabangId) $q->where('id_cabang', $cabangId);
+                    if ($unitId) $q->where('id_unit_usaha', $unitId);
+                });
+            
+            $nsRes = $nsQuery->select(DB::raw('SUM(debit) as d'), DB::raw('SUM(kredit) as k'))->first();
+            $ns_d_raw = $nsRes->d ?? 0;
+            $ns_k_raw = $nsRes->k ?? 0;
+
+            $ns_d = 0; $ns_k = 0;
+            if ($a->saldo_normal == 'Debit') {
+                $val = $ns_d_raw - $ns_k_raw;
+                if ($val >= 0) $ns_d = $val; else $ns_k = abs($val);
+            } else {
+                $val = $ns_k_raw - $ns_d_raw;
+                if ($val >= 0) $ns_k = $val; else $ns_d = abs($val);
+            }
+
+            // 2. Penyesuaian (Kolom 3-4)
+            $adjQuery = JurnalDetail::where('kode_akun', $a->kode_akun)
+                ->whereHas('jurnal', function ($q) use ($endDate, $cabangId, $unitId) {
+                    $q->where('tanggal', '<=', $endDate)
+                      ->where('sumber_jurnal', '=', 'Penyesuaian');
+                    if ($cabangId) $q->where('id_cabang', $cabangId);
+                    if ($unitId) $q->where('id_unit_usaha', $unitId);
+                });
+            
+            $adjRes = $adjQuery->select(DB::raw('SUM(debit) as d'), DB::raw('SUM(kredit) as k'))->first();
+            $adj_d = $adjRes->d ?? 0;
+            $adj_k = $adjRes->k ?? 0;
+
+            // 3. NS Setelah Penyesuaian (Kolom 5-6)
+            $total_d_raw = $ns_d_raw + $adj_d;
+            $total_k_raw = $ns_k_raw + $adj_k;
+            
+            $nssp_d = 0; $nssp_k = 0;
+            if ($a->saldo_normal == 'Debit') {
+                $val = $total_d_raw - $total_k_raw;
+                if ($val >= 0) $nssp_d = $val; else $nssp_k = abs($val);
+            } else {
+                $val = $total_k_raw - $total_d_raw;
+                if ($val >= 0) $nssp_k = $val; else $nssp_d = abs($val);
+            }
+
+            // 4. Laba Rugi (Kolom 7-8)
+            $lr_d = 0; $lr_k = 0;
+            if (in_array($a->tipe_akun, ['Pendapatan', 'Pendapatan Lainnya', 'HPP', 'Beban', 'Beban Lainnya'])) {
+                $lr_d = $nssp_d;
+                $lr_k = $nssp_k;
+            }
+
+            // 5. Neraca (Kolom 9-10)
+            $n_d = 0; $n_k = 0;
+            if (in_array($a->tipe_akun, ['Kas & Bank', 'Piutang', 'Persediaan', 'Aset Lancar Lainnya', 'Aset Tetap', 'Utang Usaha', 'Kewajiban Lancar Lainnya', 'Kewajiban Jangka Panjang', 'Ekuitas'])) {
+                $n_d = $nssp_d;
+                $n_k = $nssp_k;
+            }
+
+            return [
+                'kode_akun' => $a->kode_akun,
+                'nama_akun' => $a->nama_akun,
+                'ns_d' => $ns_d,
+                'ns_k' => $ns_k,
+                'adj_d' => $adj_d,
+                'adj_k' => $adj_k,
+                'nssp_d' => $nssp_d,
+                'nssp_k' => $nssp_k,
+                'lr_d' => $lr_d,
+                'lr_k' => $lr_k,
+                'n_d' => $n_d,
+                'n_k' => $n_k,
+            ];
+        });
+
+        $data = $data->filter(function($item) {
+            return (round($item['ns_d'], 2) != 0 || round($item['ns_k'], 2) != 0 || 
+                    round($item['adj_d'], 2) != 0 || round($item['adj_k'], 2) != 0 ||
+                    round($item['nssp_d'], 2) != 0 || round($item['nssp_k'], 2) != 0);
+        });
+
+        $cabang = Cabang::orderBy('nama_cabang')->get();
+        $unitUsaha = UnitUsaha::active()->orderBy('nama_unit')->get();
+
+        return view('laporan.neraca_lajur', compact('perusahaan', 'endDate', 'data', 'cabang', 'unitUsaha'));
     }
 }

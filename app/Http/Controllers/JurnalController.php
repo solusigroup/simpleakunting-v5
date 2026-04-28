@@ -215,4 +215,95 @@ class JurnalController extends Controller
         $jurnal->load('details.akun');
         return view('jurnal.show', compact('jurnal'));
     }
+
+    public function edit(Jurnal $jurnal)
+    {
+        return view('jurnal.edit', compact('jurnal'));
+    }
+
+    public function update(Request $request, Jurnal $jurnal)
+    {
+        $request->validate([
+            'tanggal' => 'required|date|before_or_equal:today',
+            'deskripsi' => 'required|string',
+        ]);
+
+        try {
+            DB::beginTransaction();
+
+            // Cek periode tutup buku
+            $this->validatePeriodOpen($jurnal->tanggal);
+            $this->validatePeriodOpen($request->tanggal);
+
+            $jurnal->update([
+                'tanggal' => $request->tanggal,
+                'deskripsi' => $request->deskripsi,
+            ]);
+
+            // Sinkronisasi dengan modul terkait
+            // Penjualan
+            DB::table('penjualan')->where('id_jurnal', $jurnal->id_jurnal)->update([
+                'tanggal_faktur' => $request->tanggal,
+                'keterangan' => $request->deskripsi
+            ]);
+
+            // Pembelian
+            DB::table('pembelian')->where('id_jurnal', $jurnal->id_jurnal)->update([
+                'tanggal_faktur' => $request->tanggal,
+                'keterangan' => $request->deskripsi
+            ]);
+            
+            // Simpanan
+            DB::table('simpanan')->where('id_jurnal', $jurnal->id_jurnal)->update([
+                'tanggal' => $request->tanggal,
+                'keterangan' => $request->deskripsi
+            ]);
+            
+            // Pinjaman Pencairan
+            DB::table('pinjaman')->where('id_jurnal_pencairan', $jurnal->id_jurnal)->update([
+                'tanggal_pencairan' => $request->tanggal,
+                'keterangan' => $request->deskripsi
+            ]);
+            
+            // Pinjaman Angsuran
+            DB::table('pinjaman_angsuran')->where('id_jurnal', $jurnal->id_jurnal)->update([
+                'tanggal_bayar' => $request->tanggal,
+                'keterangan' => $request->deskripsi
+            ]);
+
+            DB::commit();
+            return redirect()->route('jurnal.index')->with('success', 'Jurnal berhasil diupdate.');
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return back()->with('error', $e->getMessage())->withInput();
+        }
+    }
+
+    public function destroy(Jurnal $jurnal)
+    {
+        try {
+            DB::beginTransaction();
+
+            // Cek periode tutup buku
+            $this->validatePeriodOpen($jurnal->tanggal);
+
+            // Sinkronisasi dengan modul terkait (Unpost)
+            DB::table('penjualan')->where('id_jurnal', $jurnal->id_jurnal)->update(['id_jurnal' => null]);
+            DB::table('pembelian')->where('id_jurnal', $jurnal->id_jurnal)->update(['id_jurnal' => null]);
+            DB::table('simpanan')->where('id_jurnal', $jurnal->id_jurnal)->update(['id_jurnal' => null]);
+            DB::table('pinjaman')->where('id_jurnal_pencairan', $jurnal->id_jurnal)->update(['id_jurnal_pencairan' => null]);
+            DB::table('pinjaman_angsuran')->where('id_jurnal', $jurnal->id_jurnal)->update(['id_jurnal' => null]);
+
+            // Hapus Detail
+            $jurnal->details()->delete();
+            // Hapus Header
+            $jurnal->delete();
+
+            DB::commit();
+            return redirect()->route('jurnal.index')->with('success', 'Jurnal berhasil dihapus.');
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return back()->with('error', $e->getMessage());
+        }
+    }
 }

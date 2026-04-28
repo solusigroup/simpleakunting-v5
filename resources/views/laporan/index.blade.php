@@ -29,6 +29,15 @@
         <div class="col-md-6">
             <div class="card mb-4">
                 <div class="card-body text-center">
+                    <h5 class="card-title">Neraca Lajur (10 Kolom)</h5>
+                    <p class="card-text">Lembar kerja akuntansi yang mencakup Trial Balance, Penyesuaian, dan Laba Rugi.</p>
+                    <a href="{{ route('laporan.neraca_lajur') }}" class="btn btn-primary">Lihat Neraca Lajur</a>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-6">
+            <div class="card mb-4">
+                <div class="card-body text-center">
                     <h5 class="card-title">Laporan Persediaan</h5>
                     <p class="card-text">Laporan detail persediaan barang.</p>
                     <a href="{{ route('laporan.persediaan') }}" class="btn btn-primary">Lihat Laporan Persediaan</a>
