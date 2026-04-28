@@ -53,10 +53,17 @@
                         </select>
                     </div>
                 </div>
-                <div class="form-row mt-3">
+                <div class="form-row mt-3" style="display: flex; gap: 15px;">
                     <div class="form-group" style="flex: 1;">
                         <label for="deskripsi" class="form-label">Deskripsi Jurnal</label>
                         <input type="text" class="form-control" id="deskripsi" name="deskripsi" placeholder="Contoh: Pembayaran Gaji Karyawan" required value="{{ old('deskripsi') }}">
+                    </div>
+                    <div class="form-group" style="width: 250px;">
+                        <label for="sumber_jurnal" class="form-label">Jenis Jurnal</label>
+                        <select class="form-select" id="sumber_jurnal" name="sumber_jurnal">
+                            <option value="Manual" {{ old('sumber_jurnal') == 'Manual' ? 'selected' : '' }}>Umum / Manual</option>
+                            <option value="Penyesuaian" {{ old('sumber_jurnal') == 'Penyesuaian' ? 'selected' : '' }}>Jurnal Penyesuaian</option>
+                        </select>
                     </div>
                 </div>
             </div>

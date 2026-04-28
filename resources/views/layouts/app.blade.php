@@ -734,6 +734,12 @@
                             </a>
                         </li>
                         <li class="sidebar-nav-item">
+                            <a class="sidebar-nav-link {{ request()->routeIs('laporan.neraca_lajur') ? 'active' : '' }}" href="{{ route('laporan.neraca_lajur') }}">
+                                <span data-feather="grid"></span>
+                                Neraca Lajur (10 Kolom)
+                            </a>
+                        </li>
+                        <li class="sidebar-nav-item">
                             <a class="sidebar-nav-link {{ request()->routeIs('laporan.labarugi') ? 'active' : '' }}" href="{{ route('laporan.labarugi') }}">
                                 <span data-feather="trending-up"></span>
                                 Laba Rugi
@@ -988,7 +994,7 @@
                 </a>
             </li>
             <li class="bottom-nav-item">
-                <a href="{{ route('laporan.neraca') }}" class="bottom-nav-link {{ request()->routeIs('laporan.*') || request()->routeIs('bukubesar.*') ? 'active' : '' }}">
+                <a href="{{ route('laporan.index') }}" class="bottom-nav-link {{ request()->routeIs('laporan.*') || request()->routeIs('bukubesar.*') ? 'active' : '' }}">
                     <span data-feather="bar-chart-2"></span>
                     Laporan
                 </a>

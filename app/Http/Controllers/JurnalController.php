@@ -92,7 +92,7 @@ class JurnalController extends Controller
                 'id_cabang' => $request->id_cabang,
                 'id_unit_usaha' => $request->id_unit_usaha,
                 'deskripsi' => $request->deskripsi,
-                'sumber_jurnal' => 'Manual',
+                'sumber_jurnal' => $request->input('sumber_jurnal', 'Manual'),
                 'is_locked' => 0
             ]);
 
