@@ -207,7 +207,7 @@
                     <span class="quick-add-arrow">→</span>
                 </a>
 
-                <a href="{{ route('jurnal.create-kas') }}" class="quick-add-item">
+                <a href="{{ route('jurnal.createKas') }}" class="quick-add-item">
                     <div class="quick-add-icon income" style="background: rgba(139, 92, 246, 0.1); color: var(--color-primary);">🏦</div>
                     <div class="quick-add-info">
                         <div class="quick-add-title">Jurnal Kas</div>
