@@ -7,6 +7,9 @@ echo "🚀 Bismillah Memulai proses deployment..."
 echo "🚧 Mengaktifkan mode pemeliharaan..."
 php artisan down || true
 
+# Pastikan aplikasi kembali UP jika script ini gagal (Error Handling)
+trap 'echo "⚠️ Terjadi kesalahan! Mengaktifkan aplikasi kembali..."; php artisan up' ERR
+
 # 1a. Pastikan izin akses folder benar (Permissions Fix)
 echo "🔒 Mengatur ulang izin akses folder storage & cache..."
 chmod -R 775 storage bootstrap/cache
@@ -17,7 +20,7 @@ git pull origin main
 
 # 3. Instal dependensi PHP (Production mode)
 echo "📦 Menginstal dependensi Composer..."
-composer install --no-dev --optimize-autoloader
+composer install --no-dev --optimize-autoloader --ignore-platform-reqs
 
 # 4. Migrasi Database Pusat
 echo "🗄️ Menjalankan migrasi database pusat..."
@@ -41,8 +44,8 @@ php artisan event:cache
 # 7. Build Frontend Assets (Vite)
 if [ -f "package.json" ]; then
     echo "🎨 Membangun aset frontend (Vite)..."
-    npm install
-    npm run build
+#    npm install
+#    npm run build
 fi
 
 # 8. Restart Queue Workers (untuk memastikan kode terbaru terbaca oleh background jobs)
