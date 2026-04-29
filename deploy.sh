@@ -9,7 +9,7 @@ php artisan down || true
 
 # 1a. Pastikan izin akses folder benar (Permissions Fix)
 echo "🔒 Mengatur ulang izin akses folder storage & cache..."
-sudo chmod -R 775 storage bootstrap/cache
+chmod -R 775 storage bootstrap/cache
 
 # 2. Update kode dari repository
 echo "📥 Menarik kode terbaru dari Git..."
