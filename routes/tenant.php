@@ -98,6 +98,12 @@ Route::middleware([
             
             Route::resource('jenis-pinjaman', JenisPinjamanController::class);
             Route::resource('jenis-simpanan', JenisSimpananController::class);
+            
+            Route::resource('aset-tetap-group', \App\Http\Controllers\FixedAssetGroupController::class)->except(['show']);
+            Route::post('aset-tetap/depreciate', [\App\Http\Controllers\FixedAssetController::class, 'runDepreciation'])->name('aset-tetap.depreciate');
+            Route::get('aset-tetap/{asset}/dispose', [\App\Http\Controllers\FixedAssetDisposalController::class, 'create'])->name('aset-tetap.dispose.create');
+            Route::post('aset-tetap/{asset}/dispose', [\App\Http\Controllers\FixedAssetDisposalController::class, 'store'])->name('aset-tetap.dispose.store');
+            Route::resource('aset-tetap', \App\Http\Controllers\FixedAssetController::class);
         });
 
         Route::middleware('role:superuser,admin,manajer')->group(function () {
@@ -157,6 +163,7 @@ Route::middleware([
             Route::get('/laporan/persediaan', [LaporanController::class, 'persediaan'])->name('laporan.persediaan');
             Route::get('/laporan/neraca-lajur', [LaporanController::class, 'neracaLajur'])->name('laporan.neraca_lajur');
             Route::get('/laporan/mutasi-persediaan', [LaporanController::class, 'mutasiPersediaan'])->name('laporan.mutasi_persediaan');
+            Route::get('/laporan/aset-tetap', [LaporanController::class, 'daftarAsetTetap'])->name('laporan.aset_tetap');
         });
 
         // =====================================================

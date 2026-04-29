@@ -533,6 +533,50 @@ class LaporanController extends Controller
     }
 
     /**
+     * Laporan Daftar Aset Tetap
+     */
+    public function daftarAsetTetap(Request $request)
+    {
+        $perusahaan = DB::table('perusahaan')->find(1);
+        $cabangId = $request->input('id_cabang', session('active_cabang'));
+
+        $query = \App\Models\FixedAsset::with('group')->orderBy('tanggal_perolehan', 'asc');
+        
+        if ($cabangId) {
+            $query->where('cabang_id', $cabangId);
+        }
+
+        $status = $request->input('status');
+        if ($status) {
+            $query->where('status', $status);
+        }
+
+        $asets = $query->get();
+
+        // Rekapitulasi per kelompok
+        $rekapGroup = [];
+        foreach ($asets as $aset) {
+            $groupName = $aset->group->nama_kelompok ?? 'Tanpa Kelompok';
+            if (!isset($rekapGroup[$groupName])) {
+                $rekapGroup[$groupName] = [
+                    'jumlah_aset' => 0,
+                    'total_perolehan' => 0,
+                    'total_akumulasi' => 0,
+                    'total_nilai_buku' => 0,
+                ];
+            }
+            $rekapGroup[$groupName]['jumlah_aset'] += 1;
+            $rekapGroup[$groupName]['total_perolehan'] += $aset->harga_perolehan;
+            $rekapGroup[$groupName]['total_akumulasi'] += ($aset->harga_perolehan - $aset->nilai_buku_saat_ini);
+            $rekapGroup[$groupName]['total_nilai_buku'] += $aset->nilai_buku_saat_ini;
+        }
+
+        $cabang = Cabang::orderBy('nama_cabang')->get();
+
+        return view('laporan.aset_tetap', compact('perusahaan', 'asets', 'rekapGroup', 'cabang', 'status'));
+    }
+
+    /**
      * Export Neraca to PDF
      */
     public function neracaPdf(Request $request)

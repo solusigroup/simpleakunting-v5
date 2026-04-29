@@ -32,6 +32,7 @@ class PermissionSeeder extends Seeder
             'pinjaman' => 'Pinjaman',
             'manufacturing' => 'Manufaktur',
             'agriculture' => 'Pertanian',
+            'aset_tetap' => 'Aset Tetap',
             'users' => 'Manajemen User',
             'role_management' => 'Manajemen Role',
             'cabang' => 'Kantor Cabang',

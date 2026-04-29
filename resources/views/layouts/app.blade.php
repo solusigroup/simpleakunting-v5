@@ -689,15 +689,33 @@
             <!-- Akuntansi / Tutup Buku -->
             @if(in_array(auth()->user()->role ?? '', ['admin', 'manajer', 'owner']))
             @php
-                $isClosingActive = request()->routeIs('accounting.closing.*');
+                $isAkuntansiActive = request()->routeIs('accounting.closing.*') || request()->routeIs('aset-tetap-group.*') || request()->routeIs('aset-tetap.*');
             @endphp
             <div class="sidebar-section">
-                <div class="sidebar-section-header" data-bs-toggle="collapse" data-bs-target="#akuntansiMenu" aria-expanded="{{ $isClosingActive ? 'true' : 'false' }}">
+                <div class="sidebar-section-header" data-bs-toggle="collapse" data-bs-target="#akuntansiMenu" aria-expanded="{{ $isAkuntansiActive ? 'true' : 'false' }}">
                     <span>📊 Akuntansi</span>
                     <span data-feather="chevron-down" class="chevron"></span>
                 </div>
-                <div class="collapse {{ $isClosingActive ? 'show' : '' }}" id="akuntansiMenu">
+                <div class="collapse {{ $isAkuntansiActive ? 'show' : '' }}" id="akuntansiMenu">
                     <ul class="sidebar-nav sidebar-submenu">
+                        <li class="sidebar-nav-item">
+                            <span class="sidebar-nav-link text-secondary small">🏢 Manajemen Aset</span>
+                        </li>
+                        <li class="sidebar-nav-item">
+                            <a class="sidebar-nav-link {{ request()->routeIs('aset-tetap-group.*') ? 'active' : '' }}" href="{{ route('aset-tetap-group.index') }}">
+                                <span data-feather="grid"></span>
+                                Kelompok Aset
+                            </a>
+                        </li>
+                        <li class="sidebar-nav-item">
+                            <a class="sidebar-nav-link {{ request()->routeIs('aset-tetap.*') ? 'active' : '' }}" href="{{ route('aset-tetap.index') }}">
+                                <span data-feather="briefcase"></span>
+                                Aset Tetap
+                            </a>
+                        </li>
+                        <li class="sidebar-nav-item mt-2">
+                            <span class="sidebar-nav-link text-secondary small">🔒 Proses Akhir Bulan</span>
+                        </li>
                         <li class="sidebar-nav-item">
                             <a class="sidebar-nav-link {{ request()->routeIs('accounting.closing.*') ? 'active' : '' }}" href="{{ route('accounting.closing.index') }}">
                                 <span data-feather="lock"></span>
@@ -773,6 +791,12 @@
                             <a class="sidebar-nav-link {{ request()->routeIs('laporan.mutasi_persediaan') ? 'active' : '' }}" href="{{ route('laporan.mutasi_persediaan') }}">
                                 <span data-feather="repeat"></span>
                                 Mutasi Persediaan
+                            </a>
+                        </li>
+                        <li class="sidebar-nav-item">
+                            <a class="sidebar-nav-link {{ request()->routeIs('laporan.aset_tetap') ? 'active' : '' }}" href="{{ route('laporan.aset_tetap') }}">
+                                <span data-feather="briefcase"></span>
+                                Daftar Aset Tetap
                             </a>
                         </li>
                     </ul>
