@@ -1649,6 +1649,18 @@ body.dark-mode {
     flex-shrink: 0;
 }
 
+/* Dark Mode Overrides for Slide Panel */
+.dark-mode .slide-panel {
+    background: var(--color-bg-card);
+}
+.dark-mode .slide-panel-header,
+.dark-mode .slide-panel-footer {
+    border-color: var(--color-border);
+}
+.dark-mode .slide-panel-close:hover {
+    background: rgba(255, 255, 255, 0.05);
+}
+
 /* Desktop Grid for Dashboard */
 @media (min-width: 992px) {
     .dashboard-grid {
