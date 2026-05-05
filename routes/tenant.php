@@ -295,5 +295,6 @@ Route::middleware([
         // PANDUAN PENGOPERASIAN - All authenticated users
         // =====================================================
         Route::get('guide', [GuideController::class, 'index'])->name('guide.index');
+        Route::get('guide/pdf', [GuideController::class, 'downloadPdf'])->name('guide.pdf');
     });
 });

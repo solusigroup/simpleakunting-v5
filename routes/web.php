@@ -369,5 +369,11 @@ if (config('app.tenancy_enabled')) {
             Route::post('import-export/import/{module}', [ImportExportController::class, 'import'])->name('import-export.import');
             Route::get('import-export/export-all', [ImportExportController::class, 'exportAll'])->name('import-export.export-all');
         });
+
+        // =====================================================
+        // PANDUAN PENGOPERASIAN - All authenticated users
+        // =====================================================
+        Route::get('guide', [GuideController::class, 'index'])->name('guide.index');
+        Route::get('guide/pdf', [GuideController::class, 'downloadPdf'])->name('guide.pdf');
     });
 }

@@ -7,7 +7,12 @@
     <div class="col-12 col-xl-3 mb-4 sticky-xl-top" style="top: 80px; height: calc(100vh - 100px); overflow-y: auto; padding-bottom: 20px;">
         <div class="card border-0 shadow-sm rounded-4">
             <div class="card-body p-4">
-                <h6 class="text-uppercase fw-bold text-secondary small mb-3">Daftar Isi</h6>
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <h6 class="text-uppercase fw-bold text-secondary small mb-0">Daftar Isi</h6>
+                    <a href="{{ route('guide.pdf') }}" class="btn btn-outline-danger btn-sm rounded-pill py-1 px-3" target="_blank">
+                        <span data-feather="file-text" style="width: 14px; height: 14px;"></span> PDF
+                    </a>
+                </div>
                 <nav id="guide-nav" class="nav flex-column gap-2 small">
                     <a class="nav-link p-0 fw-medium" href="#intro">🚀 Pendahuluan</a>
                     <a class="nav-link p-0 fw-medium" href="#dashboard">🏠 Dashboard</a>
