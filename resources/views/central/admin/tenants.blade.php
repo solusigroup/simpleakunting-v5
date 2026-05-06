@@ -38,11 +38,24 @@
                         @endforeach
                     </td>
                     <td>
-                        @if($tenant->is_active)
-                            <span class="badge badge-active">Aktif</span>
-                        @else
-                            <span class="badge badge-inactive">Nonaktif</span>
-                        @endif
+                        @php
+                            $lastSeen = $tenant->last_seen_at ? \Carbon\Carbon::parse($tenant->last_seen_at) : null;
+                            $hoursDiff = $lastSeen ? $lastSeen->diffInHours(\Carbon\Carbon::now()) : null;
+                        @endphp
+                        
+                        <div style="margin-bottom: 4px;">
+                            @if($lastSeen === null || $hoursDiff > 72)
+                                <span class="badge" style="background-color: #f44336; color: white;">Offline</span>
+                            @elseif($hoursDiff >= 24 && $hoursDiff <= 72)
+                                <span class="badge" style="background-color: #ff9800; color: white;">Idle</span>
+                            @else
+                                <span class="badge" style="background-color: #4caf50; color: white;">Online</span>
+                            @endif
+                        </div>
+                        <div style="font-size: 0.85em; color: #666; white-space: nowrap;">
+                            Last Seen:<br>
+                            {{ $lastSeen ? $lastSeen->format('d M Y, H:i') : 'Never' }}
+                        </div>
                     </td>
                     <td>{{ $tenant->created_at?->format('d M Y') }}</td>
                     <td class="table-actions">

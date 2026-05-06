@@ -52,7 +52,12 @@ class TenantRegistrationController extends Controller
      */
     public function index()
     {
-        $tenants = Tenant::with('domains')->orderBy('created_at', 'desc')->get();
+        $tenants = Tenant::select('tenants.*', 'tenant_heartbeats.last_seen_at')
+            ->leftJoin('tenant_heartbeats', 'tenants.id', '=', 'tenant_heartbeats.tenant_id')
+            ->with('domains')
+            ->orderBy('tenants.created_at', 'desc')
+            ->get();
+            
         return view('central.admin.tenants', compact('tenants'));
     }
 
