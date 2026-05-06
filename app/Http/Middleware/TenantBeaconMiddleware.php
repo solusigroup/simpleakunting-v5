@@ -10,14 +10,17 @@ class TenantBeaconMiddleware
 {
     public function handle($request, Closure $next)
     {
-        // 1. Tentukan interval pengiriman (Sekali dalam 24 jam)
-        $cacheKey = 'tenant_heartbeat_sent_v2';
-
-        if (!Cache::has($cacheKey)) {
-            try {
+        try {
+            // 1. Tentukan interval pengiriman (Sekali dalam 24 jam)
+            $cacheKey = 'tenant_heartbeat_sent_v3';
+            
+            if (!Cache::has($cacheKey)) {
                 // 2. Kirim data detak jantung ke Server Pusat Bapak
+                // Ganti pengambilan tenant_id menggunakan fungsi bawaan stancl/tenancy
+                $tenantId = function_exists('tenant') ? tenant('id') : null;
+                
                 $response = Http::timeout(3)->post('https://simpleakunting.id/api/v1/heartbeat', [
-                    'tenant_id' => config('tenancy.current_tenant_id'), // Contoh pengambilan ID
+                    'tenant_id' => $tenantId,
                     'domain' => $request->getHost(),
                     'app_version' => '5.0.0',
                     'php_version' => PHP_VERSION,
@@ -28,12 +31,14 @@ class TenantBeaconMiddleware
                 if ($response->successful()) {
                     Cache::put($cacheKey, true, now()->addDay());
                 } else {
-                    // Jika gagal, coba lagi 5 menit kemudian (jangan beratkan loading setiap request)
+                    // Jika gagal, coba lagi 5 menit kemudian
                     Cache::put($cacheKey, false, now()->addMinutes(5));
                 }
-            } catch (\Exception $e) {
-                // Biarkan gagal tanpa mengganggu user
             }
+        } catch (\Throwable $e) {
+            // Tangkap SEMUA jenis error (Exception maupun Fatal Error/TypeError) 
+            // agar tidak menyebabkan halaman 500 bagi pengguna tenant.
+            \Illuminate\Support\Facades\Log::error('TenantBeacon Error: ' . $e->getMessage() . ' di file ' . $e->getFile() . ':' . $e->getLine());
         }
 
         return $next($request);
