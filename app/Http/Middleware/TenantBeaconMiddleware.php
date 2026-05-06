@@ -12,20 +12,27 @@ class TenantBeaconMiddleware
     {
         try {
             // 1. Tentukan interval pengiriman (Sekali dalam 24 jam)
-            $cacheKey = 'tenant_heartbeat_sent_v3';
+            $cacheKey = 'tenant_heartbeat_sent_v4';
             
             if (!Cache::has($cacheKey)) {
                 // 2. Kirim data detak jantung ke Server Pusat Bapak
                 // Ganti pengambilan tenant_id menggunakan fungsi bawaan stancl/tenancy
                 $tenantId = function_exists('tenant') ? tenant('id') : null;
                 
-                $response = Http::timeout(3)->post('https://simpleakunting.id/api/v1/heartbeat', [
-                    'tenant_id' => $tenantId,
-                    'domain' => $request->getHost(),
-                    'app_version' => '5.0.0',
-                    'php_version' => PHP_VERSION,
-                    'secure_key' => hash('sha256', 'KunciRahasiaPanjangDanAcak!@#$%' . $request->getHost())
-                ]);
+                $centralDomain = config('tenancy.central_domains')[0] ?? 'simpleakunting.id';
+                
+                // Gunakan 127.0.0.1 (localhost) untuk bypass masalah NAT Loopback / Hairpin NAT di server lokal,
+                // sambil mengirimkan header Host asli agar diterima oleh Nginx/Apache.
+                $response = Http::timeout(3)
+                    ->withOptions(['verify' => false]) // Abaikan validasi SSL lokal
+                    ->withHeaders(['Host' => $centralDomain])
+                    ->post('http://127.0.0.1/api/v1/heartbeat', [
+                        'tenant_id' => $tenantId,
+                        'domain' => $request->getHost(),
+                        'app_version' => '5.0.0',
+                        'php_version' => PHP_VERSION,
+                        'secure_key' => hash('sha256', 'KunciRahasiaPanjangDanAcak!@#$%' . $request->getHost())
+                    ]);
 
                 // 3. Simpan status di cache agar tidak kirim terus menerus
                 if ($response->successful()) {
