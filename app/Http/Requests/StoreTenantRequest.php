@@ -60,6 +60,18 @@ class StoreTenantRequest extends FormRequest
                 'max:255',
             ],
 
+            'use_custom_domain' => [
+                'nullable',
+            ],
+
+            'custom_domain' => [
+                'nullable',
+                'required_with:use_custom_domain',
+                'string',
+                'max:255',
+                'regex:/^([a-z0-9]+(-[a-z0-9]+)*\.)+[a-z]{2,}$/i',
+            ],
+
             'email' => [
                 'nullable',
                 'email:rfc,dns',  // validasi lebih ketat: RFC + pengecekan DNS MX record
@@ -96,6 +108,9 @@ class StoreTenantRequest extends FormRequest
             'nama_perusahaan.required' => 'Nama Perusahaan wajib diisi.',
             'nama_perusahaan.max'      => 'Nama Perusahaan maksimal :max karakter.',
 
+            'custom_domain.required_with' => 'Domain Kustom wajib diisi jika opsi Domain Kustom dicentang.',
+            'custom_domain.regex'         => 'Format Domain Kustom tidak valid. Pastikan formatnya benar, contoh: bumdesa-maju.id',
+
             'email.email' => 'Format email tidak valid atau domain email tidak ditemukan.',
             'email.max'   => 'Email maksimal :max karakter.',
 
@@ -114,6 +129,7 @@ class StoreTenantRequest extends FormRequest
     {
         return [
             'tenant_id'       => 'ID Tenant / Subdomain',
+            'custom_domain'   => 'Domain Kustom',
             'nama_perusahaan' => 'Nama Perusahaan',
             'email'           => 'Email',
             'admin_username'  => 'Username Admin',
@@ -155,6 +171,10 @@ class StoreTenantRequest extends FormRequest
 
         if ($this->has('admin_username')) {
             $merges['admin_username'] = trim(strtolower((string) $this->admin_username));
+        }
+
+        if ($this->has('custom_domain') && $this->custom_domain !== null) {
+            $merges['custom_domain'] = trim(strtolower((string) $this->custom_domain));
         }
 
         if (!empty($merges)) {

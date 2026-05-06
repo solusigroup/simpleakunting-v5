@@ -44,7 +44,18 @@
             <div class="form-group">
                 <label for="tenant_id">Tenant ID (Subdomain)</label>
                 <input type="text" id="tenant_id" name="tenant_id" value="{{ old('tenant_id') }}" placeholder="perusahaan-abc" required>
-                <div class="hint">Akan menjadi subdomain: <strong>perusahaan-abc.{{ request()->getHost() }}</strong></div>
+                <div class="hint">Akan menjadi subdomain (jika tidak menggunakan domain kustom): <strong>perusahaan-abc.{{ request()->getHost() }}</strong></div>
+            </div>
+
+            <div class="form-group" style="display: flex; align-items: center; gap: 8px; margin-bottom: 20px;">
+                <input type="checkbox" id="use_custom_domain" name="use_custom_domain" value="1" style="width: auto; margin: 0; padding: 0;" {{ old('use_custom_domain') ? 'checked' : '' }} onchange="toggleCustomDomain()">
+                <label for="use_custom_domain" style="margin: 0;">Gunakan Domain Kustom (Hosting Mandiri)</label>
+            </div>
+
+            <div class="form-group" id="custom_domain_group" style="display: {{ old('use_custom_domain') ? 'block' : 'none' }}; margin-bottom: 20px;">
+                <label for="custom_domain">Domain Kustom Lengkap</label>
+                <input type="text" id="custom_domain" name="custom_domain" value="{{ old('custom_domain') }}" placeholder="Contoh: bumdesa-maju.id">
+                <div class="hint" style="color: #ff8c00;">Pastikan Anda sudah mengarahkan DNS (A Record / CNAME) domain ini ke IP server pusat.</div>
             </div>
 
             <div class="form-group">
@@ -75,5 +86,17 @@
 
         <a href="{{ route('central.landing') }}" class="back-link">← Kembali ke Beranda</a>
     </div>
+
+    <script>
+        function toggleCustomDomain() {
+            var checkbox = document.getElementById('use_custom_domain');
+            var group = document.getElementById('custom_domain_group');
+            if (checkbox.checked) {
+                group.style.display = 'block';
+            } else {
+                group.style.display = 'none';
+            }
+        }
+    </script>
 </body>
 </html>

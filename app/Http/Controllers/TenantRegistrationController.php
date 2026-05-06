@@ -37,10 +37,14 @@ class TenantRegistrationController extends Controller
             'admin_password'   => $validated['admin_password'],
         ]);
 
+        // Logika domain
+        $domainToSave = (!empty($validated['use_custom_domain']) && !empty($validated['custom_domain'])) 
+            ? $validated['custom_domain'] 
+            : $validated['tenant_id'];
+
         $tenant->domains()->create([
-            // Simpan subdomain saja — InitializeTenancyBySubdomain akan
-            // me-resolve subdomain dari request host secara otomatis.
-            'domain' => $validated['tenant_id'],
+            // Simpan subdomain atau domain kustom
+            'domain' => $domainToSave,
         ]);
 
         return redirect()->route('central.tenants.index')
