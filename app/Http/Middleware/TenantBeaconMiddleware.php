@@ -11,10 +11,11 @@ class TenantBeaconMiddleware
     public function handle($request, Closure $next)
     {
         try {
-            // 1. Tentukan interval pengiriman
-            $cacheKey = 'tenant_heartbeat_sent_v7';
+            // 1. Tentukan interval pengiriman menggunakan Session (per user)
+            // Karena driver cache (file/database) di server tidak mendukung cache tagging bawaan stancl/tenancy
+            $cacheKey = 'tenant_heartbeat_sent_v8';
             
-            if (!Cache::has($cacheKey)) {
+            if (!session()->has($cacheKey)) {
                 $tenantId = function_exists('tenant') ? tenant('id') : null;
                 $centralDomain = config('tenancy.central_domains')[0] ?? 'simpleakunting.id';
                 $success = false;
@@ -39,7 +40,6 @@ class TenantBeaconMiddleware
 
                 if (!$success && $tenantId) {
                     // SKENARIO 2: Fallback (Tulis langsung ke Database Central)
-                    // Menggunakan Model Eloquent dengan koneksi spesifik agar terhindar dari isu mutasi Query Builder
                     $centralConn = config('tenancy.database.central_connection', 'mysql');
                     
                     \App\Models\TenantHeartbeat::on($centralConn)->updateOrCreate(
@@ -55,11 +55,9 @@ class TenantBeaconMiddleware
                     $success = true;
                 }
 
-                // 3. Simpan status di cache agar tidak kirim terus menerus
+                // 3. Simpan status di session agar tidak kirim terus menerus di setiap klik halaman
                 if ($success) {
-                    Cache::put($cacheKey, true, now()->addDay());
-                } else {
-                    Cache::put($cacheKey, false, now()->addMinutes(5));
+                    session()->put($cacheKey, true);
                 }
             }
         } catch (\Throwable $e) {
