@@ -32,10 +32,16 @@
                     <td><strong>{{ $tenant->id }}</strong></td>
                     <td>{{ $tenant->nama_perusahaan ?? '-' }}</td>
                     <td>
-                        @foreach($tenant->domains as $domain)
-                            @php $fullDomain = $domain->domain . '.' . request()->getHost(); @endphp
-                            <a href="http://{{ $fullDomain }}" class="domain-link" target="_blank">{{ $fullDomain }}</a>
-                        @endforeach
+                        @if($tenant->heartbeat_domain)
+                            <a href="http://{{ $tenant->heartbeat_domain }}" class="domain-link" target="_blank">{{ $tenant->heartbeat_domain }}</a>
+                            <div style="font-size: 0.8em; color: #4caf50; margin-top: 2px;">(Active/Reported)</div>
+                        @else
+                            @foreach($tenant->domains as $domain)
+                                @php $fullDomain = $domain->domain . '.' . request()->getHost(); @endphp
+                                <a href="http://{{ $fullDomain }}" class="domain-link" target="_blank">{{ $fullDomain }}</a>
+                            @endforeach
+                            <div style="font-size: 0.8em; color: #999; margin-top: 2px;">(Default)</div>
+                        @endif
                     </td>
                     <td>
                         @php

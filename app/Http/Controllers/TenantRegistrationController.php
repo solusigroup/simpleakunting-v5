@@ -52,7 +52,7 @@ class TenantRegistrationController extends Controller
      */
     public function index()
     {
-        $tenants = Tenant::select('tenants.*', 'tenant_heartbeats.last_seen_at')
+        $tenants = Tenant::select('tenants.*', 'tenant_heartbeats.last_seen_at', 'tenant_heartbeats.domain as heartbeat_domain')
             ->leftJoin('tenant_heartbeats', 'tenants.id', '=', 'tenant_heartbeats.tenant_id')
             ->with('domains')
             ->orderBy('tenants.created_at', 'desc')
