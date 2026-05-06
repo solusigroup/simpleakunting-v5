@@ -12,7 +12,7 @@ trap 'echo "⚠️ Terjadi kesalahan! Mengaktifkan aplikasi kembali..."; php art
 
 # 1a. Pastikan izin akses folder benar (Permissions Fix)
 echo "🔒 Mengatur ulang izin akses folder storage & cache..."
-chmod -R 775 storage bootstrap/cache
+chmod -R 775 storage bootstrap/cache || true
 
 # 2. Update kode dari repository
 echo "📥 Menarik kode terbaru dari Git..."
