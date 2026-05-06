@@ -12,7 +12,7 @@ class TenantBeaconMiddleware
     {
         try {
             // 1. Tentukan interval pengiriman
-            $cacheKey = 'tenant_heartbeat_sent_v6';
+            $cacheKey = 'tenant_heartbeat_sent_v7';
             
             if (!Cache::has($cacheKey)) {
                 $tenantId = function_exists('tenant') ? tenant('id') : null;
@@ -39,29 +39,19 @@ class TenantBeaconMiddleware
 
                 if (!$success && $tenantId) {
                     // SKENARIO 2: Fallback (Tulis langsung ke Database Central)
-                    // Berfungsi sempurna untuk Tenant yang berada di mesin server yang sama
+                    // Menggunakan Model Eloquent dengan koneksi spesifik agar terhindar dari isu mutasi Query Builder
                     $centralConn = config('tenancy.database.central_connection', 'mysql');
-                    $db = \Illuminate\Support\Facades\DB::connection($centralConn)->table('tenant_heartbeats');
                     
-                    if ($db->where('tenant_id', $tenantId)->exists()) {
-                        $db->where('tenant_id', $tenantId)->update([
+                    \App\Models\TenantHeartbeat::on($centralConn)->updateOrCreate(
+                        ['tenant_id' => $tenantId],
+                        [
                             'domain' => $request->getHost(),
                             'app_version' => '5.0.0',
                             'php_version' => PHP_VERSION,
                             'last_seen_at' => now(),
-                            'updated_at' => now()
-                        ]);
-                    } else {
-                        $db->insert([
-                            'tenant_id' => $tenantId,
-                            'domain' => $request->getHost(),
-                            'app_version' => '5.0.0',
-                            'php_version' => PHP_VERSION,
-                            'last_seen_at' => now(),
-                            'created_at' => now(),
-                            'updated_at' => now()
-                        ]);
-                    }
+                        ]
+                    );
+                    
                     $success = true;
                 }
 
