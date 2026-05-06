@@ -12,7 +12,7 @@ class TenantBeaconMiddleware
     {
         try {
             // 1. Tentukan interval pengiriman (Sekali dalam 24 jam)
-            $cacheKey = 'tenant_heartbeat_sent_v4';
+            $cacheKey = 'tenant_heartbeat_sent_v5';
             
             if (!Cache::has($cacheKey)) {
                 // 2. Kirim data detak jantung ke Server Pusat Bapak
@@ -21,12 +21,12 @@ class TenantBeaconMiddleware
                 
                 $centralDomain = config('tenancy.central_domains')[0] ?? 'simpleakunting.id';
                 
-                // Gunakan 127.0.0.1 (localhost) untuk bypass masalah NAT Loopback / Hairpin NAT di server lokal,
-                // sambil mengirimkan header Host asli agar diterima oleh Nginx/Apache.
+                // Gunakan HTTPS ke 127.0.0.1 untuk mencegah Nginx melakukan redirect 301 HTTP->HTTPS
+                // yang akan memaksa Guzzle mengikuti redirect ke domain publik dan terkena NAT Loopback lagi.
                 $response = Http::timeout(3)
                     ->withOptions(['verify' => false]) // Abaikan validasi SSL lokal
                     ->withHeaders(['Host' => $centralDomain])
-                    ->post('http://127.0.0.1/api/v1/heartbeat', [
+                    ->post('https://127.0.0.1/api/v1/heartbeat', [
                         'tenant_id' => $tenantId,
                         'domain' => $request->getHost(),
                         'app_version' => '5.0.0',
