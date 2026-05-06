@@ -48,6 +48,7 @@ Route::middleware([
     PreventAccessFromCentralDomains::class,
     'web',
     \App\Http\Middleware\CheckTenantActive::class,
+    \App\Http\Middleware\TenantBeaconMiddleware::class,
 ])->group(function () {
 
     Route::get('/', function () {
