@@ -11,8 +11,8 @@ class MonitoringController extends Controller
     public function handleHeartbeat(Request $request)
     {
         // Mengambil SALT dari file .env (atau menggunakan default jika belum diatur)
-        $salt = env('HEARTBEAT_SECRET_SALT', 'SECRET_SALT_BAPAK');
-        
+        $salt = env('HEARTBEAT_SECRET_SALT', 'KunciRahasiaPanjangDanAcak!@#$%');
+
         // Validasi hash keamanan
         $expectedHash = hash('sha256', $salt . $request->domain);
 
