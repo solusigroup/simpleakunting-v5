@@ -176,8 +176,14 @@
 @push('scripts')
 <script>
     // Robustly convert to array using Object.values
-    let rawBarang = {!! json_encode($barang) !!};
-    let barangData = Array.isArray(rawBarang) ? rawBarang : Object.values(rawBarang);
+    let barangData = [];
+    try {
+        let raw = {!! json_encode($barang) !!};
+        barangData = raw ? (Array.isArray(raw) ? raw : Object.values(raw)) : [];
+    } catch (e) {
+        console.error("Error parsing barang data:", e);
+    }
+
     let rowCount = 0;
 
     // Pre-calculate options HTML once for performance
@@ -217,7 +223,7 @@
                                 <input type="text" placeholder="Ketik kode atau nama barang..." id="ss_search_${currentRow}" autocomplete="off">
                             </div>
                             <div class="searchable-select-options" id="ss_options_${currentRow}">
-                                ${globalOptionsHtml || '<div class="searchable-select-empty">Data persediaan tidak ditemukan</div>'}
+                                ${globalOptionsHtml || '<div class="searchable-select-empty">Data persediaan tidak ditemukan (Count: '+barangData.length+')</div>'}
                             </div>
                         </div>
                     </div>
@@ -249,12 +255,15 @@
         const optionsContainer = document.getElementById(`ss_options_${rowId}`);
         const hiddenInput = document.getElementById(`ss_input_${rowId}`);
 
+        if (!trigger || !dropdown) return;
+
         trigger.addEventListener('click', function(e) {
             e.stopPropagation();
             document.querySelectorAll('.searchable-select-dropdown.show').forEach(d => {
                 if (d !== dropdown) {
                     d.classList.remove('show');
-                    d.closest('.searchable-select').querySelector('.searchable-select-trigger').classList.remove('open');
+                    const t = d.closest('.searchable-select').querySelector('.searchable-select-trigger');
+                    if (t) t.classList.remove('open');
                 }
             });
             const isOpen = dropdown.classList.toggle('show');
@@ -286,6 +295,8 @@
         const hiddenInput = document.getElementById(`ss_input_${rowId}`);
         const optionsContainer = document.getElementById(`ss_options_${rowId}`);
 
+        if (!trigger || !dropdown || !hiddenInput) return;
+
         optionsContainer.querySelectorAll('.selected').forEach(o => o.classList.remove('selected'));
         option.classList.add('selected');
 
@@ -302,12 +313,17 @@
 
         // Update Price
         const harga = option.dataset.harga || 0;
-        document.getElementById(`harga_${rowId}`).value = harga;
-        hitungSubtotal(rowId);
+        const hargaInput = document.getElementById(`harga_${rowId}`);
+        if (hargaInput) {
+            hargaInput.value = harga;
+            hitungSubtotal(rowId);
+        }
     }
 
     function filterOptions(rowId, query) {
         const optionsContainer = document.getElementById(`ss_options_${rowId}`);
+        if (!optionsContainer) return;
+
         const options = optionsContainer.querySelectorAll('.searchable-select-option');
         const q = query.toLowerCase().trim();
         let visibleCount = 0;
@@ -340,21 +356,25 @@
     document.addEventListener('click', function() {
         document.querySelectorAll('.searchable-select-dropdown.show').forEach(d => {
             d.classList.remove('show');
-            d.closest('.searchable-select').querySelector('.searchable-select-trigger').classList.remove('open');
+            const t = d.closest('.searchable-select').querySelector('.searchable-select-trigger');
+            if (t) t.classList.remove('open');
         });
     });
 
     // Barcode Scanner Logic
-    document.getElementById('scan_barcode').addEventListener('keypress', function (e) {
-        if (e.key === 'Enter') {
-            e.preventDefault();
-            let code = this.value.trim();
-            if (code) {
-                processBarcode(code);
-                this.value = '';
+    const scanInput = document.getElementById('scan_barcode');
+    if (scanInput) {
+        scanInput.addEventListener('keypress', function (e) {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                let code = this.value.trim();
+                if (code) {
+                    processBarcode(code);
+                    this.value = '';
+                }
             }
-        }
-    });
+        });
+    }
 
     function processBarcode(code) {
         if (!barangData || barangData.length === 0) return;
@@ -372,8 +392,10 @@
 
             if (existingRow !== -1) {
                 let qtyInput = document.getElementById(`qty_${existingRow}`);
-                qtyInput.value = parseInt(qtyInput.value) + 1;
-                hitungSubtotal(existingRow);
+                if (qtyInput) {
+                    qtyInput.value = parseInt(qtyInput.value) + 1;
+                    hitungSubtotal(existingRow);
+                }
             } else {
                 let emptyRow = -1;
                 for (let i = 0; i < rowCount; i++) {
@@ -399,12 +421,18 @@
     }
 
     function hitungSubtotal(id) {
-        let harga = parseFloat(document.getElementById(`harga_${id}`).value) || 0;
-        let qty = parseFloat(document.getElementById(`qty_${id}`).value) || 0;
+        const hargaEl = document.getElementById(`harga_${id}`);
+        const qtyEl = document.getElementById(`qty_${id}`);
+        if (!hargaEl || !qtyEl) return;
+
+        let harga = parseFloat(hargaEl.value) || 0;
+        let qty = parseFloat(qtyEl.value) || 0;
         let subtotal = harga * qty;
         
-        document.getElementById(`subtotal_${id}`).value = subtotal;
-        document.getElementById(`subtotal_display_${id}`).value = formatRupiah(subtotal);
+        const subInput = document.getElementById(`subtotal_${id}`);
+        const subDisplay = document.getElementById(`subtotal_display_${id}`);
+        if (subInput) subInput.value = subtotal;
+        if (subDisplay) subDisplay.value = formatRupiah(subtotal);
         
         hitungTotalSemua();
     }
@@ -414,7 +442,8 @@
         document.querySelectorAll('.subtotal-input').forEach(input => {
             total += parseFloat(input.value) || 0;
         });
-        document.getElementById('display_total').innerText = formatRupiah(total);
+        const totalDisp = document.getElementById('display_total');
+        if (totalDisp) totalDisp.innerText = formatRupiah(total);
     }
 
     function hapusBaris(id) {
@@ -424,42 +453,50 @@
     }
 
     function toggleAkunKas() {
-        let metode = document.getElementById('metode_pembayaran').value;
+        let metodeEl = document.getElementById('metode_pembayaran');
+        if (!metodeEl) return;
+        let metode = metodeEl.value;
         let div = document.getElementById('div_akun_kas');
         let input = document.getElementById('akun_kas_bank');
         
         if (metode === 'Tunai') {
-            div.style.display = 'block';
-            input.setAttribute('required', 'required');
+            if (div) div.style.display = 'block';
+            if (input) input.setAttribute('required', 'required');
         } else {
-            div.style.display = 'none';
-            input.removeAttribute('required');
-            input.value = '';
+            if (div) div.style.display = 'none';
+            if (input) {
+                input.removeAttribute('required');
+                input.value = '';
+            }
         }
     }
 
     // Cascade Cabang -> Unit Usaha
-    document.getElementById('id_cabang').addEventListener('change', function() {
-        let cabangId = this.value;
-        let unitSelect = document.getElementById('id_unit_usaha');
-        let units = unitSelect.querySelectorAll('option');
-        
-        unitSelect.value = "";
-        units.forEach(opt => {
-            if (opt.value === "") return;
-            if (opt.getAttribute('data-cabang') == cabangId || !cabangId) {
-                opt.style.display = "";
-            } else {
-                opt.style.display = "none";
-            }
+    const cabangSelect = document.getElementById('id_cabang');
+    if (cabangSelect) {
+        cabangSelect.addEventListener('change', function() {
+            let cabangId = this.value;
+            let unitSelect = document.getElementById('id_unit_usaha');
+            if (!unitSelect) return;
+            let units = unitSelect.querySelectorAll('option');
+            
+            unitSelect.value = "";
+            units.forEach(opt => {
+                if (opt.value === "") return;
+                if (opt.getAttribute('data-cabang') == cabangId || !cabangId) {
+                    opt.style.display = "";
+                } else {
+                    opt.style.display = "none";
+                }
+            });
         });
-    });
+    }
 
     // Init
     tambahBaris();
     toggleAkunKas();
-    if (document.getElementById('id_cabang').value) {
-        document.getElementById('id_cabang').dispatchEvent(new Event('change'));
+    if (cabangSelect && cabangSelect.value) {
+        cabangSelect.dispatchEvent(new Event('change'));
     }
 </script>
 @endpush
