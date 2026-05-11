@@ -1122,6 +1122,12 @@ class LaporanController extends Controller
             $totalPasiva = $totalKewajiban + $totalEkuitas + $labaBerjalan;
             $gap = $totalAset - $totalPasiva;
 
+            // 4. Orphaned Details
+            $orphanedDetails = DB::table('jurnal_detail')
+                ->leftJoin('jurnal_umum', 'jurnal_detail.id_jurnal', '=', 'jurnal_umum.id_jurnal')
+                ->whereNull('jurnal_umum.id_jurnal')
+                ->count();
+
             // 5. Missing Master Accounts
             $usedAccounts = DB::table('jurnal_detail')->distinct()->pluck('kode_akun');
             $masterAccounts = Akun::pluck('kode_akun')->toArray();
