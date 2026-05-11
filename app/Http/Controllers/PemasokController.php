@@ -103,6 +103,39 @@ class PemasokController extends Controller
         }
     }
 
+    public function show(Request $request, Pemasok $pemasok)
+    {
+        $startDate = $request->get('start_date', date('Y-m-01'));
+        $endDate = $request->get('end_date', date('Y-m-d'));
+
+        // Ambil histori jurnal yang terkait dengan pemasok ini (Tipe Utang Usaha)
+        $transactions = \App\Models\JurnalDetail::whereHas('jurnal', function($q) use ($pemasok, $startDate, $endDate) {
+                $q->where('id_pemasok', $pemasok->id_pemasok)
+                  ->whereBetween('tanggal', [$startDate, $endDate]);
+            })
+            ->whereHas('akun', function($q) {
+                $q->where('tipe_akun', 'Utang Usaha');
+            })
+            ->with('jurnal')
+            ->get()
+            ->sortBy('jurnal.tanggal');
+
+        // Hitung Saldo Awal sebelum periode (untuk running balance)
+        $saldoSebelumnya = \App\Models\JurnalDetail::whereHas('jurnal', function($q) use ($pemasok, $startDate) {
+                $q->where('id_pemasok', $pemasok->id_pemasok)
+                  ->where('tanggal', '<', $startDate);
+            })
+            ->whereHas('akun', function($q) {
+                $q->where('tipe_akun', 'Utang Usaha');
+            })
+            ->select(\Illuminate\Support\Facades\DB::raw('SUM(kredit) - SUM(debit) as total'))
+            ->value('total') ?? 0;
+
+        $saldoAwalPeriode = $pemasok->saldo_awal_hutang + $saldoSebelumnya;
+
+        return view('pemasok.show', compact('pemasok', 'transactions', 'saldoAwalPeriode', 'startDate', 'endDate'));
+    }
+
     public function destroy(Pemasok $pemasok)
     {
         $pemasok->delete();

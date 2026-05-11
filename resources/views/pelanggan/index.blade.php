@@ -43,7 +43,7 @@
                     <tr>
                         <td>{{ $p->id_pelanggan }}</td>
                         <td>
-                            <a href="{{ route('penjualan.index', ['id_pelanggan' => $p->id_pelanggan]) }}" class="text-decoration-none fw-bold" title="Lihat Riwayat Penjualan">
+                            <a href="{{ route('pelanggan.show', $p->id_pelanggan) }}" class="text-decoration-none fw-bold" title="Lihat Buku Pembantu (Subsidiary Ledger)">
                                 {{ $p->nama_pelanggan }}
                             </a>
                         </td>

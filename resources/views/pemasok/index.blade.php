@@ -43,7 +43,7 @@
                     <tr>
                         <td>{{ $p->id_pemasok }}</td>
                         <td>
-                            <a href="{{ route('pembelian.index', ['id_pemasok' => $p->id_pemasok]) }}" class="text-decoration-none fw-bold" title="Lihat Riwayat Pembelian">
+                            <a href="{{ route('pemasok.show', $p->id_pemasok) }}" class="text-decoration-none fw-bold" title="Lihat Buku Pembantu (Subsidiary Ledger)">
                                 {{ $p->nama_pemasok }}
                             </a>
                         </td>
