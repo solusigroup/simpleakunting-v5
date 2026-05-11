@@ -214,6 +214,14 @@ class PembelianController extends Controller
             'details.*.harga_beli' => 'required|numeric|min:0',
         ]);
 
+        // Proteksi Sesi POS (Shift)
+        if ($pembelian->id_pos_session) {
+            $session = \App\Models\PosSession::find($pembelian->id_pos_session);
+            if ($session && !$session->isOpen() && !auth()->user()->isSuperuser()) {
+                return back()->with('error', 'Transaksi POS ini tidak dapat diubah karena sesi kasir (shift) sudah ditutup.');
+            }
+        }
+
         try {
             DB::beginTransaction();
 
@@ -339,6 +347,15 @@ class PembelianController extends Controller
                     ->increment('saldo_terkini_hutang', $totalPembelian);
             }
 
+            // Sync POS Session Total
+            if ($pembelian->id_pos_session) {
+                $session = \App\Models\PosSession::find($pembelian->id_pos_session);
+                if ($session) {
+                    $newTotal = Pembelian::where('id_pos_session', $session->id)->sum('total');
+                    $session->update(['total_pembelian' => $newTotal]);
+                }
+            }
+
             DB::commit();
             return redirect()->route('pembelian.index')->with('success', 'Transaksi pembelian berhasil diperbarui.');
 
@@ -351,6 +368,14 @@ class PembelianController extends Controller
 
     public function destroy(Pembelian $pembelian)
     {
+        // Proteksi Sesi POS (Shift)
+        if ($pembelian->id_pos_session) {
+            $session = \App\Models\PosSession::find($pembelian->id_pos_session);
+            if ($session && !$session->isOpen() && !auth()->user()->isSuperuser()) {
+                return back()->with('error', 'Transaksi POS ini tidak dapat dihapus karena sesi kasir (shift) sudah ditutup.');
+            }
+        }
+
         try {
             DB::beginTransaction();
 
@@ -388,6 +413,15 @@ class PembelianController extends Controller
             // 4. Hapus Detail & Header Pembelian
             $pembelian->details()->delete();
             $pembelian->delete();
+
+            // Sync POS Session Total
+            if ($pembelian->id_pos_session) {
+                $session = \App\Models\PosSession::find($pembelian->id_pos_session);
+                if ($session) {
+                    $newTotal = Pembelian::where('id_pos_session', $session->id)->sum('total');
+                    $session->update(['total_pembelian' => $newTotal]);
+                }
+            }
 
             DB::commit();
             return redirect()->route('pembelian.index')->with('success', 'Transaksi pembelian berhasil dihapus. Stok dan saldo pemasok telah disesuaikan.');

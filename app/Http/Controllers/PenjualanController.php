@@ -242,6 +242,14 @@ class PenjualanController extends Controller
             'details.*.kuantitas' => 'required|numeric|min:1',
         ]);
 
+        // Proteksi Sesi POS (Shift)
+        if ($penjualan->id_pos_session) {
+            $session = \App\Models\PosSession::find($penjualan->id_pos_session);
+            if ($session && !$session->isOpen() && !auth()->user()->isSuperuser()) {
+                return back()->with('error', 'Transaksi POS ini tidak dapat diubah karena sesi kasir (shift) sudah ditutup.');
+            }
+        }
+
         try {
             DB::beginTransaction();
 
@@ -383,6 +391,15 @@ class PenjualanController extends Controller
                     ->increment('saldo_terkini_piutang', $totalPenjualan);
             }
 
+            // Sync POS Session Total
+            if ($penjualan->id_pos_session) {
+                $session = \App\Models\PosSession::find($penjualan->id_pos_session);
+                if ($session) {
+                    $newTotal = Penjualan::where('id_pos_session', $session->id)->sum('total');
+                    $session->update(['total_penjualan' => $newTotal]);
+                }
+            }
+
             DB::commit();
             return redirect()->route('penjualan.index')->with('success', 'Transaksi penjualan berhasil diperbarui.');
 
@@ -395,6 +412,14 @@ class PenjualanController extends Controller
 
     public function destroy(Penjualan $penjualan)
     {
+        // Proteksi Sesi POS (Shift)
+        if ($penjualan->id_pos_session) {
+            $session = \App\Models\PosSession::find($penjualan->id_pos_session);
+            if ($session && !$session->isOpen() && !auth()->user()->isSuperuser()) {
+                return back()->with('error', 'Transaksi POS ini tidak dapat dihapus karena sesi kasir (shift) sudah ditutup.');
+            }
+        }
+
         try {
             DB::beginTransaction();
 
@@ -405,6 +430,7 @@ class PenjualanController extends Controller
                 if ($barang) {
                     $barang->increment('stok_saat_ini', $detail->kuantitas);
                 }
+                
                 DB::table('kartu_stok')
                     ->where('id_barang', $detail->id_barang)
                     ->where('keterangan', 'LIKE', "%#{$penjualan->no_faktur}%")
@@ -424,12 +450,19 @@ class PenjualanController extends Controller
             $penjualan->details()->delete();
             $penjualan->delete();
 
-            DB::commit();
-            return redirect()->route('penjualan.index')->with('success', 'Transaksi penjualan berhasil dihapus.');
+            // Sync POS Session Total
+            if ($penjualan->id_pos_session) {
+                $session = \App\Models\PosSession::find($penjualan->id_pos_session);
+                if ($session) {
+                    $newTotal = Penjualan::where('id_pos_session', $session->id)->sum('total');
+                    $session->update(['total_penjualan' => $newTotal]);
+                }
+            }
 
+            DB::commit();
+            return redirect()->route('penjualan.index')->with('success', 'Transaksi penjualan berhasil dihapus dan stok telah disesuaikan.');
         } catch (\Exception $e) {
             DB::rollBack();
-            Log::error('Error deleting penjualan: ' . $e->getMessage());
             return back()->with('error', 'Gagal menghapus transaksi: ' . $e->getMessage());
         }
     }
