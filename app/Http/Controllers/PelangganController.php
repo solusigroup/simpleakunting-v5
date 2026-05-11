@@ -90,13 +90,21 @@ class PelangganController extends Controller
         try {
             \Illuminate\Support\Facades\DB::beginTransaction();
 
-            // 1. BACKFILL: Hubungkan kembali jurnal lama yang kehilangan link pelanggan
-            // Mengambil id_pelanggan dari tabel penjualan berdasarkan nomor transaksi
+            // 1. BACKFILL: Hubungkan kembali jurnal lama (Multi-strategy)
+            // Strategi A: Berdasarkan link id_jurnal di tabel penjualan
+            \Illuminate\Support\Facades\DB::statement("
+                UPDATE jurnal_umum j
+                JOIN penjualan p ON j.id_jurnal = p.id_jurnal
+                SET j.id_pelanggan = p.id_pelanggan
+                WHERE j.id_pelanggan IS NULL
+            ");
+
+            // Strategi B: Berdasarkan kecocokan no_transaksi (Fallback)
             \Illuminate\Support\Facades\DB::statement("
                 UPDATE jurnal_umum j
                 JOIN penjualan p ON j.no_transaksi = p.no_faktur
                 SET j.id_pelanggan = p.id_pelanggan
-                WHERE j.id_pelanggan IS NULL AND j.sumber_jurnal = 'Penjualan'
+                WHERE j.id_pelanggan IS NULL
             ");
 
             $pelanggan = Pelanggan::all();
@@ -115,7 +123,7 @@ class PelangganController extends Controller
             }
 
             \Illuminate\Support\Facades\DB::commit();
-            return redirect()->route('pelanggan.index')->with('success', 'Sinkronisasi saldo piutang seluruh pelanggan berhasil (Termasuk pemulihan data lama).');
+            return redirect()->route('pelanggan.index')->with('success', 'Sinkronisasi saldo piutang berhasil disempurnakan.');
         } catch (\Exception $e) {
             \Illuminate\Support\Facades\DB::rollBack();
             return redirect()->route('pelanggan.index')->with('error', 'Gagal sinkronisasi: ' . $e->getMessage());

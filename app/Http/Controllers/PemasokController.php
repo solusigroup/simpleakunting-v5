@@ -63,13 +63,21 @@ class PemasokController extends Controller
         try {
             \Illuminate\Support\Facades\DB::beginTransaction();
 
-            // 1. BACKFILL: Hubungkan kembali jurnal lama yang kehilangan link pemasok
-            // Mengambil id_pemasok dari tabel pembelian berdasarkan nomor transaksi
+            // 1. BACKFILL: Hubungkan kembali jurnal lama (Multi-strategy)
+            // Strategi A: Berdasarkan link id_jurnal di tabel pembelian
+            \Illuminate\Support\Facades\DB::statement("
+                UPDATE jurnal_umum j
+                JOIN pembelian p ON j.id_jurnal = p.id_jurnal
+                SET j.id_pemasok = p.id_pemasok
+                WHERE j.id_pemasok IS NULL
+            ");
+
+            // Strategi B: Berdasarkan kecocokan no_transaksi (Fallback)
             \Illuminate\Support\Facades\DB::statement("
                 UPDATE jurnal_umum j
                 JOIN pembelian p ON j.no_transaksi = p.no_faktur_pembelian
                 SET j.id_pemasok = p.id_pemasok
-                WHERE j.id_pemasok IS NULL AND j.sumber_jurnal = 'Pembelian'
+                WHERE j.id_pemasok IS NULL
             ");
 
             $pemasok = Pemasok::all();
@@ -88,7 +96,7 @@ class PemasokController extends Controller
             }
 
             \Illuminate\Support\Facades\DB::commit();
-            return redirect()->route('pemasok.index')->with('success', 'Sinkronisasi saldo hutang seluruh pemasok berhasil (Termasuk pemulihan data lama).');
+            return redirect()->route('pemasok.index')->with('success', 'Sinkronisasi saldo hutang berhasil disempurnakan.');
         } catch (\Exception $e) {
             \Illuminate\Support\Facades\DB::rollBack();
             return redirect()->route('pemasok.index')->with('error', 'Gagal sinkronisasi: ' . $e->getMessage());
