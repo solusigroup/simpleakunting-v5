@@ -136,7 +136,7 @@
             <div class="card-header d-flex justify-content-between align-items-center">
                 <span>Detail Barang</span>
                 <div class="input-group w-50">
-                    <span class="input-group-text"><i class="bi bi-upc-scan"></i> Scan Barcode</span>
+                    <span class="input-group-text"><i class="bi bi-upc-scan"></i> SCAN BARCODE</span>
                     <input type="text" class="form-control" id="scan_barcode" placeholder="Scan barcode atau ketik kode barang disini..." autofocus>
                 </div>
             </div>
@@ -175,30 +175,16 @@
 
 @push('scripts')
 <script>
-    // Robustly convert to array using Object.values
     let barangData = [];
     try {
         let raw = {!! json_encode($barang) !!};
         barangData = raw ? (Array.isArray(raw) ? raw : Object.values(raw)) : [];
+        console.log("Barang loaded:", barangData.length);
     } catch (e) {
         console.error("Error parsing barang data:", e);
     }
 
     let rowCount = 0;
-
-    // Pre-calculate options HTML once for performance
-    let globalOptionsHtml = '';
-    if (barangData && barangData.length > 0) {
-        globalOptionsHtml = barangData.map(b => {
-            const label = `${b.kode_barang || ''} - ${b.nama_barang || ''} (Stok: ${b.stok_saat_ini || 0})`;
-            return `<div class="searchable-select-option" 
-                        data-value="${b.id_barang}" 
-                        data-label="${b.kode_barang || ''} - ${b.nama_barang || ''}"
-                        data-harga="${b.harga_jual || 0}"
-                        data-barcode="${b.barcode || ''}"
-                        data-kode="${b.kode_barang || ''}">${label}</div>`;
-        }).join('');
-    }
 
     function formatRupiah(angka) {
         return new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR' }).format(angka);
@@ -223,7 +209,7 @@
                                 <input type="text" placeholder="Ketik kode atau nama barang..." id="ss_search_${currentRow}" autocomplete="off">
                             </div>
                             <div class="searchable-select-options" id="ss_options_${currentRow}">
-                                ${globalOptionsHtml || '<div class="searchable-select-empty">Data persediaan tidak ditemukan (Count: '+barangData.length+')</div>'}
+                                <!-- Options will be injected here -->
                             </div>
                         </div>
                     </div>
@@ -255,7 +241,10 @@
         const optionsContainer = document.getElementById(`ss_options_${rowId}`);
         const hiddenInput = document.getElementById(`ss_input_${rowId}`);
 
-        if (!trigger || !dropdown) return;
+        if (!trigger || !dropdown || !optionsContainer) return;
+
+        // Populate options once row is added
+        populateOptions(rowId);
 
         trigger.addEventListener('click', function(e) {
             e.stopPropagation();
@@ -289,16 +278,37 @@
         });
     }
 
+    function populateOptions(rowId) {
+        const container = document.getElementById(`ss_options_${rowId}`);
+        if (!container) return;
+
+        if (!barangData || barangData.length === 0) {
+            container.innerHTML = '<div class="searchable-select-empty">Data persediaan kosong</div>';
+            return;
+        }
+
+        let html = '';
+        barangData.forEach(b => {
+            const label = `${b.kode_barang || ''} - ${b.nama_barang || ''}`;
+            const fullLabel = `${label} (Stok: ${b.stok_saat_ini || 0})`;
+            
+            // Safer way to handle attributes
+            html += `<div class="searchable-select-option" 
+                        data-value="${b.id_barang}" 
+                        data-harga="${b.harga_jual || 0}"
+                        data-barcode="${(b.barcode || '').replace(/"/g, '&quot;')}"
+                        data-kode="${(b.kode_barang || '').replace(/"/g, '&quot;')}"
+                        data-label="${label.replace(/"/g, '&quot;')}">${fullLabel}</div>`;
+        });
+        container.innerHTML = html;
+    }
+
     function selectOption(rowId, option) {
         const trigger = document.getElementById(`ss_trigger_${rowId}`);
         const dropdown = document.getElementById(`ss_dropdown_${rowId}`);
         const hiddenInput = document.getElementById(`ss_input_${rowId}`);
-        const optionsContainer = document.getElementById(`ss_options_${rowId}`);
 
         if (!trigger || !dropdown || !hiddenInput) return;
-
-        optionsContainer.querySelectorAll('.selected').forEach(o => o.classList.remove('selected'));
-        option.classList.add('selected');
 
         hiddenInput.value = option.dataset.value;
         const triggerText = trigger.querySelector('.trigger-text');
@@ -311,7 +321,6 @@
         dropdown.classList.remove('show');
         trigger.classList.remove('open');
 
-        // Update Price
         const harga = option.dataset.harga || 0;
         const hargaInput = document.getElementById(`harga_${rowId}`);
         if (hargaInput) {
@@ -331,7 +340,8 @@
         options.forEach(option => {
             const label = option.textContent.toLowerCase();
             const barcode = (option.dataset.barcode || '').toLowerCase();
-            if (!q || label.includes(q) || barcode.includes(q)) {
+            const kode = (option.dataset.kode || '').toLowerCase();
+            if (!q || label.includes(q) || barcode.includes(q) || kode.includes(q)) {
                 option.classList.remove('hidden');
                 visibleCount++;
             } else {
@@ -361,7 +371,6 @@
         });
     });
 
-    // Barcode Scanner Logic
     const scanInput = document.getElementById('scan_barcode');
     if (scanInput) {
         scanInput.addEventListener('keypress', function (e) {
@@ -411,7 +420,6 @@
                     emptyRow = rowCount - 1;
                 }
 
-                // Programmatically select the option
                 const option = document.querySelector(`#ss_options_${emptyRow} [data-value="${barang.id_barang}"]`);
                 if (option) selectOption(emptyRow, option);
             }
@@ -471,7 +479,6 @@
         }
     }
 
-    // Cascade Cabang -> Unit Usaha
     const cabangSelect = document.getElementById('id_cabang');
     if (cabangSelect) {
         cabangSelect.addEventListener('change', function() {
@@ -492,7 +499,6 @@
         });
     }
 
-    // Init
     tambahBaris();
     toggleAkunKas();
     if (cabangSelect && cabangSelect.value) {
