@@ -106,14 +106,14 @@
 @push('styles')
 <style>
     .searchable-select { position: relative; width: 100%; }
-    .searchable-select-trigger { display: flex; align-items: center; justify-content: space-between; width: 100%; padding: 6px 12px; font-size: 0.875rem; border: 1px solid var(--color-border, #dee2e6); border-radius: var(--radius-sm, 6px); background: var(--color-bg, #fff); color: var(--color-text, #333); cursor: pointer; transition: border-color 0.2s, box-shadow 0.2s; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; min-height: 34px; }
-    .searchable-select-trigger:hover { border-color: var(--color-primary, #8b5cf6); }
+    .searchable-select-trigger { display: flex; align-items: center; justify-content: space-between; width: 100%; padding: 0.375rem 0.75rem; font-size: 0.875rem; border: 1px solid var(--color-border, #dee2e6); border-radius: var(--radius-sm, 6px); background: var(--color-bg, #fff); color: var(--color-text, #333); cursor: pointer; transition: all 0.2s; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; min-height: 38px; }
+    .searchable-select-trigger:hover { border-color: var(--color-primary, #8b5cf6); box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
     .searchable-select-trigger.open { border-color: var(--color-primary, #8b5cf6); box-shadow: 0 0 0 3px rgba(139, 92, 246, 0.15); }
     .searchable-select-trigger .trigger-text { flex: 1; overflow: hidden; text-overflow: ellipsis; }
     .searchable-select-trigger .trigger-text.placeholder { color: var(--color-text-muted, #999); }
     .searchable-select-trigger .trigger-chevron { margin-left: 8px; transition: transform 0.2s; flex-shrink: 0; }
     .searchable-select-trigger.open .trigger-chevron { transform: rotate(180deg); }
-    .searchable-select-dropdown { display: none; position: absolute; top: calc(100% + 4px); left: 0; right: 0; background: var(--color-bg-card, #fff); border: 1px solid var(--color-border, #dee2e6); border-radius: var(--radius-sm, 6px); box-shadow: 0 8px 24px rgba(0,0,0,0.12); z-index: 1050; max-height: 280px; overflow: hidden; }
+    .searchable-select-dropdown { display: none; position: absolute; top: calc(100% + 4px); left: 0; right: 0; background: var(--color-bg-card, #fff); border: 1px solid var(--color-border, #dee2e6); border-radius: var(--radius-sm, 6px); box-shadow: 0 8px 24px rgba(0,0,0,0.15); z-index: 1050; max-height: 280px; overflow: hidden; }
     .searchable-select-dropdown.show { display: block; }
     .searchable-select-search { padding: 8px; border-bottom: 1px solid var(--color-border, #eee); position: sticky; top: 0; background: var(--color-bg-card, #fff); z-index: 1; }
     .searchable-select-search input { width: 100%; padding: 6px 10px; border: 1px solid var(--color-border, #dee2e6); border-radius: var(--radius-sm, 4px); font-size: 0.8125rem; outline: none; transition: border-color 0.2s; background: var(--color-bg, #fff); color: var(--color-text, #333); }
@@ -124,6 +124,10 @@
     .searchable-select-option.selected { background: rgba(139, 92, 246, 0.12); color: var(--color-primary, #8b5cf6); font-weight: 600; }
     .searchable-select-option.hidden { display: none; }
     .searchable-select-empty { padding: 12px; text-align: center; color: var(--color-text-muted, #999); font-size: 0.8125rem; }
+
+    /* Fix clipping in table-responsive */
+    .table-responsive { overflow: visible !important; }
+    .data-table td { overflow: visible !important; position: relative; }
 </style>
 @endpush
 
@@ -138,9 +142,11 @@
 
     function tambahBaris() {
         const currentRow = rowCount;
-        let optionsHtml = akunData.map(a =>
-            `<div class="searchable-select-option" data-value="${a.kode_akun}" data-label="${a.kode_akun} - ${a.nama_akun}">${a.kode_akun} - ${a.nama_akun}</div>`
-        ).join('');
+        let optionsHtml = akunData.map(a => {
+            const label = `${a.kode_akun} - ${a.nama_akun}`;
+            const escapedLabel = label.replace(/"/g, '&quot;');
+            return `<div class="searchable-select-option" data-value="${a.kode_akun}" data-label="${escapedLabel}">${label}</div>`;
+        }).join('');
 
         let html = `
             <tr id="row_${currentRow}">
@@ -172,6 +178,7 @@
             </tr>
         `;
         document.getElementById('container_detail').insertAdjacentHTML('beforeend', html);
+        feather.replace();
         initSearchableSelect(currentRow);
         rowCount++;
     }
