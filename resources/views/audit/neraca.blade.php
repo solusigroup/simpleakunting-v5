@@ -175,21 +175,6 @@
                 @if($orphanedDetails > 0)
                 <p class="small text-muted mt-2">Ini berarti ada data detail jurnal yang tersisa padahal transaksi utamanya sudah dihapus. Sebaiknya dibersihkan via database.</p>
                 @endif
-                
-                <hr>
-                
-                <div class="d-flex justify-content-between">
-                    <span>Transaksi dengan Akun yang Tidak Terdaftar di Master:</span>
-                    <span class="fw-bold {{ count($missingMasterAccounts) > 0 ? 'text-danger' : 'text-success' }}">
-                        {{ count($missingMasterAccounts) }} Akun {{ count($missingMasterAccounts) > 0 ? '⚠️' : '✅' }}
-                    </span>
-                </div>
-                @if(count($missingMasterAccounts) > 0)
-                <div class="alert alert-warning mt-2 small py-2 mb-0">
-                    <strong>Daftar Kode Akun:</strong> {{ $missingMasterAccounts->implode(', ') }}
-                    <br>Segera buat akun ini di Master Akun agar nilainya terhitung di laporan.
-                </div>
-                @endif
             </div>
         </div>
     </div>
