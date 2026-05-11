@@ -3,10 +3,14 @@
 @section('title', 'Buat Pengeluaran Kas - Simple Akunting')
 
 @section('content')
-    <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
-        <h1 class="h2">Buat Pengeluaran Baru</h1>
-        <div class="btn-toolbar mb-2 mb-md-0">
-            <a href="{{ route('pembayaran.index') }}" class="btn btn-sm btn-secondary">
+    <div class="page-header-actions">
+        <div>
+            <h1 class="page-title">Buat Pengeluaran Kas</h1>
+            <p class="page-subtitle">Tambah transaksi pengeluaran kas atau bank baru</p>
+        </div>
+        <div>
+            <a href="{{ route('pembayaran.index') }}" class="btn btn-outline btn-sm">
+                <span data-feather="arrow-left" style="width: 16px; height: 16px; margin-right: 4px;"></span>
                 Kembali
             </a>
         </div>
@@ -14,67 +18,89 @@
 
     <form action="{{ route('pembayaran.store') }}" method="POST">
         @csrf
-        <div class="row mb-3">
-            <div class="col-md-4">
-                <label for="no_transaksi" class="form-label">No Transaksi</label>
-                <input type="text" class="form-control" id="no_transaksi" name="no_transaksi" value="{{ $noTransaksi }}" readonly>
-            </div>
-            <div class="col-md-4">
-                <label for="tanggal" class="form-label">Tanggal</label>
-                <input type="date" class="form-control" id="tanggal" name="tanggal" value="{{ date('Y-m-d') }}" required>
-            </div>
-            <div class="col-md-4">
-                <label for="akun_kas" class="form-label">Keluar dari Akun (Kredit)</label>
-                <select class="form-select" id="akun_kas" name="akun_kas" required>
-                    <option value="">-- Pilih Kas/Bank --</option>
-                    @foreach($akunKas as $a)
-                        <option value="{{ $a->kode_akun }}">{{ $a->kode_akun }} - {{ $a->nama_akun }}</option>
-                    @endforeach
-                </select>
+        <!-- Header Form -->
+        <div class="form-card mb-4">
+            <div class="form-card-body">
+                <div class="form-row" style="display: flex; gap: 20px;">
+                    <div class="form-group" style="flex: 1;">
+                        <label for="no_transaksi" class="form-label">No Transaksi</label>
+                        <input type="text" class="form-control" id="no_transaksi" name="no_transaksi" value="{{ $noTransaksi }}" readonly style="background: var(--color-bg);">
+                    </div>
+                    <div class="form-group" style="flex: 1;">
+                        <label for="tanggal" class="form-label">Tanggal <span class="text-danger">*</span></label>
+                        <input type="date" class="form-control" id="tanggal" name="tanggal" value="{{ date('Y-m-d') }}" required>
+                    </div>
+                    <div class="form-group" style="flex: 1;">
+                        <label for="akun_kas" class="form-label">Keluar dari Akun (Kredit) <span class="text-danger">*</span></label>
+                        <div class="searchable-select" id="ss_header">
+                            <input type="hidden" name="akun_kas" id="ss_input_header" required>
+                            <div class="searchable-select-trigger" id="ss_trigger_header">
+                                <span class="trigger-text placeholder">🔍 Pilih Kas/Bank...</span>
+                                <svg class="trigger-chevron" xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg>
+                            </div>
+                            <div class="searchable-select-dropdown" id="ss_dropdown_header">
+                                <div class="searchable-select-search">
+                                    <input type="text" placeholder="Cari kas/bank..." id="ss_search_header" autocomplete="off">
+                                </div>
+                                <div class="searchable-select-options" id="ss_options_header">
+                                    @foreach($akunKas as $a)
+                                        <div class="searchable-select-option" data-value="{{ $a->kode_akun }}" data-label="{{ $a->kode_akun }} - {{ $a->nama_akun }}">{{ $a->kode_akun }} - {{ $a->nama_akun }}</div>
+                                    @endforeach
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="form-row mt-3" style="display: flex; gap: 20px;">
+                    <div class="form-group" style="flex: 1;">
+                        <label for="id_pemasok" class="form-label">Dibayar Ke (Pemasok) - Opsional</label>
+                        <select class="form-select" id="id_pemasok" name="id_pemasok">
+                            <option value="">-- Umum --</option>
+                            @foreach($pemasok as $p)
+                                <option value="{{ $p->id_pemasok }}">{{ $p->nama_pemasok }}</option>
+                            @endforeach
+                        </select>
+                    </div>
+                    <div class="form-group" style="flex: 2;">
+                        <label for="keterangan" class="form-label">Keterangan <span class="text-danger">*</span></label>
+                        <input type="text" class="form-control" id="keterangan" name="keterangan" placeholder="Contoh: Pembayaran Biaya Listrik & Air" required>
+                    </div>
+                </div>
             </div>
         </div>
 
-        <div class="row mb-3">
-            <div class="col-md-6">
-                <label for="id_pemasok" class="form-label">Dibayar Kepada (Pemasok) - Opsional</label>
-                <select class="form-select" id="id_pemasok" name="id_pemasok">
-                    <option value="">-- Umum --</option>
-                    @foreach($pemasok as $p)
-                        <option value="{{ $p->id_pemasok }}">{{ $p->nama_pemasok }}</option>
-                    @endforeach
-                </select>
+        <!-- Detail Table -->
+        <div class="form-card mb-4">
+            <div class="form-card-header">
+                <h3 class="form-card-title">Rincian Pengeluaran (Debit)</h3>
             </div>
-            <div class="col-md-6">
-                <label for="keterangan" class="form-label">Keterangan</label>
-                <input type="text" class="form-control" id="keterangan" name="keterangan" required>
-            </div>
-        </div>
-
-        <div class="card">
-            <div class="card-header">Rincian Pengeluaran (Debit)</div>
-            <div class="card-body p-0">
-                <table class="table table-bordered mb-0">
-                    <thead class="table-light">
+            <div class="table-responsive">
+                <table class="data-table">
+                    <thead>
                         <tr>
-                            <th width="60%">Akun Beban/Utang</th>
-                            <th width="30%">Jumlah</th>
-                            <th width="10%">Aksi</th>
+                            <th style="width: 60%;">Akun Beban/Utang</th>
+                            <th style="width: 30%;">Jumlah (Rp)</th>
+                            <th style="width: 10%;">Aksi</th>
                         </tr>
                     </thead>
                     <tbody id="container_detail">
                         <!-- Rows via JS -->
                     </tbody>
                     <tfoot>
-                        <tr>
-                            <td class="text-end fw-bold">Total Pembayaran</td>
+                        <tr style="background: var(--color-bg);">
+                            <td class="text-right fw-bold" style="text-align: right;">Total Pengeluaran</td>
                             <td>
-                                <input type="text" class="form-control form-control-sm" id="total_display" readonly>
+                                <input type="text" class="form-control form-control-sm" id="total_display" readonly style="background: var(--color-bg); font-weight: 700; font-size: 1rem; color: var(--color-primary);">
                             </td>
                             <td></td>
                         </tr>
                         <tr>
-                            <td colspan="3">
-                                <button type="button" class="btn btn-sm btn-success" onclick="tambahBaris()">+ Tambah Baris</button>
+                            <td colspan="3" style="padding: var(--space-md);">
+                                <button type="button" class="btn btn-success btn-sm" onclick="tambahBaris()">
+                                    <span data-feather="plus" style="width: 14px; height: 14px; margin-right: 4px;"></span>
+                                    Tambah Baris
+                                </button>
                             </td>
                         </tr>
                     </tfoot>
@@ -257,6 +283,10 @@
         document.getElementById('total_display').value = formatRupiah(total);
     }
 
+    // Initialize header searchable select
+    initSearchableSelect('header');
+
     tambahBaris();
+    feather.replace();
 </script>
 @endpush
