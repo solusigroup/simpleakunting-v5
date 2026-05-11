@@ -118,6 +118,18 @@
                 <span>2. Akun Tanpa Klasifikasi Tipe (Tidak Muncul di Neraca/LR)</span>
                 <span class="badge bg-warning text-dark">{{ count($invalidAccounts) }} Temuan</span>
             </div>
+            <div class="card-body bg-light border-bottom">
+                <p class="small mb-0 fw-bold text-muted text-uppercase">Daftar Tipe Akun yang Dikenali Sistem:</p>
+                <div class="d-flex flex-wrap gap-1 mt-1">
+                    @foreach($allowedTypes as $type)
+                        <span class="badge bg-secondary opacity-75" style="font-size: 0.7rem;">{{ $type }}</span>
+                    @endforeach
+                </div>
+                <div class="mt-2 text-danger small">
+                    <span data-feather="info" style="width: 14px; height: 14px;"></span> 
+                    <strong>Penting:</strong> Ejaan dan spasi harus sama persis dengan daftar di atas. Pastikan tidak ada spasi tambahan di awal atau akhir nama tipe.
+                </div>
+            </div>
             <div class="table-responsive">
                 <table class="table table-sm table-hover mb-0">
                     <thead class="table-light">
@@ -125,7 +137,7 @@
                             <th>Kode Akun</th>
                             <th>Nama Akun</th>
                             <th>Tipe Saat Ini</th>
-                            <th>Saran Tindakan</th>
+                            <th>Aksi</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -134,7 +146,9 @@
                             <td>{{ $a->kode_akun }}</td>
                             <td>{{ $a->nama_akun }}</td>
                             <td><span class="badge bg-danger">{{ $a->tipe_akun ?: 'KOSONG' }}</span></td>
-                            <td>Atur tipe akun di Master Akun agar masuk ke laporan.</td>
+                            <td>
+                                <a href="{{ route('akun.index') }}?search={{ $a->kode_akun }}" class="btn btn-xs btn-primary py-0 px-2">Ubah Master Akun</a>
+                            </td>
                         </tr>
                         @empty
                         <tr>

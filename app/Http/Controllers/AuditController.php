@@ -34,13 +34,17 @@ class AuditController extends Controller
                 });
         }
 
-        // 2. Check Accounts with Missing Types
-        $invalidAccounts = Akun::whereNull('tipe_akun')
-            ->orWhereNotIn('tipe_akun', [
-                'Kas & Bank', 'Piutang', 'Persediaan', 'Aset Lancar Lainnya', 'Aset Tetap',
-                'Utang Usaha', 'Kewajiban Lancar Lainnya', 'Kewajiban Jangka Panjang', 'Ekuitas',
-                'Pendapatan', 'Pendapatan Lainnya', 'HPP', 'Beban', 'Beban Lainnya'
-            ])->get();
+        // 2. Check Accounts with Invalid Types (Trimming spaces for robustness)
+        $allowedTypes = [
+            'Kas & Bank', 'Piutang', 'Persediaan', 'Aset Lancar Lainnya', 'Aset Tetap',
+            'Utang Usaha', 'Kewajiban Lancar Lainnya', 'Kewajiban Jangka Panjang', 'Ekuitas',
+            'Pendapatan', 'Pendapatan Lainnya', 'HPP', 'Beban', 'Beban Lainnya'
+        ];
+
+        $invalidAccounts = Akun::where(function($q) use ($allowedTypes) {
+            $q->whereNull('tipe_akun')
+              ->orWhereRaw('TRIM(tipe_akun) NOT IN ("' . implode('","', $allowedTypes) . '")');
+        })->get();
 
         // 3. Equation Breakdown (Gap Analysis)
         $totalAset = $this->sumByTypes(['Kas & Bank', 'Piutang', 'Persediaan', 'Aset Lancar Lainnya', 'Aset Tetap'], $perTanggal);
@@ -58,7 +62,7 @@ class AuditController extends Controller
             ->count();
 
         return view('audit.neraca', compact(
-            'perTanggal', 'unbalancedData', 'invalidAccounts', 
+            'perTanggal', 'unbalancedData', 'invalidAccounts', 'allowedTypes',
             'totalAset', 'totalKewajiban', 'totalEkuitas', 'labaBerjalan', 
             'totalPasiva', 'gap', 'orphanedDetails'
         ));
