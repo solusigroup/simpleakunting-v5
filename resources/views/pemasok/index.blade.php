@@ -17,6 +17,9 @@
                     <li><a class="dropdown-item" href="{{ route('import-export.index') }}"><span data-feather="upload"></span> Import Data</a></li>
                 </ul>
             </div>
+            <a href="{{ route('pemasok.recalculate') }}" class="btn btn-sm btn-outline-primary" title="Sinkronisasi Saldo berdasarkan Transaksi">
+                <span data-feather="refresh-cw" style="width: 14px; height: 14px;"></span> Sinkronisasi Saldo
+            </a>
             <a href="{{ route('pemasok.create') }}" class="btn btn-sm btn-primary">
                 Tambah Pemasok
             </a>

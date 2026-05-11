@@ -101,6 +101,7 @@ class PembelianController extends Controller
                 'tanggal' => $request->tanggal_faktur,
                 'id_cabang' => $request->id_cabang,
                 'id_unit_usaha' => $request->id_unit_usaha,
+                'id_pemasok' => $request->id_pemasok,
                 'deskripsi' => "Pembelian Faktur #{$noFaktur}",
                 'sumber_jurnal' => 'Pembelian',
                 'is_locked' => 1
@@ -258,6 +259,10 @@ class PembelianController extends Controller
             JurnalDetail::where('id_jurnal', $pembelian->id_jurnal)->delete();
 
             // 2. APPLY NEW IMPACT
+            $jurnal->update([
+                'id_pemasok' => $request->id_pemasok,
+            ]);
+
             $totalPembelian = 0;
             $detailsData = [];
             foreach ($request->details as $item) {

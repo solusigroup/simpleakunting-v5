@@ -111,6 +111,7 @@ class PenjualanController extends Controller
                 'tanggal' => $request->tanggal_faktur,
                 'id_cabang' => $request->id_cabang,
                 'id_unit_usaha' => $request->id_unit_usaha,
+                'id_pelanggan' => $request->id_pelanggan,
                 'deskripsi' => "Penjualan Faktur #{$noFaktur}",
                 'sumber_jurnal' => 'Penjualan',
                 'is_locked' => 1
@@ -283,6 +284,10 @@ class PenjualanController extends Controller
             JurnalDetail::where('id_jurnal', $penjualan->id_jurnal)->delete();
 
             // 2. APPLY NEW IMPACT
+            $jurnal->update([
+                'id_pelanggan' => $request->id_pelanggan,
+            ]);
+
             $totalPenjualan = 0;
             $detailsData = [];
             foreach ($request->details as $item) {

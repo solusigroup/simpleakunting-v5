@@ -85,6 +85,34 @@ class PelangganController extends Controller
         return redirect()->route('pelanggan.index')->with('success', 'Data pelanggan berhasil diperbarui.');
     }
 
+    public function recalculate()
+    {
+        try {
+            \Illuminate\Support\Facades\DB::beginTransaction();
+
+            $pelanggan = Pelanggan::all();
+            foreach ($pelanggan as $p) {
+                $netChange = \App\Models\JurnalDetail::whereHas('jurnal', function($q) use ($p) {
+                        $q->where('id_pelanggan', $p->id_pelanggan);
+                    })
+                    ->whereHas('akun', function($q) {
+                        $q->where('tipe_akun', 'Piutang');
+                    })
+                    ->select(\Illuminate\Support\Facades\DB::raw('SUM(debit) - SUM(kredit) as net_change'))
+                    ->value('net_change') ?? 0;
+
+                $p->saldo_terkini_piutang = $p->saldo_awal_piutang + $netChange;
+                $p->save();
+            }
+
+            \Illuminate\Support\Facades\DB::commit();
+            return redirect()->route('pelanggan.index')->with('success', 'Sinkronisasi saldo piutang seluruh pelanggan berhasil.');
+        } catch (\Exception $e) {
+            \Illuminate\Support\Facades\DB::rollBack();
+            return redirect()->route('pelanggan.index')->with('error', 'Gagal sinkronisasi: ' . $e->getMessage());
+        }
+    }
+
     /**
      * Remove the specified resource from storage.
      */

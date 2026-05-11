@@ -37,6 +37,26 @@
                         @enderror
                     </div>
                 </div>
+                <div class="form-row mt-3" style="display: flex; gap: 15px;">
+                    <div class="form-group" style="flex: 1;">
+                        <label for="id_pelanggan" class="form-label">Pelanggan (Opsional)</label>
+                        <select class="form-select" id="id_pelanggan" name="id_pelanggan">
+                            <option value="">-- Tidak Ada --</option>
+                            @foreach($pelanggan as $p)
+                                <option value="{{ $p->id_pelanggan }}" {{ old('id_pelanggan', $jurnal->id_pelanggan) == $p->id_pelanggan ? 'selected' : '' }}>{{ $p->nama_pelanggan }} (Saldo: Rp {{ number_format($p->saldo_terkini_piutang, 0, ',', '.') }})</option>
+                            @endforeach
+                        </select>
+                    </div>
+                    <div class="form-group" style="flex: 1;">
+                        <label for="id_pemasok" class="form-label">Pemasok (Opsional)</label>
+                        <select class="form-select" id="id_pemasok" name="id_pemasok">
+                            <option value="">-- Tidak Ada --</option>
+                            @foreach($pemasok as $v)
+                                <option value="{{ $v->id_pemasok }}" {{ old('id_pemasok', $jurnal->id_pemasok) == $v->id_pemasok ? 'selected' : '' }}>{{ $v->nama_pemasok }} (Saldo: Rp {{ number_format($v->saldo_terkini_hutang, 0, ',', '.') }})</option>
+                            @endforeach
+                        </select>
+                    </div>
+                </div>
                 <div class="form-row mt-3">
                     <div class="form-group" style="flex: 1;">
                         <label for="deskripsi" class="form-label">Deskripsi Jurnal <span class="text-danger">*</span></label>

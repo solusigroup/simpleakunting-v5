@@ -35,8 +35,10 @@ class JurnalController extends Controller
 
         $cabang = Cabang::orderBy('nama_cabang')->get();
         $unitUsaha = UnitUsaha::active()->orderBy('nama_unit')->get();
+        $pelanggan = Pelanggan::orderBy('nama_pelanggan')->get();
+        $pemasok = Pemasok::orderBy('nama_pemasok')->get();
 
-        return view('jurnal.create', compact('akun', 'noTransaksi', 'cabang', 'unitUsaha'));
+        return view('jurnal.create', compact('akun', 'noTransaksi', 'cabang', 'unitUsaha', 'pelanggan', 'pemasok'));
     }
 
     public function store(Request $request)
@@ -91,6 +93,8 @@ class JurnalController extends Controller
                 'tanggal' => $request->tanggal,
                 'id_cabang' => $request->id_cabang,
                 'id_unit_usaha' => $request->id_unit_usaha,
+                'id_pelanggan' => $request->id_pelanggan,
+                'id_pemasok' => $request->id_pemasok,
                 'deskripsi' => $request->deskripsi,
                 'sumber_jurnal' => $request->input('sumber_jurnal', 'Manual'),
                 'is_locked' => 0
@@ -104,6 +108,18 @@ class JurnalController extends Controller
                         'debit' => $detail['debit'],
                         'kredit' => $detail['kredit'],
                     ]);
+
+                    // Update Saldo Pelanggan/Pemasok jika akun Piutang/Utang
+                    $akun = Akun::where('kode_akun', $detail['kode_akun'])->first();
+                    if ($akun) {
+                        if ($akun->tipe_akun == 'Piutang' && $request->id_pelanggan) {
+                            $selisih = $detail['debit'] - $detail['kredit'];
+                            \App\Models\Pelanggan::where('id_pelanggan', $request->id_pelanggan)->increment('saldo_terkini_piutang', $selisih);
+                        } elseif ($akun->tipe_akun == 'Utang Usaha' && $request->id_pemasok) {
+                            $selisih = $detail['kredit'] - $detail['debit'];
+                            \App\Models\Pemasok::where('id_pemasok', $request->id_pemasok)->increment('saldo_terkini_hutang', $selisih);
+                        }
+                    }
                 }
             }
 
@@ -218,7 +234,13 @@ class JurnalController extends Controller
 
     public function edit(Jurnal $jurnal)
     {
-        return view('jurnal.edit', compact('jurnal'));
+        $akun = Akun::orderBy('kode_akun')->get();
+        $cabang = Cabang::orderBy('nama_cabang')->get();
+        $unitUsaha = UnitUsaha::active()->orderBy('nama_unit')->get();
+        $pelanggan = Pelanggan::orderBy('nama_pelanggan')->get();
+        $pemasok = Pemasok::orderBy('nama_pemasok')->get();
+        
+        return view('jurnal.edit', compact('jurnal', 'akun', 'cabang', 'unitUsaha', 'pelanggan', 'pemasok'));
     }
 
     public function update(Request $request, Jurnal $jurnal)
@@ -298,23 +320,25 @@ class JurnalController extends Controller
             // Cek periode tutup buku
             $this->validatePeriodOpen($jurnal->tanggal);
 
-            // 1. Revert Pelanggan Piutang if Receipt
-            if ($jurnal->sumber_jurnal === 'Penerimaan Kas' && $jurnal->id_pelanggan) {
+            // 1. Revert Pelanggan Piutang if linked
+            if ($jurnal->id_pelanggan) {
                 $totalPiutang = $jurnal->details()
                     ->whereHas('akun', function($q) { $q->where('tipe_akun', 'Piutang'); })
-                    ->sum('kredit');
-                if ($totalPiutang > 0) {
-                    Pelanggan::where('id_pelanggan', $jurnal->id_pelanggan)->increment('saldo_terkini_piutang', $totalPiutang);
+                    ->select(DB::raw('SUM(debit) - SUM(kredit) as net_change'))
+                    ->value('net_change');
+                if ($totalPiutang != 0) {
+                    Pelanggan::where('id_pelanggan', $jurnal->id_pelanggan)->decrement('saldo_terkini_piutang', $totalPiutang);
                 }
             }
 
-            // 2. Revert Pemasok Hutang if Payment
-            if ($jurnal->sumber_jurnal === 'Pengeluaran Kas' && $jurnal->id_pemasok) {
+            // 2. Revert Pemasok Hutang if linked
+            if ($jurnal->id_pemasok) {
                 $totalHutang = $jurnal->details()
                     ->whereHas('akun', function($q) { $q->where('tipe_akun', 'Utang Usaha'); })
-                    ->sum('debit');
-                if ($totalHutang > 0) {
-                    Pemasok::where('id_pemasok', $jurnal->id_pemasok)->increment('saldo_terkini_hutang', $totalHutang);
+                    ->select(DB::raw('SUM(kredit) - SUM(debit) as net_change'))
+                    ->value('net_change');
+                if ($totalHutang != 0) {
+                    Pemasok::where('id_pemasok', $jurnal->id_pemasok)->decrement('saldo_terkini_hutang', $totalHutang);
                 }
             }
 

@@ -109,8 +109,10 @@ Route::middleware([
 
         Route::middleware('role:superuser,admin,manajer')->group(function () {
             Route::get('pelanggan', [PelangganController::class, 'index'])->name('pelanggan.index');
+            Route::get('pelanggan/recalculate', [PelangganController::class, 'recalculate'])->name('pelanggan.recalculate');
             Route::get('pelanggan/{pelanggan}', [PelangganController::class, 'show'])->name('pelanggan.show');
             Route::get('pemasok', [PemasokController::class, 'index'])->name('pemasok.index');
+            Route::get('pemasok/recalculate', [PemasokController::class, 'recalculate'])->name('pemasok.recalculate');
             Route::get('pemasok/{pemasok}', [PemasokController::class, 'show'])->name('pemasok.show');
             Route::get('persediaan', [PersediaanController::class, 'index'])->name('persediaan.index');
             Route::get('akun', [AkunController::class, 'index'])->name('akun.index');

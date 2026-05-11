@@ -58,6 +58,34 @@ class PemasokController extends Controller
         return redirect()->route('pemasok.index')->with('success', 'Data pemasok berhasil diperbarui.');
     }
 
+    public function recalculate()
+    {
+        try {
+            \Illuminate\Support\Facades\DB::beginTransaction();
+
+            $pemasok = Pemasok::all();
+            foreach ($pemasok as $v) {
+                $netChange = \App\Models\JurnalDetail::whereHas('jurnal', function($q) use ($v) {
+                        $q->where('id_pemasok', $v->id_pemasok);
+                    })
+                    ->whereHas('akun', function($q) {
+                        $q->where('tipe_akun', 'Utang Usaha');
+                    })
+                    ->select(\Illuminate\Support\Facades\DB::raw('SUM(kredit) - SUM(debit) as net_change'))
+                    ->value('net_change') ?? 0;
+
+                $v->saldo_terkini_hutang = $v->saldo_awal_hutang + $netChange;
+                $v->save();
+            }
+
+            \Illuminate\Support\Facades\DB::commit();
+            return redirect()->route('pemasok.index')->with('success', 'Sinkronisasi saldo hutang seluruh pemasok berhasil.');
+        } catch (\Exception $e) {
+            \Illuminate\Support\Facades\DB::rollBack();
+            return redirect()->route('pemasok.index')->with('error', 'Gagal sinkronisasi: ' . $e->getMessage());
+        }
+    }
+
     public function destroy(Pemasok $pemasok)
     {
         $pemasok->delete();

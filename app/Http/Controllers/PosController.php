@@ -404,6 +404,7 @@ class PosController extends Controller
                 'tanggal' => $tanggal,
                 'id_cabang' => $idCabang,
                 'id_unit_usaha' => $idUnit,
+                'id_pemasok' => $request->id_pemasok,
                 'deskripsi' => "POS Pembelian #{$noFaktur}",
                 'sumber_jurnal' => 'POS',
                 'is_locked' => 1,
