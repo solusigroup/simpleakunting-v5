@@ -1081,57 +1081,54 @@ class LaporanController extends Controller
     {
         try {
             $perTanggal = $request->input('per_tanggal', date('Y-m-d'));
-
-            // 1. Check Unbalanced Journals
-            $unbalancedJournals = DB::table('jurnal_detail')
-                ->select('id_jurnal', DB::raw('SUM(debit) as total_debit'), DB::raw('SUM(kredit) as total_kredit'))
-                ->groupBy('id_jurnal')
-                ->havingRaw('ABS(SUM(debit) - SUM(kredit)) > 0.01')
-                ->get();
             
-            $unbalancedData = [];
-            if ($unbalancedJournals->count() > 0) {
-                $unbalancedData = \App\Models\Jurnal::whereIn('id_jurnal', $unbalancedJournals->pluck('id_jurnal'))
-                    ->get()
-                    ->map(function($j) use ($unbalancedJournals) {
-                        $stats = $unbalancedJournals->firstWhere('id_jurnal', $j->id_jurnal);
-                        $j->total_debit = $stats->total_debit;
-                        $j->total_kredit = $stats->total_kredit;
-                        $j->selisih = abs($stats->total_debit - $stats->total_kredit);
-                        return $j;
-                    });
-            }
+            // Debug point 1: DB Table check
+            try {
+                $countDetail = DB::table('jurnal_detail')->count();
+            } catch (\Exception $e) { return "Error at DP1: " . $e->getMessage(); }
 
-            // 2. Check Accounts with Invalid Types
-            $allowedTypes = [
-                'Kas & Bank', 'Piutang', 'Persediaan', 'Aset Lancar Lainnya', 'Aset Tetap',
-                'Utang Usaha', 'Kewajiban Lancar Lainnya', 'Kewajiban Jangka Panjang', 'Ekuitas',
-                'Pendapatan', 'Pendapatan Lainnya', 'HPP', 'Beban', 'Beban Lainnya'
-            ];
+            // Debug point 2: Unbalanced Journals
+            try {
+                $unbalancedJournals = DB::table('jurnal_detail')
+                    ->select('id_jurnal', DB::raw('SUM(debit) as total_debit'), DB::raw('SUM(kredit) as total_kredit'))
+                    ->groupBy('id_jurnal')
+                    ->havingRaw('ABS(SUM(debit) - SUM(kredit)) > 0.01')
+                    ->get();
+            } catch (\Exception $e) { return "Error at DP2: " . $e->getMessage(); }
 
-            $invalidAccounts = Akun::all()->filter(function($a) use ($allowedTypes) {
-                return empty($a->tipe_akun) || !in_array(trim($a->tipe_akun), $allowedTypes);
-            });
+            // Debug point 3: Models
+            try {
+                $unbalancedData = [];
+                if ($unbalancedJournals->count() > 0) {
+                    $unbalancedData = \App\Models\Jurnal::whereIn('id_jurnal', $unbalancedJournals->pluck('id_jurnal'))->get();
+                }
+            } catch (\Exception $e) { return "Error at DP3: " . $e->getMessage(); }
 
-            // 3. Equation Breakdown (Gap Analysis)
-            $totalAset = $this->sumByTypesAudit(['Kas & Bank', 'Piutang', 'Persediaan', 'Aset Lancar Lainnya', 'Aset Tetap'], $perTanggal);
-            $totalKewajiban = $this->sumByTypesAudit(['Utang Usaha', 'Kewajiban Lancar Lainnya', 'Kewajiban Jangka Panjang'], $perTanggal);
-            $totalEkuitas = $this->sumByTypesAudit(['Ekuitas'], $perTanggal);
-            $labaBerjalan = $this->hitungLabaRugi($perTanggal);
+            // Debug point 4: Accounts
+            try {
+                $allowedTypes = ['Kas & Bank', 'Piutang', 'Persediaan', 'Aset Lancar Lainnya', 'Aset Tetap', 'Utang Usaha', 'Kewajiban Lancar Lainnya', 'Kewajiban Jangka Panjang', 'Ekuitas', 'Pendapatan', 'Pendapatan Lainnya', 'HPP', 'Beban', 'Beban Lainnya'];
+                $invalidAccounts = Akun::all()->filter(function($a) use ($allowedTypes) {
+                    return empty($a->tipe_akun) || !in_array(trim($a->tipe_akun), $allowedTypes);
+                });
+            } catch (\Exception $e) { return "Error at DP4: " . $e->getMessage(); }
 
-            $totalPasiva = $totalKewajiban + $totalEkuitas + $labaBerjalan;
-            $gap = $totalAset - $totalPasiva;
+            // Debug point 5: Calculations
+            try {
+                $totalAset = $this->sumByTypesAudit(['Kas & Bank', 'Piutang', 'Persediaan', 'Aset Lancar Lainnya', 'Aset Tetap'], $perTanggal);
+                $labaBerjalan = $this->hitungLabaRugi($perTanggal);
+                $totalKewajiban = $this->sumByTypesAudit(['Utang Usaha', 'Kewajiban Lancar Lainnya', 'Kewajiban Jangka Panjang'], $perTanggal);
+                $totalEkuitas = $this->sumByTypesAudit(['Ekuitas'], $perTanggal);
+                $totalPasiva = $totalKewajiban + $totalEkuitas + $labaBerjalan;
+                $gap = $totalAset - $totalPasiva;
+            } catch (\Exception $e) { return "Error at DP5: " . $e->getMessage(); }
 
-            // 4. Orphaned Details
-            $orphanedDetails = DB::table('jurnal_detail')
-                ->leftJoin('jurnal_umum', 'jurnal_detail.id_jurnal', '=', 'jurnal_umum.id_jurnal')
-                ->whereNull('jurnal_umum.id_jurnal')
-                ->count();
-
-            // 5. Check for Jurnal Detail with missing Master Akun
-            $usedAccounts = DB::table('jurnal_detail')->distinct()->pluck('kode_akun');
-            $masterAccounts = Akun::pluck('kode_akun')->toArray();
-            $missingMasterAccounts = collect($usedAccounts)->diff($masterAccounts);
+            // Debug point 6: Orphaned & Missing
+            try {
+                $orphanedDetails = DB::table('jurnal_detail')->leftJoin('jurnal_umum', 'jurnal_detail.id_jurnal', '=', 'jurnal_umum.id_jurnal')->whereNull('jurnal_umum.id_jurnal')->count();
+                $usedAccounts = DB::table('jurnal_detail')->distinct()->pluck('kode_akun');
+                $masterAccounts = Akun::pluck('kode_akun')->toArray();
+                $missingMasterAccounts = collect($usedAccounts)->diff($masterAccounts);
+            } catch (\Exception $e) { return "Error at DP6: " . $e->getMessage(); }
 
             return view('audit.neraca', compact(
                 'perTanggal', 'unbalancedData', 'invalidAccounts', 'allowedTypes',
@@ -1139,7 +1136,7 @@ class LaporanController extends Controller
                 'totalPasiva', 'gap', 'orphanedDetails', 'missingMasterAccounts'
             ));
         } catch (\Exception $e) {
-            return response()->json(['error' => $e->getMessage()], 500);
+            return "Global Error: " . $e->getMessage();
         }
     }
 
