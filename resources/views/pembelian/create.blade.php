@@ -30,14 +30,14 @@
         .searchable-select-search input { width: 100%; padding: 10px 14px; border: 1px solid #e0e0e0; border-radius: 8px; font-size: 0.875rem; outline: none; transition: all 0.2s; background: #fff; color: #333; }
         .searchable-select-search input:focus { border-color: #8b5cf6; box-shadow: 0 0 0 3px rgba(139, 92, 246, 0.1); }
         
-        .searchable-select-options { max-height: 260px; overflow-y: auto; padding: 6px 0; scrollbar-width: thin; }
+        .searchable-select-options { max-height: 260px; overflow-y: auto; padding: 6px 0; scrollbar-width: thin; min-height: 50px; }
         .searchable-select-options::-webkit-scrollbar { width: 6px; }
         .searchable-select-options::-webkit-scrollbar-thumb { background: #ccc; border-radius: 10px; }
         
-        .searchable-select-option { padding: 10px 16px; cursor: pointer; font-size: 0.875rem; color: #444; transition: all 0.15s; white-space: nowrap; }
+        .searchable-select-option { padding: 10px 16px; cursor: pointer; font-size: 0.875rem; color: #444; transition: all 0.15s; white-space: nowrap; display: block !important; }
         .searchable-select-option:hover { background: #f5f3ff; color: #8b5cf6; padding-left: 20px; }
         .searchable-select-option.selected { background: #f5f3ff; color: #8b5cf6; font-weight: 600; }
-        .searchable-select-option.hidden { display: none; }
+        .searchable-select-option.hidden { display: none !important; }
         .searchable-select-empty { padding: 20px; text-align: center; color: #999; font-size: 0.875rem; }
 
         .table-responsive { overflow: visible !important; }
@@ -175,13 +175,10 @@
 
 @push('scripts')
 <script>
-    let barangData = [];
-    try {
-        let raw = {!! json_encode($barang) !!};
-        barangData = raw ? (Array.isArray(raw) ? raw : Object.values(raw)) : [];
-        console.log("Barang loaded:", barangData.length);
-    } catch (e) {
-        console.error("Error parsing barang data:", e);
+    // Simplified data loading
+    let barangData = @json($barang);
+    if (!Array.isArray(barangData)) {
+        barangData = Object.values(barangData || {});
     }
 
     let rowCount = 0;
@@ -209,7 +206,7 @@
                                 <input type="text" placeholder="Ketik kode atau nama barang..." id="ss_search_${currentRow}" autocomplete="off">
                             </div>
                             <div class="searchable-select-options" id="ss_options_${currentRow}">
-                                <!-- Options will be injected here -->
+                                <!-- Initial options -->
                             </div>
                         </div>
                     </div>
@@ -239,33 +236,29 @@
         const dropdown = document.getElementById(`ss_dropdown_${rowId}`);
         const searchInput = document.getElementById(`ss_search_${rowId}`);
         const optionsContainer = document.getElementById(`ss_options_${rowId}`);
-        const hiddenInput = document.getElementById(`ss_input_${rowId}`);
 
-        if (!trigger || !dropdown || !optionsContainer) return;
-
-        populateOptions(rowId);
+        // Immediate populate
+        renderOptions(rowId, '');
 
         trigger.addEventListener('click', function(e) {
             e.stopPropagation();
             document.querySelectorAll('.searchable-select-dropdown.show').forEach(d => {
                 if (d !== dropdown) {
                     d.classList.remove('show');
-                    const t = d.closest('.searchable-select').querySelector('.searchable-select-trigger');
-                    if (t) t.classList.remove('open');
+                    d.closest('.searchable-select').querySelector('.searchable-select-trigger').classList.remove('open');
                 }
             });
             const isOpen = dropdown.classList.toggle('show');
             trigger.classList.toggle('open', isOpen);
             if (isOpen) {
                 searchInput.value = '';
-                filterOptions(rowId, '');
+                renderOptions(rowId, '');
                 setTimeout(() => searchInput.focus(), 50);
             }
         });
 
         searchInput.addEventListener('input', function(e) {
-            e.stopPropagation();
-            filterOptions(rowId, this.value);
+            renderOptions(rowId, this.value);
         });
 
         optionsContainer.addEventListener('click', function(e) {
@@ -277,35 +270,34 @@
         });
     }
 
-    function populateOptions(rowId) {
+    function renderOptions(rowId, query) {
         const container = document.getElementById(`ss_options_${rowId}`);
-        if (!container) return;
+        const q = query.toLowerCase().trim();
+        
+        let filtered = barangData.filter(b => {
+            const label = `${b.kode_barang} ${b.nama_barang}`.toLowerCase();
+            const barcode = (b.barcode || '').toLowerCase();
+            return !q || label.includes(q) || barcode.includes(q);
+        });
 
-        if (!barangData || barangData.length === 0) {
-            container.innerHTML = '<div class="searchable-select-empty">Data persediaan kosong</div>';
+        if (filtered.length === 0) {
+            container.innerHTML = `<div class="searchable-select-empty">Barang tidak ditemukan (Total: ${barangData.length})</div>`;
             return;
         }
 
-        let html = '';
-        barangData.forEach(b => {
-            const label = `${b.kode_barang || ''} - ${b.nama_barang || ''}`;
-            
-            html += `<div class="searchable-select-option" 
+        container.innerHTML = filtered.map(b => {
+            const label = `${b.kode_barang} - ${b.nama_barang}`;
+            return `<div class="searchable-select-option" 
                         data-value="${b.id_barang}" 
                         data-harga="${b.harga_beli || 0}"
-                        data-barcode="${(b.barcode || '').replace(/"/g, '&quot;')}"
-                        data-kode="${(b.kode_barang || '').replace(/"/g, '&quot;')}"
                         data-label="${label.replace(/"/g, '&quot;')}">${label}</div>`;
-        });
-        container.innerHTML = html;
+        }).join('');
     }
 
     function selectOption(rowId, option) {
         const trigger = document.getElementById(`ss_trigger_${rowId}`);
         const dropdown = document.getElementById(`ss_dropdown_${rowId}`);
         const hiddenInput = document.getElementById(`ss_input_${rowId}`);
-
-        if (!trigger || !dropdown || !hiddenInput) return;
 
         hiddenInput.value = option.dataset.value;
         const triggerText = trigger.querySelector('.trigger-text');
@@ -319,126 +311,17 @@
         trigger.classList.remove('open');
 
         const harga = option.dataset.harga || 0;
-        const hargaInput = document.getElementById(`harga_${rowId}`);
-        if (hargaInput) {
-            hargaInput.value = harga;
-            hitungSubtotal(rowId);
-        }
+        document.getElementById(`harga_${rowId}`).value = harga;
+        hitungSubtotal(rowId);
     }
 
-    function filterOptions(rowId, query) {
-        const optionsContainer = document.getElementById(`ss_options_${rowId}`);
-        if (!optionsContainer) return;
-
-        const options = optionsContainer.querySelectorAll('.searchable-select-option');
-        const q = query.toLowerCase().trim();
-        let visibleCount = 0;
-
-        options.forEach(option => {
-            const label = option.textContent.toLowerCase();
-            const barcode = (option.dataset.barcode || '').toLowerCase();
-            const kode = (option.dataset.kode || '').toLowerCase();
-            if (!q || label.includes(q) || barcode.includes(q) || kode.includes(q)) {
-                option.classList.remove('hidden');
-                visibleCount++;
-            } else {
-                option.classList.add('hidden');
-            }
-        });
-
-        let emptyMsg = optionsContainer.querySelector('.searchable-select-empty');
-        if (visibleCount === 0) {
-            if (!emptyMsg) {
-                emptyMsg = document.createElement('div');
-                emptyMsg.className = 'searchable-select-empty';
-                emptyMsg.textContent = 'Barang tidak ditemukan';
-                optionsContainer.appendChild(emptyMsg);
-            }
-            emptyMsg.style.display = '';
-        } else if (emptyMsg) {
-            emptyMsg.style.display = 'none';
-        }
-    }
-
-    document.addEventListener('click', function() {
-        document.querySelectorAll('.searchable-select-dropdown.show').forEach(d => {
-            d.classList.remove('show');
-            const t = d.closest('.searchable-select').querySelector('.searchable-select-trigger');
-            if (t) t.classList.remove('open');
-        });
-    });
-
-    const scanInput = document.getElementById('scan_barcode');
-    if (scanInput) {
-        scanInput.addEventListener('keypress', function (e) {
-            if (e.key === 'Enter') {
-                e.preventDefault();
-                let code = this.value.trim();
-                if (code) {
-                    processBarcode(code);
-                    this.value = '';
-                }
-            }
-        });
-    }
-
-    function processBarcode(code) {
-        if (!barangData || barangData.length === 0) return;
-        let barang = barangData.find(b => (b.barcode === code) || (b.kode_barang === code));
-        
-        if (barang) {
-            let existingRow = -1;
-            for (let i = 0; i < rowCount; i++) {
-                let input = document.getElementById(`ss_input_${i}`);
-                if (input && input.value == barang.id_barang) {
-                    existingRow = i;
-                    break;
-                }
-            }
-
-            if (existingRow !== -1) {
-                let qtyInput = document.getElementById(`qty_${existingRow}`);
-                if (qtyInput) {
-                    qtyInput.value = parseInt(qtyInput.value) + 1;
-                    hitungSubtotal(existingRow);
-                }
-            } else {
-                let emptyRow = -1;
-                for (let i = 0; i < rowCount; i++) {
-                    let input = document.getElementById(`ss_input_${i}`);
-                    if (input && input.value === "") {
-                        emptyRow = i;
-                        break;
-                    }
-                }
-
-                if (emptyRow === -1) {
-                    tambahBaris();
-                    emptyRow = rowCount - 1;
-                }
-
-                const option = document.querySelector(`#ss_options_${emptyRow} [data-value="${barang.id_barang}"]`);
-                if (option) selectOption(emptyRow, option);
-            }
-        } else {
-            alert('Barang tidak ditemukan!');
-        }
-    }
-
+    // Standard logic remains
     function hitungSubtotal(id) {
-        const hargaEl = document.getElementById(`harga_${id}`);
-        const qtyEl = document.getElementById(`qty_${id}`);
-        if (!hargaEl || !qtyEl) return;
-
-        let harga = parseFloat(hargaEl.value) || 0;
-        let qty = parseFloat(qtyEl.value) || 0;
+        let harga = parseFloat(document.getElementById(`harga_${id}`).value) || 0;
+        let qty = parseFloat(document.getElementById(`qty_${id}`).value) || 0;
         let subtotal = harga * qty;
-        
-        const subInput = document.getElementById(`subtotal_${id}`);
-        const subDisplay = document.getElementById(`subtotal_display_${id}`);
-        if (subInput) subInput.value = subtotal;
-        if (subDisplay) subDisplay.value = formatRupiah(subtotal);
-        
+        document.getElementById(`subtotal_${id}`).value = subtotal;
+        document.getElementById(`subtotal_display_${id}`).value = formatRupiah(subtotal);
         hitungTotalSemua();
     }
 
@@ -447,8 +330,7 @@
         document.querySelectorAll('.subtotal-input').forEach(input => {
             total += parseFloat(input.value) || 0;
         });
-        const totalDisp = document.getElementById('display_total');
-        if (totalDisp) totalDisp.innerText = formatRupiah(total);
+        document.getElementById('display_total').innerText = formatRupiah(total);
     }
 
     function hapusBaris(id) {
@@ -458,48 +340,64 @@
     }
 
     function toggleAkunKas() {
-        let metodeEl = document.getElementById('metode_pembayaran');
-        if (!metodeEl) return;
-        let metode = metodeEl.value;
+        let metode = document.getElementById('metode_pembayaran').value;
         let div = document.getElementById('div_akun_kas');
         let input = document.getElementById('akun_kas_bank');
-        
         if (metode === 'Tunai') {
-            if (div) div.style.display = 'block';
-            if (input) input.setAttribute('required', 'required');
+            div.style.display = 'block';
+            input.setAttribute('required', 'required');
         } else {
-            if (div) div.style.display = 'none';
-            if (input) {
-                input.removeAttribute('required');
-                input.value = '';
-            }
+            div.style.display = 'none';
+            input.removeAttribute('required');
+            input.value = '';
         }
     }
 
-    const cabangSelect = document.getElementById('id_cabang');
-    if (cabangSelect) {
-        cabangSelect.addEventListener('change', function() {
-            let cabangId = this.value;
-            let unitSelect = document.getElementById('id_unit_usaha');
-            if (!unitSelect) return;
-            let units = unitSelect.querySelectorAll('option');
-            
-            unitSelect.value = "";
-            units.forEach(opt => {
-                if (opt.value === "") return;
-                if (opt.getAttribute('data-cabang') == cabangId || !cabangId) {
-                    opt.style.display = "";
-                } else {
-                    opt.style.display = "none";
-                }
-            });
+    document.addEventListener('click', function() {
+        document.querySelectorAll('.searchable-select-dropdown.show').forEach(d => {
+            d.classList.remove('show');
+            d.closest('.searchable-select').querySelector('.searchable-select-trigger').classList.remove('open');
         });
+    });
+
+    // Barcode logic
+    document.getElementById('scan_barcode').addEventListener('keypress', function (e) {
+        if (e.key === 'Enter') {
+            e.preventDefault();
+            let code = this.value.trim();
+            if (code) {
+                processBarcode(code);
+                this.value = '';
+            }
+        }
+    });
+
+    function processBarcode(code) {
+        let barang = barangData.find(b => (b.barcode === code) || (b.kode_barang === code));
+        if (barang) {
+            let emptyRow = -1;
+            for (let i = 0; i < rowCount; i++) {
+                let input = document.getElementById(`ss_input_${i}`);
+                if (input && input.value === "") { emptyRow = i; break; }
+            }
+            if (emptyRow === -1) { tambahBaris(); emptyRow = rowCount - 1; }
+            
+            // Artificial element to select
+            const dummyOption = {
+                dataset: {
+                    value: barang.id_barang,
+                    label: `${barang.kode_barang} - ${barang.nama_barang}`,
+                    harga: barang.harga_beli || 0
+                }
+            };
+            selectOption(emptyRow, dummyOption);
+        } else {
+            alert('Barang tidak ditemukan!');
+        }
     }
 
+    // Init
     tambahBaris();
     toggleAkunKas();
-    if (cabangSelect && cabangSelect.value) {
-        cabangSelect.dispatchEvent(new Event('change'));
-    }
 </script>
 @endpush
