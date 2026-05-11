@@ -12,60 +12,65 @@ class AuditController extends Controller
 {
     public function checkNeraca(Request $request)
     {
-        $perTanggal = $request->input('per_tanggal', date('Y-m-d'));
+        try {
+            $perTanggal = $request->input('per_tanggal', date('Y-m-d'));
 
-        // 1. Check Unbalanced Journals
-        $unbalancedJournals = DB::table('jurnal_detail')
-            ->select('id_jurnal', DB::raw('SUM(debit) as total_debit'), DB::raw('SUM(kredit) as total_kredit'))
-            ->groupBy('id_jurnal')
-            ->havingRaw('ABS(SUM(debit) - SUM(kredit)) > 0.01')
-            ->get();
-        
-        $unbalancedData = [];
-        if ($unbalancedJournals->count() > 0) {
-            $unbalancedData = Jurnal::whereIn('id_jurnal', $unbalancedJournals->pluck('id_jurnal'))
-                ->get()
-                ->map(function($j) use ($unbalancedJournals) {
-                    $stats = $unbalancedJournals->firstWhere('id_jurnal', $j->id_jurnal);
-                    $j->total_debit = $stats->total_debit;
-                    $j->total_kredit = $stats->total_kredit;
-                    $j->selisih = abs($stats->total_debit - $stats->total_kredit);
-                    return $j;
-                });
+            // 1. Check Unbalanced Journals
+            $unbalancedJournals = DB::table('jurnal_detail')
+                ->select('id_jurnal', DB::raw('SUM(debit) as total_debit'), DB::raw('SUM(kredit) as total_kredit'))
+                ->groupBy('id_jurnal')
+                ->havingRaw('ABS(SUM(debit) - SUM(kredit)) > 0.01')
+                ->get();
+            
+            $unbalancedData = [];
+            if ($unbalancedJournals->count() > 0) {
+                $unbalancedData = Jurnal::whereIn('id_jurnal', $unbalancedJournals->pluck('id_jurnal'))
+                    ->get()
+                    ->map(function($j) use ($unbalancedJournals) {
+                        $stats = $unbalancedJournals->firstWhere('id_jurnal', $j->id_jurnal);
+                        $j->total_debit = $stats->total_debit;
+                        $j->total_kredit = $stats->total_kredit;
+                        $j->selisih = abs($stats->total_debit - $stats->total_kredit);
+                        return $j;
+                    });
+            }
+
+            // 2. Check Accounts with Invalid Types
+            $allowedTypes = [
+                'Kas & Bank', 'Piutang', 'Persediaan', 'Aset Lancar Lainnya', 'Aset Tetap',
+                'Utang Usaha', 'Kewajiban Lancar Lainnya', 'Kewajiban Jangka Panjang', 'Ekuitas',
+                'Pendapatan', 'Pendapatan Lainnya', 'HPP', 'Beban', 'Beban Lainnya'
+            ];
+
+            $invalidAccounts = Akun::all()->filter(function($a) use ($allowedTypes) {
+                return empty($a->tipe_akun) || !in_array(trim($a->tipe_akun), $allowedTypes);
+            });
+
+            // 3. Equation Breakdown (Gap Analysis)
+            $totalAset = $this->sumByTypes(['Kas & Bank', 'Piutang', 'Persediaan', 'Aset Lancar Lainnya', 'Aset Tetap'], $perTanggal);
+            $totalKewajiban = $this->sumByTypes(['Utang Usaha', 'Kewajiban Lancar Lainnya', 'Kewajiban Jangka Panjang'], $perTanggal);
+            $totalEkuitas = $this->sumByTypes(['Ekuitas'], $perTanggal);
+            $labaBerjalan = $this->hitungLabaRugi($perTanggal);
+
+            $totalPasiva = $totalKewajiban + $totalEkuitas + $labaBerjalan;
+            $gap = $totalAset - $totalPasiva;
+
+            // 4. Orphaned Details
+            $orphanedDetails = DB::table('jurnal_detail')
+                ->leftJoin('jurnal_umum', 'jurnal_detail.id_jurnal', '=', 'jurnal_umum.id_jurnal')
+                ->whereNull('jurnal_umum.id_jurnal')
+                ->count();
+
+            return view('audit.neraca', compact(
+                'perTanggal', 'unbalancedData', 'invalidAccounts', 'allowedTypes',
+                'totalAset', 'totalKewajiban', 'totalEkuitas', 'labaBerjalan', 
+                'totalPasiva', 'gap', 'orphanedDetails'
+            ));
+        } catch (\Exception $e) {
+            \Log::error('Audit Neraca Error: ' . $e->getMessage());
+            \Log::error($e->getTraceAsString());
+            return response()->json(['error' => $e->getMessage()], 500);
         }
-
-        // 2. Check Accounts with Invalid Types (Trimming spaces for robustness)
-        $allowedTypes = [
-            'Kas & Bank', 'Piutang', 'Persediaan', 'Aset Lancar Lainnya', 'Aset Tetap',
-            'Utang Usaha', 'Kewajiban Lancar Lainnya', 'Kewajiban Jangka Panjang', 'Ekuitas',
-            'Pendapatan', 'Pendapatan Lainnya', 'HPP', 'Beban', 'Beban Lainnya'
-        ];
-
-        $invalidAccounts = Akun::where(function($q) use ($allowedTypes) {
-            $q->whereNull('tipe_akun')
-              ->orWhereNotIn(DB::raw('TRIM(tipe_akun)'), $allowedTypes);
-        })->get();
-
-        // 3. Equation Breakdown (Gap Analysis)
-        $totalAset = $this->sumByTypes(['Kas & Bank', 'Piutang', 'Persediaan', 'Aset Lancar Lainnya', 'Aset Tetap'], $perTanggal);
-        $totalKewajiban = $this->sumByTypes(['Utang Usaha', 'Kewajiban Lancar Lainnya', 'Kewajiban Jangka Panjang'], $perTanggal);
-        $totalEkuitas = $this->sumByTypes(['Ekuitas'], $perTanggal);
-        $labaBerjalan = $this->hitungLabaRugi($perTanggal);
-
-        $totalPasiva = $totalKewajiban + $totalEkuitas + $labaBerjalan;
-        $gap = $totalAset - $totalPasiva;
-
-        // 4. Orphaned Details
-        $orphanedDetails = DB::table('jurnal_detail')
-            ->leftJoin('jurnal_umum', 'jurnal_detail.id_jurnal', '=', 'jurnal_umum.id_jurnal')
-            ->whereNull('jurnal_umum.id_jurnal')
-            ->count();
-
-        return view('audit.neraca', compact(
-            'perTanggal', 'unbalancedData', 'invalidAccounts', 'allowedTypes',
-            'totalAset', 'totalKewajiban', 'totalEkuitas', 'labaBerjalan', 
-            'totalPasiva', 'gap', 'orphanedDetails'
-        ));
     }
 
     private function sumByTypes($types, $perTanggal)
