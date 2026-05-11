@@ -1128,10 +1128,20 @@ class LaporanController extends Controller
                 ->whereNull('jurnal_umum.id_jurnal')
                 ->count();
 
+            // 5. Check for Jurnal Detail with missing Master Akun
+            $missingMasterAccounts = DB::table('jurnal_detail')
+                ->whereNotExists(function($query) {
+                    $query->select(DB::raw(1))
+                          ->from('akun')
+                          ->whereRaw('akun.kode_akun = jurnal_detail.kode_akun');
+                })
+                ->distinct()
+                ->pluck('kode_akun');
+
             return view('audit.neraca', compact(
                 'perTanggal', 'unbalancedData', 'invalidAccounts', 'allowedTypes',
                 'totalAset', 'totalKewajiban', 'totalEkuitas', 'labaBerjalan', 
-                'totalPasiva', 'gap', 'orphanedDetails'
+                'totalPasiva', 'gap', 'orphanedDetails', 'missingMasterAccounts'
             ));
         } catch (\Exception $e) {
             return response()->json(['error' => $e->getMessage()], 500);
