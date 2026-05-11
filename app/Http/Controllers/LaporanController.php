@@ -1133,26 +1133,25 @@ class LaporanController extends Controller
             $masterAccounts = Akun::pluck('kode_akun')->toArray();
             $missingMasterAccounts = collect($usedAccounts)->diff($masterAccounts);
 
-            // 6. Detailed Account Balances for Audit
-            $accountBalances = Akun::orderBy('kode_akun')->get()->map(function($akun) use ($perTanggal) {
-                $saldoRaw = JurnalDetail::where('kode_akun', $akun->kode_akun)
-                    ->whereHas('jurnal', function($q) use ($perTanggal) {
-                        $q->where('tanggal', '<=', $perTanggal);
-                    })
-                    ->select(DB::raw('SUM(debit) as d'), DB::raw('SUM(kredit) as k'))
-                    ->first();
-                
-                $d = $saldoRaw->d ?? 0;
-                $k = $saldoRaw->k ?? 0;
-                $balance = ($akun->saldo_normal == 'Debit') ? ($d - $k) : ($k - $d);
-                
-                $akun->debit = $d;
-                $akun->kredit = $k;
-                $akun->balance = $balance;
-                return $akun;
-            })->filter(function($akun) {
-                return $akun->debit != 0 || $akun->kredit != 0;
-            });
+            // 6. Detailed Account Balances (Optimized)
+            $accountBalances = DB::table('jurnal_detail')
+                ->join('akun', 'jurnal_detail.kode_akun', '=', 'akun.kode_akun')
+                ->join('jurnal_umum', 'jurnal_detail.id_jurnal', '=', 'jurnal_umum.id_jurnal')
+                ->where('jurnal_umum.tanggal', '<=', $perTanggal)
+                ->select(
+                    'akun.kode_akun', 
+                    'akun.nama_akun', 
+                    'akun.tipe_akun', 
+                    'akun.saldo_normal',
+                    DB::raw('SUM(debit) as debit'), 
+                    DB::raw('SUM(kredit) as kredit')
+                )
+                ->groupBy('akun.kode_akun', 'akun.nama_akun', 'akun.tipe_akun', 'akun.saldo_normal')
+                ->get()
+                ->map(function($item) {
+                    $item->balance = ($item->saldo_normal == 'Debit') ? ($item->debit - $item->kredit) : ($item->kredit - $item->debit);
+                    return $item;
+                });
 
             return view('audit.neraca', compact(
                 'perTanggal', 'unbalancedData', 'invalidAccounts', 'allowedTypes',
