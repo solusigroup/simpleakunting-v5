@@ -173,7 +173,7 @@
                     </span>
                 </div>
     <!-- 4. Rincian Saldo Per Akun -->
-    <div class="row mt-4">
+    <div class="row mt-4 mb-5">
         <div class="col-md-12">
             <div class="card shadow-sm border-0">
                 <div class="card-header bg-dark text-white d-flex justify-content-between align-items-center">
@@ -192,34 +192,17 @@
                             </tr>
                         </thead>
                         <tbody>
-                            @php
-                                $allAkuns = \App\Models\Akun::orderBy('kode_akun')->get();
-                            @endphp
-                            @foreach($allAkuns as $akun)
-                                @php
-                                    $saldoRaw = \App\Models\JurnalDetail::where('kode_akun', $akun->kode_akun)
-                                        ->whereHas('jurnal', function($q) use ($perTanggal) {
-                                            $q->where('tanggal', '<=', $perTanggal);
-                                        })
-                                        ->select(DB::raw('SUM(debit) as d'), DB::raw('SUM(kredit) as k'))
-                                        ->first();
-                                    
-                                    $d = $saldoRaw->d ?? 0;
-                                    $k = $saldoRaw->k ?? 0;
-                                    $balance = ($akun->saldo_normal == 'Debit') ? ($d - $k) : ($k - $d);
-                                @endphp
-                                @if($d != 0 || $k != 0)
+                            @foreach($accountBalances as $akun)
                                 <tr>
                                     <td>{{ $akun->kode_akun }}</td>
                                     <td>{{ $akun->nama_akun }}</td>
                                     <td><span class="badge bg-light text-dark border">{{ $akun->tipe_akun }}</span></td>
-                                    <td class="text-end text-muted small">{{ number_format($d, 0, ',', '.') }}</td>
-                                    <td class="text-end text-muted small">{{ number_format($k, 0, ',', '.') }}</td>
-                                    <td class="text-end fw-bold {{ $balance < 0 ? 'text-danger' : '' }}">
-                                        {{ number_format($balance, 0, ',', '.') }}
+                                    <td class="text-end text-muted small">{{ number_format($akun->debit, 0, ',', '.') }}</td>
+                                    <td class="text-end text-muted small">{{ number_format($akun->kredit, 0, ',', '.') }}</td>
+                                    <td class="text-end fw-bold {{ $akun->balance < 0 ? 'text-danger' : '' }}">
+                                        {{ number_format($akun->balance, 0, ',', '.') }}
                                     </td>
                                 </tr>
-                                @endif
                             @endforeach
                         </tbody>
                     </table>
@@ -230,6 +213,22 @@
             </div>
         </div>
     </div>
+
+    <!-- Missing Master Accounts Alert -->
+    @if(count($missingMasterAccounts) > 0)
+    <div class="row mt-3">
+        <div class="col-md-12">
+            <div class="alert alert-danger shadow-sm">
+                <h5 class="alert-heading">⚠️ Ditemukan Akun Tanpa Master!</h5>
+                <p>Daftar kode akun berikut memiliki transaksi tapi tidak terdaftar di Master Akun: 
+                    <strong>{{ $missingMasterAccounts->implode(', ') }}</strong>
+                </p>
+                <hr>
+                <p class="mb-0">Mohon segera buat akun ini di menu Master Akun agar nilainya muncul di laporan.</p>
+            </div>
+        </div>
+    </div>
+    @endif
 </div>
 
 <style>

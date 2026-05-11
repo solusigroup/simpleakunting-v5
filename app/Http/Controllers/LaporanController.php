@@ -1122,19 +1122,37 @@ class LaporanController extends Controller
             $totalPasiva = $totalKewajiban + $totalEkuitas + $labaBerjalan;
             $gap = $totalAset - $totalPasiva;
 
-            // 4. Orphaned Details
-            $orphanedDetails = DB::table('jurnal_detail')
-                ->leftJoin('jurnal_umum', 'jurnal_detail.id_jurnal', '=', 'jurnal_umum.id_jurnal')
-                ->whereNull('jurnal_umum.id_jurnal')
-                ->count();
+            // 5. Missing Master Accounts
+            $usedAccounts = DB::table('jurnal_detail')->distinct()->pluck('kode_akun');
+            $masterAccounts = Akun::pluck('kode_akun')->toArray();
+            $missingMasterAccounts = collect($usedAccounts)->diff($masterAccounts);
 
-            // Default empty for missing accounts for now to avoid error
-            $missingMasterAccounts = collect([]);
+            // 6. Detailed Account Balances for Audit
+            $accountBalances = Akun::orderBy('kode_akun')->get()->map(function($akun) use ($perTanggal) {
+                $saldoRaw = JurnalDetail::where('kode_akun', $akun->kode_akun)
+                    ->whereHas('jurnal', function($q) use ($perTanggal) {
+                        $q->where('tanggal', '<=', $perTanggal);
+                    })
+                    ->select(DB::raw('SUM(debit) as d'), DB::raw('SUM(kredit) as k'))
+                    ->first();
+                
+                $d = $saldoRaw->d ?? 0;
+                $k = $saldoRaw->k ?? 0;
+                $balance = ($akun->saldo_normal == 'Debit') ? ($d - $k) : ($k - $d);
+                
+                $akun->debit = $d;
+                $akun->kredit = $k;
+                $akun->balance = $balance;
+                return $akun;
+            })->filter(function($akun) {
+                return $akun->debit != 0 || $akun->kredit != 0;
+            });
 
             return view('audit.neraca', compact(
                 'perTanggal', 'unbalancedData', 'invalidAccounts', 'allowedTypes',
                 'totalAset', 'totalKewajiban', 'totalEkuitas', 'labaBerjalan', 
-                'totalPasiva', 'gap', 'orphanedDetails', 'missingMasterAccounts'
+                'totalPasiva', 'gap', 'orphanedDetails', 'missingMasterAccounts',
+                'accountBalances'
             ));
         } catch (\Exception $e) {
             return "Audit Error: " . $e->getMessage();
