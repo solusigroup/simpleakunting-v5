@@ -29,7 +29,11 @@
                                 </tr>
                                 <tr>
                                     <td><strong>Pemasok</strong></td>
-                                    <td>: {{ $pembelian->pemasok->nama_pemasok ?? 'Umum' }}</td>
+                                    <td>: 
+                                        <a href="{{ route('pembayaran.create', ['id_pemasok' => $pembelian->id_pemasok]) }}" class="text-decoration-none fw-bold">
+                                            {{ $pembelian->pemasok->nama_pemasok ?? 'Umum' }}
+                                        </a>
+                                    </td>
                                 </tr>
                                 <tr>
                                     <td><strong>Metode</strong></td>

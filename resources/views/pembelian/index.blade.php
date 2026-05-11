@@ -37,7 +37,11 @@
                         <tr>
                             <td>{{ \Carbon\Carbon::parse($p->tanggal_faktur)->format('d/m/Y') }}</td>
                             <td><strong>{{ $p->no_faktur }}</strong></td>
-                            <td>{{ $p->pemasok->nama_pemasok ?? '-' }}</td>
+                            <td>
+                                <a href="{{ route('pembayaran.create', ['id_pemasok' => $p->id_pemasok]) }}" class="vendor-link" title="Bayar Tagihan ke Vendor ini">
+                                    {{ $p->pemasok->nama_pemasok ?? '-' }}
+                                </a>
+                            </td>
                             <td style="font-weight: 600; color: var(--color-danger);">Rp {{ number_format($p->total, 0, ',', '.') }}</td>
                             <td>
                                 <span class="badge badge-secondary">{{ $p->metode_pembayaran }}</span>

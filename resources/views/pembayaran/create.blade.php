@@ -81,7 +81,7 @@
                         <select class="form-select" id="id_pemasok" name="id_pemasok">
                             <option value="">-- Umum --</option>
                             @foreach($pemasok as $p)
-                                <option value="{{ $p->id_pemasok }}">{{ $p->nama_pemasok }}</option>
+                                <option value="{{ $p->id_pemasok }}" {{ request('id_pemasok') == $p->id_pemasok ? 'selected' : '' }}>{{ $p->nama_pemasok }}</option>
                             @endforeach
                         </select>
                     </div>

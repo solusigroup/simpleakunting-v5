@@ -37,7 +37,11 @@
                         <tr>
                             <td>{{ \Carbon\Carbon::parse($p->tanggal_faktur)->format('d/m/Y') }}</td>
                             <td><strong>{{ $p->no_faktur }}</strong></td>
-                            <td>{{ $p->pelanggan->nama_pelanggan ?? '-' }}</td>
+                            <td>
+                                <a href="{{ route('penerimaan.create', ['id_pelanggan' => $p->id_pelanggan]) }}" class="customer-link" title="Terima Pembayaran dari Pelanggan ini">
+                                    {{ $p->pelanggan->nama_pelanggan ?? '-' }}
+                                </a>
+                            </td>
                             <td style="font-weight: 600;">Rp {{ number_format($p->total, 0, ',', '.') }}</td>
                             <td>
                                 <span class="badge badge-secondary">{{ $p->metode_pembayaran }}</span>

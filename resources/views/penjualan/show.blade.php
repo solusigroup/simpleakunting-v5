@@ -29,7 +29,11 @@
                                 </tr>
                                 <tr>
                                     <td><strong>Pelanggan</strong></td>
-                                    <td>: {{ $penjualan->pelanggan->nama_pelanggan ?? 'Umum' }}</td>
+                                    <td>: 
+                                        <a href="{{ route('penerimaan.create', ['id_pelanggan' => $penjualan->id_pelanggan]) }}" class="text-decoration-none fw-bold">
+                                            {{ $penjualan->pelanggan->nama_pelanggan ?? 'Umum' }}
+                                        </a>
+                                    </td>
                                 </tr>
                                 <tr>
                                     <td><strong>Metode</strong></td>
