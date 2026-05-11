@@ -21,7 +21,7 @@
         <!-- Header Form -->
         <div class="form-card mb-4">
             <div class="form-card-body">
-                <div class="form-row" style="display: flex; gap: 20px;">
+                <div class="form-row">
                     <div class="form-group" style="flex: 1;">
                         <label for="no_transaksi" class="form-label">No Transaksi</label>
                         <input type="text" class="form-control" id="no_transaksi" name="no_transaksi" value="{{ $noTransaksi }}" readonly style="background: var(--color-bg);">
@@ -32,27 +32,16 @@
                     </div>
                     <div class="form-group" style="flex: 1;">
                         <label for="akun_kas" class="form-label">Keluar dari Akun (Kredit) <span class="text-danger">*</span></label>
-                        <div class="searchable-select" id="ss_header">
-                            <input type="hidden" name="akun_kas" id="ss_input_header" required>
-                            <div class="searchable-select-trigger" id="ss_trigger_header">
-                                <span class="trigger-text placeholder">🔍 Pilih Kas/Bank...</span>
-                                <svg class="trigger-chevron" xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg>
-                            </div>
-                            <div class="searchable-select-dropdown" id="ss_dropdown_header">
-                                <div class="searchable-select-search">
-                                    <input type="text" placeholder="Cari kas/bank..." id="ss_search_header" autocomplete="off">
-                                </div>
-                                <div class="searchable-select-options" id="ss_options_header">
-                                    @foreach($akunKas as $a)
-                                        <div class="searchable-select-option" data-value="{{ $a->kode_akun }}" data-label="{{ $a->kode_akun }} - {{ $a->nama_akun }}">{{ $a->kode_akun }} - {{ $a->nama_akun }}</div>
-                                    @endforeach
-                                </div>
-                            </div>
-                        </div>
+                        <select class="form-select @error('akun_kas') is-invalid @enderror" id="akun_kas" name="akun_kas" required>
+                            <option value="">-- Pilih Kas/Bank --</option>
+                            @foreach($akunKas as $a)
+                                <option value="{{ $a->kode_akun }}">{{ $a->kode_akun }} - {{ $a->nama_akun }}</option>
+                            @endforeach
+                        </select>
                     </div>
                 </div>
 
-                <div class="form-row mt-3" style="display: flex; gap: 20px;">
+                <div class="form-row mt-3">
                     <div class="form-group" style="flex: 1;">
                         <label for="id_pemasok" class="form-label">Dibayar Ke (Pemasok) - Opsional</label>
                         <select class="form-select" id="id_pemasok" name="id_pemasok">
@@ -79,8 +68,8 @@
                 <table class="data-table">
                     <thead>
                         <tr>
-                            <th style="width: 60%;">Akun Beban/Utang</th>
-                            <th style="width: 30%;">Jumlah (Rp)</th>
+                            <th style="width: 60%;">Akun</th>
+                            <th style="width: 30%;">Nominal</th>
                             <th style="width: 10%;">Aksi</th>
                         </tr>
                     </thead>
@@ -128,6 +117,7 @@
     .searchable-select-dropdown.show { display: block; }
     .searchable-select-search { padding: 8px; border-bottom: 1px solid var(--color-border, #eee); position: sticky; top: 0; background: var(--color-bg-card, #fff); z-index: 1; }
     .searchable-select-search input { width: 100%; padding: 6px 10px; border: 1px solid var(--color-border, #dee2e6); border-radius: var(--radius-sm, 4px); font-size: 0.8125rem; outline: none; transition: border-color 0.2s; background: var(--color-bg, #fff); color: var(--color-text, #333); }
+    .searchable-select-search input:focus { border-color: var(--color-primary, #8b5cf6); box-shadow: 0 0 0 2px rgba(139, 92, 246, 0.1); }
     .searchable-select-options { max-height: 220px; overflow-y: auto; padding: 4px 0; }
     .searchable-select-option { padding: 7px 12px; cursor: pointer; font-size: 0.8125rem; color: var(--color-text, #333); transition: background 0.15s; }
     .searchable-select-option:hover { background: rgba(139, 92, 246, 0.08); }
@@ -175,7 +165,9 @@
                     <input type="number" class="form-control form-control-sm input-jumlah" name="details[${currentRow}][jumlah]" value="0" min="0" onkeyup="hitungTotal()" onchange="hitungTotal()">
                 </td>
                 <td>
-                    <button type="button" class="btn btn-sm btn-danger" onclick="hapusBaris(${currentRow})">X</button>
+                    <button type="button" class="btn btn-danger btn-icon btn-sm" onclick="hapusBaris(${currentRow})">
+                        <span data-feather="x" style="width: 14px; height: 14px;"></span>
+                    </button>
                 </td>
             </tr>
         `;
@@ -283,9 +275,7 @@
         document.getElementById('total_display').value = formatRupiah(total);
     }
 
-    // Initialize header searchable select
-    initSearchableSelect('header');
-
+    tambahBaris();
     tambahBaris();
     feather.replace();
 </script>
