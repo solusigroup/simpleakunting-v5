@@ -32,6 +32,7 @@ use App\Http\Controllers\KasController;
 use App\Http\Controllers\CabangSessionController;
 use App\Http\Controllers\PosController;
 use App\Http\Controllers\ReturController;
+use App\Http\Controllers\AuditController;
 use App\Http\Controllers\GuideController;
 
 /*
@@ -195,6 +196,9 @@ Route::middleware([
             Route::resource('unit-usaha', UnitUsahaController::class);
             Route::post('cabang/switch', [CabangSessionController::class, 'switch'])->name('cabang.switch');
             Route::get('audit-trail', [\App\Http\Controllers\AuditTrailController::class, 'index'])->name('audit-trail.index');
+            
+            // Audit Diagnostics
+            Route::get('audit/neraca', [AuditController::class, 'checkNeraca'])->name('audit.neraca');
         });
 
         // API: Cascade dropdown unit usaha by cabang (all authenticated)

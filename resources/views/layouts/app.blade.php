@@ -737,6 +737,12 @@
                                 Tutup Buku (Closing)
                             </a>
                         </li>
+                        <li class="sidebar-nav-item">
+                            <a class="sidebar-nav-link {{ request()->routeIs('audit.neraca') ? 'active' : '' }}" href="{{ route('audit.neraca') }}">
+                                <span data-feather="search"></span>
+                                Diagnosa Neraca
+                            </a>
+                        </li>
                     </ul>
                 </div>
             </div>
