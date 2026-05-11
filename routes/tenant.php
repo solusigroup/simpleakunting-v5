@@ -65,7 +65,8 @@ Route::middleware([
         Route::post('logout', [AuthController::class, 'logout'])->name('logout');
         
         // Audit Diagnostics (Debug Position)
-        Route::get('audit/neraca', [LaporanController::class, 'checkNeraca'])->name('audit.neraca');
+        Route::get('test-diagnosa', function() { return "Test OK"; });
+        Route::get('laporan/diagnosa-neraca', [LaporanController::class, 'checkNeraca'])->name('audit.neraca');
         
         // =====================================================
         // DASHBOARD - All authenticated users
