@@ -172,9 +172,61 @@
                         {{ $orphanedDetails }} Record {{ $orphanedDetails > 0 ? '⚠️' : '✅' }}
                     </span>
                 </div>
-                @if($orphanedDetails > 0)
-                <p class="small text-muted mt-2">Ini berarti ada data detail jurnal yang tersisa padahal transaksi utamanya sudah dihapus. Sebaiknya dibersihkan via database.</p>
-                @endif
+    <!-- 4. Rincian Saldo Per Akun -->
+    <div class="row mt-4">
+        <div class="col-md-12">
+            <div class="card shadow-sm border-0">
+                <div class="card-header bg-dark text-white d-flex justify-content-between align-items-center">
+                    <span>4. Rincian Saldo Per Akun (Penyusun Angka di Atas)</span>
+                </div>
+                <div class="table-responsive" style="max-height: 500px; overflow-y: auto;">
+                    <table class="table table-sm table-hover mb-0">
+                        <thead class="table-light sticky-top">
+                            <tr>
+                                <th>Kode</th>
+                                <th>Nama Akun</th>
+                                <th>Tipe Akun</th>
+                                <th class="text-end">Debit</th>
+                                <th class="text-end">Kredit</th>
+                                <th class="text-end">Saldo Akhir</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @php
+                                $allAkuns = \App\Models\Akun::orderBy('kode_akun')->get();
+                            @endphp
+                            @foreach($allAkuns as $akun)
+                                @php
+                                    $saldoRaw = \App\Models\JurnalDetail::where('kode_akun', $akun->kode_akun)
+                                        ->whereHas('jurnal', function($q) use ($perTanggal) {
+                                            $q->where('tanggal', '<=', $perTanggal);
+                                        })
+                                        ->select(DB::raw('SUM(debit) as d'), DB::raw('SUM(kredit) as k'))
+                                        ->first();
+                                    
+                                    $d = $saldoRaw->d ?? 0;
+                                    $k = $saldoRaw->k ?? 0;
+                                    $balance = ($akun->saldo_normal == 'Debit') ? ($d - $k) : ($k - $d);
+                                @endphp
+                                @if($d != 0 || $k != 0)
+                                <tr>
+                                    <td>{{ $akun->kode_akun }}</td>
+                                    <td>{{ $akun->nama_akun }}</td>
+                                    <td><span class="badge bg-light text-dark border">{{ $akun->tipe_akun }}</span></td>
+                                    <td class="text-end text-muted small">{{ number_format($d, 0, ',', '.') }}</td>
+                                    <td class="text-end text-muted small">{{ number_format($k, 0, ',', '.') }}</td>
+                                    <td class="text-end fw-bold {{ $balance < 0 ? 'text-danger' : '' }}">
+                                        {{ number_format($balance, 0, ',', '.') }}
+                                    </td>
+                                </tr>
+                                @endif
+                            @endforeach
+                        </tbody>
+                    </table>
+                </div>
+                <div class="card-footer bg-light small text-muted">
+                    * Saldo Akhir dihitung berdasarkan Saldo Normal (Debit/Kredit) masing-masing akun.
+                </div>
             </div>
         </div>
     </div>
