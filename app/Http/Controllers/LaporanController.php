@@ -1130,31 +1130,9 @@ class LaporanController extends Controller
 
             // 5. Missing Master Accounts
             $usedAccounts = DB::table('jurnal_detail')->distinct()->pluck('kode_akun');
-            $masterAccounts = Akun::pluck('kode_akun')->toArray();
-            $missingMasterAccounts = collect($usedAccounts)->diff($masterAccounts);
-
-            // 6. Detailed Account Balances (Safe Collection Approach)
-            $details = JurnalDetail::whereHas('jurnal', function($q) use ($perTanggal) {
-                $q->where('tanggal', '<=', $perTanggal);
-            })->get();
-
-            $accountBalances = $details->groupBy('kode_akun')->map(function($rows, $kode) {
-                $akun = Akun::where('kode_akun', $kode)->first();
-                if (!$akun) return null;
-                
-                $d = $rows->sum('debit');
-                $k = $rows->sum('kredit');
-                $balance = ($akun->saldo_normal == 'Debit') ? ($d - $k) : ($k - $d);
-                
-                return (object)[
-                    'kode_akun' => $kode,
-                    'nama_akun' => $akun->nama_akun,
-                    'tipe_akun' => $akun->tipe_akun,
-                    'debit' => $d,
-                    'kredit' => $k,
-                    'balance' => $balance
-                ];
-            })->filter()->values();
+            // Temporarily disabled to find 500 cause
+            $missingMasterAccounts = collect([]);
+            $accountBalances = collect([]);
 
             return view('audit.neraca', compact(
                 'perTanggal', 'unbalancedData', 'invalidAccounts', 'allowedTypes',
