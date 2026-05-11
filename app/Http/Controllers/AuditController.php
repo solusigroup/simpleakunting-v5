@@ -43,7 +43,7 @@ class AuditController extends Controller
 
         $invalidAccounts = Akun::where(function($q) use ($allowedTypes) {
             $q->whereNull('tipe_akun')
-              ->orWhereRaw('TRIM(tipe_akun) NOT IN ("' . implode('","', $allowedTypes) . '")');
+              ->orWhereNotIn(DB::raw('TRIM(tipe_akun)'), $allowedTypes);
         })->get();
 
         // 3. Equation Breakdown (Gap Analysis)
