@@ -18,9 +18,15 @@ use Illuminate\Support\Facades\Log;
 class PembelianController extends Controller
 {
     use \App\Traits\CheckClosedPeriod;
-    public function index()
+    public function index(Request $request)
     {
-        $pembelian = Pembelian::with('pemasok')->orderBy('tanggal_faktur', 'desc')->paginate(20);
+        $query = Pembelian::with('pemasok');
+
+        if ($request->has('id_pemasok')) {
+            $query->where('id_pemasok', $request->id_pemasok);
+        }
+
+        $pembelian = $query->orderBy('tanggal_faktur', 'desc')->paginate(20);
         return view('pembelian.index', compact('pembelian'));
     }
 

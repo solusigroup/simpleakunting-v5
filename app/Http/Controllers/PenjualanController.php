@@ -18,9 +18,15 @@ use Illuminate\Support\Facades\Log;
 class PenjualanController extends Controller
 {
     use \App\Traits\CheckClosedPeriod;
-    public function index()
+    public function index(Request $request)
     {
-        $penjualan = Penjualan::with('pelanggan')->orderBy('tanggal_faktur', 'desc')->paginate(20);
+        $query = Penjualan::with('pelanggan');
+
+        if ($request->has('id_pelanggan')) {
+            $query->where('id_pelanggan', $request->id_pelanggan);
+        }
+
+        $penjualan = $query->orderBy('tanggal_faktur', 'desc')->paginate(20);
         return view('penjualan.index', compact('penjualan'));
     }
 

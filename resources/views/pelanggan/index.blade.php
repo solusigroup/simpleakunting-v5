@@ -39,7 +39,11 @@
                 @forelse ($pelanggan as $p)
                     <tr>
                         <td>{{ $p->id_pelanggan }}</td>
-                        <td>{{ $p->nama_pelanggan }}</td>
+                        <td>
+                            <a href="{{ route('penjualan.index', ['id_pelanggan' => $p->id_pelanggan]) }}" class="text-decoration-none fw-bold" title="Lihat Riwayat Penjualan">
+                                {{ $p->nama_pelanggan }}
+                            </a>
+                        </td>
                         <td>{{ Str::limit($p->alamat, 30) }}</td>
                         <td>{{ $p->telepon }}</td>
                         <td>Rp {{ number_format($p->saldo_terkini_piutang, 2, ',', '.') }}</td>
