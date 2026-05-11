@@ -68,8 +68,8 @@
                 <table class="data-table">
                     <thead>
                         <tr>
-                            <th style="width: 50%;">Akun</th>
-                            <th style="width: 40%;">Nominal</th>
+                            <th style="width: 60%;">Akun</th>
+                            <th style="width: 30%;">Nominal</th>
                             <th style="width: 10%;">Aksi</th>
                         </tr>
                     </thead>
@@ -97,13 +97,8 @@
             </div>
         </div>
 
-        <div class="form-card">
-            <div class="form-card-body">
-                <button type="submit" class="btn btn-primary btn-block" id="btnSubmit" style="padding: 16px; font-weight: 700; text-transform: uppercase; letter-spacing: 1px;">
-                    <span data-feather="save" style="width: 18px; height: 18px; margin-right: 8px;"></span>
-                    Simpan Transaksi
-                </button>
-            </div>
+        <div class="mt-3 mb-5">
+            <button type="submit" class="btn btn-lg btn-primary w-100">Simpan Transaksi</button>
         </div>
     </form>
 @endsection
