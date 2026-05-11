@@ -290,5 +290,202 @@ class ManufacturingController extends Controller
 
         return view('manufacturing.laporan.wip_valuation', compact('wipProductions', 'totalWipValue', 'perusahaan'));
     }
+    public function productionEdit($id)
+    {
+        $produksi = Produksi::with(['details.material', 'bom.barangJadi'])->findOrFail($id);
+        $boms = Bom::with('barangJadi')->get();
+        $cabangs = Cabang::all();
+        return view('manufacturing.production.edit', compact('produksi', 'boms', 'cabangs'));
+    }
+
+    public function productionUpdate(Request $request, $id)
+    {
+        $request->validate([
+            'bom_id' => 'required|exists:bom,id',
+            'tanggal' => 'required|date',
+            'kuantitas_produksi' => 'required|numeric|min:1',
+            'id_cabang' => 'nullable|exists:cabang,id',
+        ]);
+
+        try {
+            DB::beginTransaction();
+
+            $produksi = Produksi::with('details.material', 'bom.barangJadi')->findOrFail($id);
+            
+            // 1. REVERSE OLD IMPACT
+            // Reverse Materials
+            foreach ($produksi->details as $oldDetail) {
+                $material = $oldDetail->material;
+                if ($material) {
+                    $material->increment('stok_saat_ini', $oldDetail->kuantitas_digunakan);
+                }
+            }
+            // Reverse Finished Good
+            $oldFg = $produksi->bom->barangJadi;
+            if ($oldFg) {
+                $oldFg->decrement('stok_saat_ini', $produksi->kuantitas_produksi);
+            }
+            // Delete old kartu stok entries
+            DB::table('kartu_stok')
+                ->where('keterangan', 'LIKE', "%{$produksi->no_produksi}%")
+                ->delete();
+            // Delete old journal details
+            if ($produksi->id_jurnal) {
+                JurnalDetail::where('id_jurnal', $produksi->id_jurnal)->delete();
+            }
+
+            // 2. APPLY NEW IMPACT
+            $bom = Bom::with('details.material')->findOrFail($request->bom_id);
+            $bomInfo = [];
+            foreach ($bom->details as $detail) {
+                $needed = ($detail->kuantitas / $bom->kuantitas_hasil) * $request->kuantitas_produksi;
+                $material = $detail->material;
+                
+                // Re-check stock (after reversal)
+                if ($material->stok_saat_ini < $needed) {
+                    throw new \Exception("Stok {$material->nama_barang} tidak cukup. Butuh {$needed}, ada {$material->stok_saat_ini}");
+                }
+                
+                $bomInfo[] = [
+                    'material' => $material,
+                    'qty' => $needed,
+                    'cost' => $material->harga_beli
+                ];
+            }
+
+            // Update Production Record
+            $produksi->update([
+                'tanggal' => $request->tanggal,
+                'bom_id' => $request->bom_id,
+                'id_cabang' => $request->id_cabang,
+                'kuantitas_produksi' => $request->kuantitas_produksi,
+                'keterangan' => $request->keterangan,
+            ]);
+
+            // Clear old details
+            $produksi->details()->delete();
+
+            $totalCost = 0;
+            foreach ($bomInfo as $item) {
+                $subtotalCost = $item['qty'] * $item['cost'];
+                $totalCost += $subtotalCost;
+
+                ProduksiDetail::create([
+                    'produksi_id' => $produksi->id,
+                    'material_id' => $item['material']->id_barang,
+                    'kuantitas_digunakan' => $item['qty'],
+                    'biaya_satuan' => $item['cost'],
+                    'total_biaya' => $subtotalCost,
+                ]);
+
+                // Reduce Material Stock
+                $item['material']->decrement('stok_saat_ini', $item['qty']);
+                
+                // Log Stock Card (Material OUT)
+                DB::table('kartu_stok')->insert([
+                    'id_barang' => $item['material']->id_barang,
+                    'id_cabang' => $request->id_cabang,
+                    'tipe_transaksi' => 'OUT',
+                    'kuantitas' => $item['qty'],
+                    'keterangan' => "Update Produksi {$produksi->no_produksi}",
+                    'created_at' => now(), 'updated_at' => now()
+                ]);
+            }
+
+            // Increase Finished Good Stock
+            $fg = $bom->barangJadi;
+            $fg->increment('stok_saat_ini', $request->kuantitas_produksi);
+            
+            // Log Stock Card (FG IN)
+            DB::table('kartu_stok')->insert([
+                'id_barang' => $fg->id_barang,
+                'id_cabang' => $request->id_cabang,
+                'tipe_transaksi' => 'IN',
+                'kuantitas' => $request->kuantitas_produksi,
+                'keterangan' => "Update Hasil Produksi {$produksi->no_produksi}",
+                'created_at' => now(), 'updated_at' => now()
+            ]);
+
+            // Re-create Journal Details
+            $jurnal = Jurnal::findOrFail($produksi->id_jurnal);
+            $jurnal->update([
+                'tanggal' => $request->tanggal,
+                'id_cabang' => $request->id_cabang,
+                'deskripsi' => "Update Produksi #{$produksi->no_produksi}",
+            ]);
+
+            $perusahaan = DB::table('perusahaan')->first();
+            $akunPersediaanDefault = $perusahaan->akun_persediaan ?? '1-10200';
+
+            // Debit: Persediaan Barang Jadi
+            JurnalDetail::create([
+                'id_jurnal' => $jurnal->id_jurnal,
+                'kode_akun' => $fg->akun_persediaan ?? $akunPersediaanDefault,
+                'debit' => $totalCost,
+                'kredit' => 0
+            ]);
+
+            // Kredit: Persediaan Bahan Baku
+            foreach ($bomInfo as $item) {
+                $subtotalCost = $item['qty'] * $item['cost'];
+                JurnalDetail::create([
+                    'id_jurnal' => $jurnal->id_jurnal,
+                    'kode_akun' => $item['material']->akun_persediaan ?? $akunPersediaanDefault,
+                    'debit' => 0,
+                    'kredit' => $subtotalCost
+                ]);
+            }
+
+            DB::commit();
+            return redirect()->route('manufacturing.production.index')->with('success', 'Produksi berhasil diperbarui.');
+
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return back()->with('error', 'Gagal memperbarui produksi: ' . $e->getMessage());
+        }
+    }
+
+    public function productionDestroy($id)
+    {
+        try {
+            DB::beginTransaction();
+
+            $produksi = Produksi::with('details.material', 'bom.barangJadi')->findOrFail($id);
+            
+            // Reverse Materials
+            foreach ($produksi->details as $detail) {
+                $material = $detail->material;
+                if ($material) {
+                    $material->increment('stok_saat_ini', $detail->kuantitas_digunakan);
+                }
+            }
+
+            // Reverse Finished Good
+            $fg = $produksi->bom->barangJadi;
+            if ($fg) {
+                $fg->decrement('stok_saat_ini', $produksi->kuantitas_produksi);
+            }
+
+            // Delete Kartu Stok
+            DB::table('kartu_stok')
+                ->where('keterangan', 'LIKE', "%{$produksi->no_produksi}%")
+                ->delete();
+
+            // Delete Journal
+            if ($produksi->id_jurnal) {
+                JurnalDetail::where('id_jurnal', $produksi->id_jurnal)->delete();
+                Jurnal::where('id_jurnal', $produksi->id_jurnal)->delete();
+            }
+
+            $produksi->details()->delete();
+            $produksi->delete();
+
+            DB::commit();
+            return redirect()->route('manufacturing.production.index')->with('success', 'Produksi berhasil dibatalkan dan stok dikembalikan.');
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return back()->with('error', 'Gagal menghapus produksi: ' . $e->getMessage());
+        }
+    }
 }
 

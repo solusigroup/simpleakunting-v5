@@ -27,18 +27,38 @@
                 <th>Qty</th>
                 <th>Status</th>
                 <th>Cabang</th>
+                <th>Aksi</th>
             </tr>
         </thead>
         <tbody>
             @forelse($productions as $prod)
             <tr>
                 <td>{{ $prod->no_produksi }}</td>
-                <td>{{ $prod->tanggal }}</td>
+                <td>{{ \Carbon\Carbon::parse($prod->tanggal)->format('d/m/Y') }}</td>
                 <td>{{ $prod->bom->nama_bom ?? '-' }}</td>
                 <td>{{ $prod->bom->barangJadi->nama_barang ?? '-' }}</td>
                 <td>{{ $prod->kuantitas_produksi }}</td>
                 <td><span class="badge bg-success">{{ strtoupper($prod->status) }}</span></td>
                 <td>{{ $prod->cabang->nama_cabang ?? '-' }}</td>
+                <td>
+                    <div class="action-buttons">
+                        {{-- <a href="{{ route('manufacturing.production.show', $prod->id) }}" class="btn btn-sm btn-icon btn-light" title="Detail">
+                            <span data-feather="eye" style="width: 14px; height: 14px;"></span>
+                        </a> --}}
+                        @if(auth()->user()->isAdmin() || auth()->user()->isSuperuser())
+                            <a href="{{ route('manufacturing.production.edit', $prod->id) }}" class="btn btn-sm btn-icon btn-light" title="Edit">
+                                <span data-feather="edit-2" style="width: 14px; height: 14px;"></span>
+                            </a>
+                            <form action="{{ route('manufacturing.production.destroy', $prod->id) }}" method="POST" class="d-inline" onsubmit="return confirm('Apakah Anda yakin ingin membatalkan produksi ini? Stok bahan baku dan barang jadi akan disesuaikan kembali.')">
+                                @csrf
+                                @method('DELETE')
+                                <button type="submit" class="btn btn-sm btn-icon btn-light text-danger" title="Hapus">
+                                    <span data-feather="trash-2" style="width: 14px; height: 14px;"></span>
+                                </button>
+                            </form>
+                        @endif
+                    </div>
+                </td>
             </tr>
             @empty
             <tr>
