@@ -64,6 +64,9 @@ Route::middleware([
     Route::middleware('auth')->group(function () {
         Route::post('logout', [AuthController::class, 'logout'])->name('logout');
         
+        // Audit Diagnostics (Debug Position)
+        Route::get('audit/neraca', [LaporanController::class, 'checkNeraca'])->name('audit.neraca');
+        
         // =====================================================
         // DASHBOARD - All authenticated users
         // =====================================================
@@ -195,9 +198,6 @@ Route::middleware([
             Route::resource('unit-usaha', UnitUsahaController::class);
             Route::post('cabang/switch', [CabangSessionController::class, 'switch'])->name('cabang.switch');
             Route::get('audit-trail', [\App\Http\Controllers\AuditTrailController::class, 'index'])->name('audit-trail.index');
-            
-            // Audit Diagnostics
-            Route::get('audit/neraca', [LaporanController::class, 'checkNeraca'])->name('audit.neraca');
         });
 
         // API: Cascade dropdown unit usaha by cabang (all authenticated)

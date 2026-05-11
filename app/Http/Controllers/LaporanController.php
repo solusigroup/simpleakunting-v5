@@ -1139,8 +1139,7 @@ class LaporanController extends Controller
                 'gap' => $gap
             ]);
         } catch (\Exception $e) {
-            \Log::error('Audit Neraca Error: ' . $e->getMessage());
-            return response()->json(['error' => $e->getMessage(), 'trace' => $e->getTraceAsString()], 500);
+            return response()->json(['error' => $e->getMessage()], 500);
         }
     }
 
