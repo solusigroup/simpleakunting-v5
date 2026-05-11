@@ -24,7 +24,7 @@ class PembayaranController extends Controller
         return view('pembayaran.index', compact('pembayaran'));
     }
 
-    public function create()
+    public function create(Request $request)
     {
         // Akun Kas/Bank untuk Kredit
         $akunKas = Akun::where('tipe_akun', 'Kas & Bank')->orderBy('kode_akun')->get();

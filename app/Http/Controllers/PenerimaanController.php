@@ -22,7 +22,7 @@ class PenerimaanController extends Controller
         return view('penerimaan.index', compact('penerimaan'));
     }
 
-    public function create()
+    public function create(Request $request)
     {
         // Akun Kas/Bank untuk Debit
         $akunKas = Akun::where('tipe_akun', 'Kas & Bank')->orderBy('kode_akun')->get();

@@ -78,12 +78,23 @@
                 <div class="form-row mt-3">
                     <div class="form-group" style="flex: 1;">
                         <label for="id_pemasok" class="form-label">Dibayar Ke (Pemasok) - Opsional</label>
-                        <select class="form-select" id="id_pemasok" name="id_pemasok">
-                            <option value="">-- Umum --</option>
+                        <select class="form-select" id="id_pemasok" name="id_pemasok" onchange="updateSaldoDisplay()">
+                            <option value="" data-saldo="0">-- Umum --</option>
                             @foreach($pemasok as $p)
-                                <option value="{{ $p->id_pemasok }}" {{ request('id_pemasok') == $p->id_pemasok ? 'selected' : '' }}>{{ $p->nama_pemasok }}</option>
+                                <option value="{{ $p->id_pemasok }}" 
+                                    data-saldo="{{ $p->saldo_terkini_hutang }}"
+                                    {{ request('id_pemasok') == $p->id_pemasok ? 'selected' : '' }}>
+                                    {{ $p->nama_pemasok }}
+                                </option>
                             @endforeach
                         </select>
+                    </div>
+                    <div class="form-group" style="flex: 1;">
+                        <label class="form-label">Saldo Hutang Saat Ini</label>
+                        <div class="input-group">
+                            <span class="input-group-text">Rp</span>
+                            <input type="text" class="form-control" id="saldo_hutang_display" readonly style="background: #fff8f8; color: #dc3545; font-weight: bold;">
+                        </div>
                     </div>
                     <div class="form-group" style="flex: 2;">
                         <label for="keterangan" class="form-label">Keterangan <span class="text-danger">*</span></label>
@@ -292,8 +303,18 @@
         document.getElementById('total_display').value = formatRupiah(total);
     }
 
+    function updateSaldoDisplay() {
+        const select = document.getElementById('id_pemasok');
+        const display = document.getElementById('saldo_hutang_display');
+        const selectedOption = select.options[select.selectedIndex];
+        const saldo = parseFloat(selectedOption.getAttribute('data-saldo')) || 0;
+        
+        display.value = new Intl.NumberFormat('id-ID').format(saldo);
+    }
+
     // Init rows
     tambahBaris();
     tambahBaris();
+    updateSaldoDisplay();
 </script>
 @endpush
