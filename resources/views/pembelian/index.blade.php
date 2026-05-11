@@ -49,9 +49,21 @@
                             </td>
                             <td>
                                 <div class="action-buttons">
-                                    <a href="{{ route('pembelian.show', $p->id_pembelian) }}" class="btn btn-sm btn-primary">
-                                        Detail
+                                    <a href="{{ route('pembelian.show', $p->id_pembelian) }}" class="btn btn-sm btn-icon btn-light" title="Detail">
+                                        <span data-feather="eye" style="width: 14px; height: 14px;"></span>
                                     </a>
+                                    @if(auth()->user()->isAdmin() || auth()->user()->isSuperuser())
+                                        <a href="{{ route('pembelian.edit', $p->id_pembelian) }}" class="btn btn-sm btn-icon btn-light" title="Edit">
+                                            <span data-feather="edit-2" style="width: 14px; height: 14px;"></span>
+                                        </a>
+                                        <form action="{{ route('pembelian.destroy', $p->id_pembelian) }}" method="POST" class="d-inline" onsubmit="return confirm('Apakah Anda yakin ingin menghapus transaksi ini? Stok dan jurnal akan disesuaikan.')">
+                                            @csrf
+                                            @method('DELETE')
+                                            <button type="submit" class="btn btn-sm btn-icon btn-light text-danger" title="Hapus">
+                                                <span data-feather="trash-2" style="width: 14px; height: 14px;"></span>
+                                            </button>
+                                        </form>
+                                    @endif
                                 </div>
                             </td>
                         </tr>
