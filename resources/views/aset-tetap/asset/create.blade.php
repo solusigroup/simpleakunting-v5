@@ -58,6 +58,20 @@
                                     <div class="invalid-feedback">{{ $message }}</div>
                                 @enderror
                             </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="akun_pembayaran" class="form-label">Akun Pembayaran (Kredit)</label>
+                                <select class="form-select @error('akun_pembayaran') is-invalid @enderror" id="akun_pembayaran" name="akun_pembayaran" required>
+                                    <option value="">-- Pilih Akun Kas/Bank --</option>
+                                    @foreach($akunKas as $a)
+                                        <option value="{{ $a->kode_akun }}" {{ old('akun_pembayaran') == $a->kode_akun ? 'selected' : '' }}>
+                                            {{ $a->kode_akun }} - {{ $a->nama_akun }}
+                                        </option>
+                                    @endforeach
+                                </select>
+                                @error('akun_pembayaran')
+                                    <div class="invalid-feedback">{{ $message }}</div>
+                                @enderror
+                            </div>
                         </div>
 
                         <div class="row">

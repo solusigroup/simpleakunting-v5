@@ -19,6 +19,7 @@ class Produksi extends Model
         'kuantitas_produksi',
         'status',
         'keterangan',
+        'id_jurnal',
     ];
 
     public function bom()

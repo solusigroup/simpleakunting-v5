@@ -8,6 +8,8 @@ use App\Models\Produksi;
 use App\Models\ProduksiDetail;
 use App\Models\Persediaan;
 use App\Models\Cabang;
+use App\Models\Jurnal;
+use App\Models\JurnalDetail;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Auth;
@@ -167,18 +169,41 @@ class ManufacturingController extends Controller
                 'created_at' => now(), 'updated_at' => now()
             ]);
 
-            // Journal Entry (WIP/HPP)
+            // Journal Entry (Production Costing)
             // Debit Persediaan Barang Jadi, Credit Persediaan Bahan Baku
-            // Or Debit WIP, Credit Raw Material -> Debit FG, Credit WIP.
-            // Simplified: Debit Inventory (FG), Credit Inventory (Raw)
-            
-            // Need Accounts
-            $akunPersediaanFG = $fg->akun_persediaan; 
-            // Composite Raw Material Account? Or loop through?
-            // Usually we Credit the Raw Material Inventory Account.
-            
-            // Create Journal
-            // ... (Omitting full Journal logic for brevity, but same pattern as Agriculture)
+            $perusahaan = DB::table('perusahaan')->first();
+            $akunPersediaanDefault = $perusahaan->akun_persediaan ?? '1-10200';
+
+            $jurnal = Jurnal::create([
+                'no_transaksi' => $produksi->no_produksi,
+                'tanggal' => $request->tanggal,
+                'id_cabang' => $request->id_cabang,
+                'deskripsi' => "Produksi #{$produksi->no_produksi}",
+                'sumber_jurnal' => 'Produksi',
+                'is_locked' => 1
+            ]);
+
+            // Debit: Persediaan Barang Jadi
+            JurnalDetail::create([
+                'id_jurnal' => $jurnal->id_jurnal,
+                'kode_akun' => $fg->akun_persediaan ?? $akunPersediaanDefault,
+                'debit' => $totalCost,
+                'kredit' => 0
+            ]);
+
+            // Kredit: Persediaan Bahan Baku (Breakdown per material account)
+            foreach ($bomInfo as $item) {
+                $subtotalCost = $item['qty'] * $item['cost'];
+                JurnalDetail::create([
+                    'id_jurnal' => $jurnal->id_jurnal,
+                    'kode_akun' => $item['material']->akun_persediaan ?? $akunPersediaanDefault,
+                    'debit' => 0,
+                    'kredit' => $subtotalCost
+                ]);
+            }
+
+            // Link Jurnal ke Produksi
+            $produksi->update(['id_jurnal' => $jurnal->id_jurnal]);
 
             DB::commit();
             return redirect()->route('manufacturing.production.index')->with('success', 'Produksi berhasil dicatat.');

@@ -5,7 +5,11 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use App\Models\FixedAsset;
 use App\Models\FixedAssetGroup;
+use App\Models\Akun;
+use App\Models\Jurnal;
+use App\Models\JurnalDetail;
 use Carbon\Carbon;
+use Illuminate\Support\Facades\DB;
 
 class FixedAssetController extends Controller
 {
@@ -23,7 +27,9 @@ class FixedAssetController extends Controller
         $nextId = $lastAsset ? $lastAsset->id + 1 : 1;
         $kodeAset = 'FA-' . str_pad($nextId, 5, '0', STR_PAD_LEFT);
         
-        return view('aset-tetap.asset.create', compact('groups', 'kodeAset'));
+        $akunKas = Akun::where('tipe_akun', 'Kas & Bank')->get();
+        
+        return view('aset-tetap.asset.create', compact('groups', 'kodeAset', 'akunKas'));
     }
 
     public function store(Request $request)
@@ -36,16 +42,57 @@ class FixedAssetController extends Controller
             'harga_perolehan' => 'required|numeric|min:0',
             'nilai_residu' => 'required|numeric|min:0',
             'umur_ekonomis_bulan' => 'required|integer|min:1',
+            'akun_pembayaran' => 'required|exists:akun,kode_akun',
         ]);
 
-        $data = $request->all();
-        $data['nilai_buku_saat_ini'] = $data['harga_perolehan'];
-        $data['status'] = 'Aktif';
-        $data['cabang_id'] = session('cabang_id') ?? null;
+        try {
+            DB::beginTransaction();
 
-        FixedAsset::create($data);
+            $group = FixedAssetGroup::findOrFail($request->kelompok_aset_id);
+            $akunAset = $group->akun_aset ?? '1-20100'; // Fallback to a common Fixed Asset account if not set
 
-        return redirect()->route('aset-tetap.index')->with('success', 'Aset tetap berhasil ditambahkan.');
+            $data = $request->all();
+            $data['nilai_buku_saat_ini'] = $data['harga_perolehan'];
+            $data['status'] = 'Aktif';
+            $data['cabang_id'] = session('cabang_id') ?? null;
+
+            // 1. Create Journal
+            $jurnal = Jurnal::create([
+                'no_transaksi' => $request->kode_aset,
+                'tanggal' => $request->tanggal_perolehan,
+                'id_cabang' => $data['cabang_id'],
+                'deskripsi' => "Perolehan Aset Tetap: {$request->nama_aset}",
+                'sumber_jurnal' => 'Aset Tetap',
+                'is_locked' => 1
+            ]);
+
+            // Debit: Akun Aset Tetap
+            JurnalDetail::create([
+                'id_jurnal' => $jurnal->id_jurnal,
+                'kode_akun' => $akunAset,
+                'debit' => $request->harga_perolehan,
+                'kredit' => 0
+            ]);
+
+            // Kredit: Kas/Bank
+            JurnalDetail::create([
+                'id_jurnal' => $jurnal->id_jurnal,
+                'kode_akun' => $request->akun_pembayaran,
+                'debit' => 0,
+                'kredit' => $request->harga_perolehan
+            ]);
+
+            // 2. Create Asset Record
+            $data['id_jurnal'] = $jurnal->id_jurnal;
+            FixedAsset::create($data);
+
+            DB::commit();
+            return redirect()->route('aset-tetap.index')->with('success', 'Aset tetap dan jurnal perolehan berhasil disimpan.');
+
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return back()->with('error', 'Gagal menyimpan aset tetap: ' . $e->getMessage())->withInput();
+        }
     }
 
     public function edit($id)
