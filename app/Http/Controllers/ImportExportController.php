@@ -22,7 +22,7 @@ class ImportExportController extends Controller
         'anggota' => [
             'label' => 'Anggota Koperasi',
             'table' => 'anggota',
-            'columns' => ['no_anggota', 'nik', 'nama_lengkap', 'alamat', 'telepon', 'email', 'tanggal_daftar', 'status']
+            'columns' => ['no_anggota', 'nik', 'nama_lengkap', 'jenis_kelamin', 'alamat', 'telepon', 'email', 'tanggal_daftar', 'status']
         ],
         'simpanan' => [
             'label' => 'Simpanan',
@@ -37,22 +37,22 @@ class ImportExportController extends Controller
         'pelanggan' => [
             'label' => 'Pelanggan',
             'table' => 'pelanggan',
-            'columns' => ['kode_pelanggan', 'nama_pelanggan', 'alamat', 'telepon', 'email']
+            'columns' => ['nama_pelanggan', 'alamat', 'telepon', 'email', 'saldo_awal_piutang']
         ],
         'pemasok' => [
             'label' => 'Pemasok',
             'table' => 'pemasok',
-            'columns' => ['kode_pemasok', 'nama_pemasok', 'alamat', 'telepon', 'email']
+            'columns' => ['nama_pemasok', 'alamat', 'telepon', 'email', 'saldo_awal_hutang']
         ],
         'persediaan' => [
             'label' => 'Persediaan',
             'table' => 'master_persediaan',
-            'columns' => ['kode_barang', 'nama_barang', 'satuan', 'harga_beli', 'harga_jual', 'stok_awal', 'stok_saat_ini']
+            'columns' => ['kode_barang', 'nama_barang', 'jenis_barang', 'satuan', 'harga_beli', 'harga_jual', 'stok_awal', 'stok_minimum', 'akun_persediaan', 'akun_hpp', 'akun_penjualan']
         ],
         'akun' => [
             'label' => 'Chart of Accounts (COA)',
             'table' => 'akun',
-            'columns' => ['kode_akun', 'nama_akun', 'tipe_akun', 'saldo_normal', 'kategori']
+            'columns' => ['kode_akun', 'nama_akun', 'tipe_akun', 'saldo_normal', 'saldo_awal']
         ],
     ];
 
@@ -171,62 +171,52 @@ class ImportExportController extends Controller
         $config = $this->modules[$module];
         $file = $request->file('file');
         
+        // Define truly required columns to prevent total failure on optional ones
+        $requiredColumns = [
+            'anggota' => ['no_anggota', 'nik', 'nama_lengkap'],
+            'pelanggan' => ['nama_pelanggan'],
+            'pemasok' => ['nama_pemasok'],
+            'persediaan' => ['kode_barang', 'nama_barang'],
+            'akun' => ['kode_akun', 'nama_akun', 'tipe_akun'],
+        ];
+
         try {
             $pathname = $file->getPathname();
             $handle = fopen($pathname, 'r');
-            
-            // Read first line to detect delimiter and handle BOM
             $firstLine = fgets($handle);
-            
-            // Skip BOM if present
             $firstLine = preg_replace('/^\xEF\xBB\xBF/', '', $firstLine);
             
-            // Simple delimiter detection: comma vs semicolon
             $commaCount = substr_count($firstLine, ',');
             $semicolonCount = substr_count($firstLine, ';');
             $delimiter = ($semicolonCount > $commaCount) ? ';' : ',';
             
-            // Parse header from first line
             $header = str_getcsv($firstLine, $delimiter);
-            
-            // Clean headers: trim and remove any remaining invisible characters
             $header = array_map(function($h) {
-                // Remove non-printable characters and trim
                 return trim(preg_replace('/[[:^print:]]/', '', $h));
             }, $header);
 
-            // Column aliases: map old/alternative column names to current DB column names
             $columnAliases = [
                 'stok_akhir' => 'stok_saat_ini',
-                'kode_pelanggan' => 'kode_pelanggan',
+                'kode_pelanggan' => 'nama_pelanggan', // Mapping old code to name if applicable
+                'jenis' => 'jenis_barang',
+                'kode' => 'kode_barang',
+                'nama' => 'nama_barang',
             ];
 
-            // Remap headers using aliases
             $header = array_map(function($h) use ($columnAliases) {
                 return $columnAliases[$h] ?? $h;
             }, $header);
             
-            // Validate header
             $expectedColumns = $config['columns'];
+            $missingRequired = array_diff($requiredColumns[$module] ?? [], $header);
             
-            // Check if all expected columns are present
-            $missingColumns = array_diff($expectedColumns, $header);
-            $extraColumns = array_diff($header, $expectedColumns);
-            
-            if (!empty($missingColumns)) {
+            if (!empty($missingRequired)) {
                 fclose($handle);
-                $errorMsg = 'Kolom CSV tidak sesuai.';
-                $errorMsg .= ' Kolom yang kurang: ' . implode(', ', $missingColumns) . '.';
-                if (!empty($extraColumns)) {
-                    $errorMsg .= ' Kolom tidak dikenal: ' . implode(', ', $extraColumns) . '.';
-                }
-                $errorMsg .= ' Kolom yang diharapkan: ' . implode(', ', $expectedColumns) . '.';
-                return back()->with('error', $errorMsg);
+                return back()->with('error', 'Gagal Impor: Kolom wajib berikut tidak ditemukan: ' . implode(', ', $missingRequired));
             }
 
             DB::beginTransaction();
 
-            // Clear table if replace mode
             if ($request->mode === 'replace') {
                 DB::table($config['table'])->truncate();
             }
@@ -237,50 +227,39 @@ class ImportExportController extends Controller
 
             while (($row = fgetcsv($handle, 0, $delimiter)) !== false) {
                 $lineNumber++;
-                
-                // Skip empty rows
-                if (empty(array_filter($row))) {
-                    continue;
-                }
+                if (empty(array_filter($row))) continue;
 
                 try {
                     $data = [];
                     foreach ($header as $i => $col) {
-                        // Only include columns that are in the expected list
-                        if (!in_array($col, $expectedColumns)) {
-                            continue;
-                        }
+                        if (!in_array($col, $expectedColumns)) continue;
+                        
                         $value = trim($row[$i] ?? '');
-                        
-                        // Handle empty values
-                        if ($value === '' || $value === 'contoh_' . $col) {
-                            // Default numeric columns to 0 instead of null
-                            if (preg_match('/stok|harga|jumlah|saldo|total|bunga|tenor|provisi|biaya/i', $col)) {
-                                $value = 0;
-                            } else {
-                                $value = null;
-                            }
+                        if ($value === '' || strpos($value, 'contoh_') === 0) {
+                            $value = preg_match('/stok|harga|jumlah|saldo|total|bunga|tenor|provisi|biaya/i', $col) ? 0 : null;
                         }
                         
-                        // Convert date formats (DD-MM-YYYY or DD/MM/YYYY) to MySQL format (YYYY-MM-DD)
                         if ($value !== null && preg_match('/tanggal|date/i', $col)) {
                             if (preg_match('/^(\d{2})[\/\-](\d{2})[\/\-](\d{4})$/', $value, $matches)) {
-                                // DD-MM-YYYY or DD/MM/YYYY
                                 $value = $matches[3] . '-' . $matches[2] . '-' . $matches[1];
-                            } elseif (preg_match('/^(\d{4})[\/\-](\d{2})[\/\-](\d{2})$/', $value)) {
-                                // Already in YYYY-MM-DD format, keep as is
                             }
                         }
                         
                         $data[$col] = $value;
                     }
 
+                    // Auto-sync current balances/stock with initial ones if current is missing or zero
+                    if ($module === 'pelanggan') {
+                        $data['saldo_terkini_piutang'] = $data['saldo_awal_piutang'] ?? 0;
+                    } elseif ($module === 'pemasok') {
+                        $data['saldo_terkini_hutang'] = $data['saldo_awal_hutang'] ?? 0;
+                    } elseif ($module === 'persediaan') {
+                        $data['stok_saat_ini'] = $data['stok_awal'] ?? 0;
+                    }
 
-                    // Add timestamps
                     $data['created_at'] = now();
                     $data['updated_at'] = now();
 
-                    // Insert based on module specific handling
                     $this->insertRecord($module, $config['table'], $data);
                     $imported++;
                 } catch (\Exception $e) {
@@ -292,21 +271,22 @@ class ImportExportController extends Controller
 
             if (count($errors) > 0 && $imported === 0) {
                 DB::rollBack();
-                return back()->with('error', 'Import gagal. Errors: ' . implode('; ', array_slice($errors, 0, 5)));
+                return back()->with('error', 'Import gagal total. Kesalahan pertama: ' . $errors[0]);
             }
 
             DB::commit();
 
+            $status = count($errors) > 0 ? 'warning' : 'success';
             $message = "Berhasil impor {$imported} data {$config['label']}.";
             if (count($errors) > 0) {
-                $message .= " Ada " . count($errors) . " baris yang gagal diimpor.";
+                $message .= " Namun, " . count($errors) . " baris gagal (Cek limit 5 error pertama: " . implode('; ', array_slice($errors, 0, 5)) . ")";
             }
 
-            return back()->with('success', $message);
+            return back()->with($status, $message);
 
         } catch (\Exception $e) {
-            DB::rollBack();
-            return back()->with('error', 'Gagal membaca file: ' . $e->getMessage());
+            if (DB::transactionLevel() > 0) DB::rollBack();
+            return back()->with('error', 'Sistem error saat membaca file: ' . $e->getMessage());
         }
     }
 
@@ -315,53 +295,45 @@ class ImportExportController extends Controller
      */
     protected function insertRecord(string $module, string $table, array $data)
     {
-        // Remove sample data markers
+        // Remove sample data markers (already handled in loop, but here for safety)
         foreach ($data as $key => $value) {
             if (is_string($value) && strpos($value, 'contoh_') === 0) {
                 $data[$key] = null;
             }
         }
 
-        // Module-specific handling
+        // Module-specific handling & Defaults for non-nullable fields
         switch ($module) {
             case 'anggota':
-                // Check for duplicate NIK or no_anggota
+                $data['jenis_kelamin'] = $data['jenis_kelamin'] ?? 'L';
+                $data['tanggal_daftar'] = $data['tanggal_daftar'] ?? date('Y-m-d');
+                $data['status'] = $data['status'] ?? 'aktif';
+
                 if (!empty($data['nik'])) {
-                    $exists = DB::table($table)->where('nik', $data['nik'])->exists();
-                    if ($exists) {
-                        throw new \Exception("NIK {$data['nik']} sudah ada");
+                    if (DB::table($table)->where('nik', $data['nik'])->exists()) {
+                        throw new \Exception("NIK {$data['nik']} sudah terdaftar");
                     }
                 }
                 if (!empty($data['no_anggota'])) {
-                    $exists = DB::table($table)->where('no_anggota', $data['no_anggota'])->exists();
-                    if ($exists) {
-                        throw new \Exception("No Anggota {$data['no_anggota']} sudah ada");
+                    if (DB::table($table)->where('no_anggota', $data['no_anggota'])->exists()) {
+                        throw new \Exception("No Anggota {$data['no_anggota']} sudah terdaftar");
                     }
                 }
                 break;
 
             case 'pelanggan':
-                if (!empty($data['kode_pelanggan'])) {
-                    $exists = DB::table($table)->where('kode_pelanggan', $data['kode_pelanggan'])->exists();
-                    if ($exists) {
-                        throw new \Exception("Kode pelanggan {$data['kode_pelanggan']} sudah ada");
-                    }
-                }
+                // Check if already exists by name (optional, but good for gaps)
                 break;
 
             case 'pemasok':
-                if (!empty($data['kode_pemasok'])) {
-                    $exists = DB::table($table)->where('kode_pemasok', $data['kode_pemasok'])->exists();
-                    if ($exists) {
-                        throw new \Exception("Kode pemasok {$data['kode_pemasok']} sudah ada");
-                    }
-                }
                 break;
 
             case 'persediaan':
+                $data['satuan'] = $data['satuan'] ?? 'Pcs';
+                $data['jenis_barang'] = $data['jenis_barang'] ?? 'barang_dagang';
+
                 if (!empty($data['kode_barang'])) {
-                    $exists = DB::table($table)->where('kode_barang', $data['kode_barang'])->exists();
-                    if ($exists) {
+                    if (DB::table($table)->where('kode_barang', $data['kode_barang'])->exists()) {
                         throw new \Exception("Kode barang {$data['kode_barang']} sudah ada");
                     }
                 }
@@ -369,10 +341,11 @@ class ImportExportController extends Controller
 
             case 'akun':
                 if (!empty($data['kode_akun'])) {
-                    $exists = DB::table($table)->where('kode_akun', $data['kode_akun'])->exists();
-                    if ($exists) {
-                        // Update instead of insert
-                        DB::table($table)->where('kode_akun', $data['kode_akun'])->update($data);
+                    if (DB::table($table)->where('kode_akun', $data['kode_akun'])->exists()) {
+                        // Update instead of insert for COA
+                        $updateData = $data;
+                        unset($updateData['created_at']);
+                        DB::table($table)->where('kode_akun', $data['kode_akun'])->update($updateData);
                         return;
                     }
                 }
