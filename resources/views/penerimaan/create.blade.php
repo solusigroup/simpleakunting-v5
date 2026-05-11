@@ -106,28 +106,36 @@
 @push('styles')
 <style>
     .searchable-select { position: relative; width: 100%; }
-    .searchable-select-trigger { display: flex; align-items: center; justify-content: space-between; width: 100%; padding: 0.375rem 0.75rem; font-size: 0.875rem; border: 1px solid var(--color-border, #dee2e6); border-radius: var(--radius-sm, 6px); background: var(--color-bg, #fff); color: var(--color-text, #333); cursor: pointer; transition: all 0.2s; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; min-height: 38px; }
-    .searchable-select-trigger:hover { border-color: var(--color-primary, #8b5cf6); box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
-    .searchable-select-trigger.open { border-color: var(--color-primary, #8b5cf6); box-shadow: 0 0 0 3px rgba(139, 92, 246, 0.15); }
-    .searchable-select-trigger .trigger-text { flex: 1; overflow: hidden; text-overflow: ellipsis; }
+    .searchable-select-trigger { display: flex; align-items: center; justify-content: space-between; width: 100%; padding: 0.5rem 1rem; font-size: 0.875rem; border: 1px solid var(--color-border, #dee2e6); border-radius: 8px; background: var(--color-bg, #fff); color: var(--color-text, #333); cursor: pointer; transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; min-height: 42px; position: relative; }
+    .searchable-select-trigger:hover { border-color: var(--color-primary, #8b5cf6); background: var(--color-bg-hover, #fcfaff); }
+    .searchable-select-trigger.open { border-color: var(--color-primary, #8b5cf6); box-shadow: 0 0 0 4px rgba(139, 92, 246, 0.15); background: #fff; z-index: 1051; }
+    .searchable-select-trigger .trigger-text { flex: 1; overflow: hidden; text-overflow: ellipsis; display: flex; align-items: center; gap: 8px; }
     .searchable-select-trigger .trigger-text.placeholder { color: var(--color-text-muted, #999); }
-    .searchable-select-trigger .trigger-chevron { margin-left: 8px; transition: transform 0.2s; flex-shrink: 0; }
-    .searchable-select-trigger.open .trigger-chevron { transform: rotate(180deg); }
-    .searchable-select-dropdown { display: none; position: absolute; top: calc(100% + 4px); left: 0; right: 0; background: var(--color-bg-card, #fff); border: 1px solid var(--color-border, #dee2e6); border-radius: var(--radius-sm, 6px); box-shadow: 0 8px 24px rgba(0,0,0,0.15); z-index: 1050; max-height: 280px; overflow: hidden; }
+    .searchable-select-trigger .trigger-chevron { margin-left: 8px; transition: transform 0.3s; flex-shrink: 0; color: var(--color-text-muted, #666); }
+    .searchable-select-trigger.open .trigger-chevron { transform: rotate(180deg); color: var(--color-primary, #8b5cf6); }
+    
+    .searchable-select-dropdown { display: none; position: absolute; top: calc(100% + 8px); left: 0; right: 0; background: #fff; border: 1px solid var(--color-border, #dee2e6); border-radius: 10px; box-shadow: 0 12px 30px rgba(0,0,0,0.15); z-index: 1050; max-height: 320px; overflow: hidden; animation: selectFadeIn 0.2s ease-out; }
+    @keyframes selectFadeIn { from { opacity: 0; transform: translateY(-10px); } to { opacity: 1; transform: translateY(0); } }
     .searchable-select-dropdown.show { display: block; }
-    .searchable-select-search { padding: 8px; border-bottom: 1px solid var(--color-border, #eee); position: sticky; top: 0; background: var(--color-bg-card, #fff); z-index: 1; }
-    .searchable-select-search input { width: 100%; padding: 6px 10px; border: 1px solid var(--color-border, #dee2e6); border-radius: var(--radius-sm, 4px); font-size: 0.8125rem; outline: none; transition: border-color 0.2s; background: var(--color-bg, #fff); color: var(--color-text, #333); }
-    .searchable-select-search input:focus { border-color: var(--color-primary, #8b5cf6); box-shadow: 0 0 0 2px rgba(139, 92, 246, 0.1); }
-    .searchable-select-options { max-height: 220px; overflow-y: auto; padding: 4px 0; }
-    .searchable-select-option { padding: 7px 12px; cursor: pointer; font-size: 0.8125rem; color: var(--color-text, #333); transition: background 0.15s; }
-    .searchable-select-option:hover { background: rgba(139, 92, 246, 0.08); }
-    .searchable-select-option.selected { background: rgba(139, 92, 246, 0.12); color: var(--color-primary, #8b5cf6); font-weight: 600; }
+    
+    .searchable-select-search { padding: 12px; border-bottom: 1px solid #f0f0f0; position: sticky; top: 0; background: #f8f9fa; z-index: 1; }
+    .searchable-select-search input { width: 100%; padding: 8px 12px; border: 1px solid #e0e0e0; border-radius: 8px; font-size: 0.875rem; outline: none; transition: all 0.2s; background: #fff; color: var(--color-text, #333); }
+    .searchable-select-search input:focus { border-color: var(--color-primary, #8b5cf6); box-shadow: 0 0 0 3px rgba(139, 92, 246, 0.1); background: #fff; }
+    
+    .searchable-select-options { max-height: 240px; overflow-y: auto; padding: 6px 0; scrollbar-width: thin; scrollbar-color: #e0e0e0 transparent; }
+    .searchable-select-options::-webkit-scrollbar { width: 6px; }
+    .searchable-select-options::-webkit-scrollbar-thumb { background: #e0e0e0; border-radius: 10px; }
+    
+    .searchable-select-option { padding: 10px 16px; cursor: pointer; font-size: 0.875rem; color: var(--color-text, #444); transition: all 0.15s; display: flex; align-items: center; justify-content: space-between; }
+    .searchable-select-option:hover { background: #f5f3ff; color: var(--color-primary, #8b5cf6); padding-left: 20px; }
+    .searchable-select-option.selected { background: #f5f3ff; color: var(--color-primary, #8b5cf6); font-weight: 600; }
     .searchable-select-option.hidden { display: none; }
-    .searchable-select-empty { padding: 12px; text-align: center; color: var(--color-text-muted, #999); font-size: 0.8125rem; }
+    .searchable-select-empty { padding: 20px; text-align: center; color: var(--color-text-muted, #999); font-size: 0.875rem; }
 
     /* Fix clipping in table-responsive */
     .table-responsive { overflow: visible !important; }
-    .data-table td { overflow: visible !important; position: relative; }
+    .data-table td { overflow: visible !important; position: relative; padding: 12px 8px !important; }
+    .data-table tr:hover { background-color: transparent !important; }
 </style>
 @endpush
 
@@ -154,8 +162,11 @@
                     <div class="searchable-select" id="ss_${currentRow}">
                         <input type="hidden" name="details[${currentRow}][kode_akun]" id="ss_input_${currentRow}" required>
                         <div class="searchable-select-trigger" id="ss_trigger_${currentRow}">
-                            <span class="trigger-text placeholder">🔍 Cari akun...</span>
-                            <svg class="trigger-chevron" xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg>
+                            <div class="trigger-text placeholder">
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color: #8b5cf6; opacity: 0.7;"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+                                <span>Cari akun...</span>
+                            </div>
+                            <svg class="trigger-chevron" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg>
                         </div>
                         <div class="searchable-select-dropdown" id="ss_dropdown_${currentRow}">
                             <div class="searchable-select-search">
@@ -226,7 +237,10 @@
 
             hiddenInput.value = option.dataset.value;
             const triggerText = trigger.querySelector('.trigger-text');
-            triggerText.textContent = option.dataset.label;
+            triggerText.innerHTML = `
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color: #8b5cf6;"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+                <span>${option.dataset.label}</span>
+            `;
             triggerText.classList.remove('placeholder');
 
             dropdown.classList.remove('show');
