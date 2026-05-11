@@ -1128,11 +1128,16 @@ class LaporanController extends Controller
                 ->whereNull('jurnal_umum.id_jurnal')
                 ->count();
 
-            return view('audit.neraca', compact(
-                'perTanggal', 'unbalancedData', 'invalidAccounts', 'allowedTypes',
-                'totalAset', 'totalKewajiban', 'totalEkuitas', 'labaBerjalan', 
-                'totalPasiva', 'gap', 'orphanedDetails'
-            ));
+            return response()->json([
+                'perTanggal' => $perTanggal,
+                'unbalancedCount' => count($unbalancedData),
+                'invalidCount' => count($invalidAccounts),
+                'totalAset' => $totalAset,
+                'totalKewajiban' => $totalKewajiban,
+                'totalEkuitas' => $totalEkuitas,
+                'labaBerjalan' => $labaBerjalan,
+                'gap' => $gap
+            ]);
         } catch (\Exception $e) {
             \Log::error('Audit Neraca Error: ' . $e->getMessage());
             return response()->json(['error' => $e->getMessage(), 'trace' => $e->getTraceAsString()], 500);
