@@ -31,6 +31,7 @@ use App\Http\Controllers\UnitUsahaController;
 use App\Http\Controllers\KasController;
 use App\Http\Controllers\CabangSessionController;
 use App\Http\Controllers\PosController;
+use App\Http\Controllers\ReturController;
 use App\Http\Controllers\GuideController;
 
 /*
@@ -145,6 +146,18 @@ Route::middleware([
             Route::resource('jurnal', JurnalController::class);
             Route::resource('penerimaan', PenerimaanController::class);
             Route::resource('pembayaran', PembayaranController::class);
+
+            // RETUR
+            Route::get('retur/penjualan', [ReturController::class, 'indexPenjualan'])->name('retur.penjualan.index');
+            Route::get('retur/penjualan/create', [ReturController::class, 'createPenjualan'])->name('retur.penjualan.create');
+            Route::post('retur/penjualan', [ReturController::class, 'storePenjualan'])->name('retur.penjualan.store');
+            Route::get('retur/penjualan/{id}', [ReturController::class, 'showPenjualan'])->name('retur.penjualan.show');
+
+            Route::get('retur/pembelian', [ReturController::class, 'indexPembelian'])->name('retur.pembelian.index');
+            Route::get('retur/pembelian/create', [ReturController::class, 'createPembelian'])->name('retur.pembelian.create');
+            Route::post('retur/pembelian', [ReturController::class, 'storePembelian'])->name('retur.pembelian.store');
+            Route::get('retur/pembelian/{id}', [ReturController::class, 'showPembelian'])->name('retur.pembelian.show');
+
             Route::get('kas', [KasController::class, 'index'])->name('kas.index');
             Route::get('kas/transfer', [KasController::class, 'transfer'])->name('kas.transfer');
             Route::post('kas/transfer', [KasController::class, 'storeTransfer'])->name('kas.storeTransfer');

@@ -649,6 +649,21 @@
                                 Jurnal Kas (KM/KK)
                             </a>
                         </li>
+                        <li class="sidebar-nav-item mt-2">
+                            <span class="sidebar-nav-link text-secondary small">🔄 Retur</span>
+                        </li>
+                        <li class="sidebar-nav-item">
+                            <a class="sidebar-nav-link {{ request()->routeIs('retur.penjualan.*') ? 'active' : '' }}" href="{{ route('retur.penjualan.index') }}">
+                                <span data-feather="corner-up-left"></span>
+                                Retur Penjualan
+                            </a>
+                        </li>
+                        <li class="sidebar-nav-item">
+                            <a class="sidebar-nav-link {{ request()->routeIs('retur.pembelian.*') ? 'active' : '' }}" href="{{ route('retur.pembelian.index') }}">
+                                <span data-feather="corner-up-right"></span>
+                                Retur Pembelian
+                            </a>
+                        </li>
                     </ul>
                 </div>
             </div>
