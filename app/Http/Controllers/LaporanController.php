@@ -1133,25 +1133,28 @@ class LaporanController extends Controller
             $masterAccounts = Akun::pluck('kode_akun')->toArray();
             $missingMasterAccounts = collect($usedAccounts)->diff($masterAccounts);
 
-            // 6. Detailed Account Balances (Optimized)
-            $accountBalances = DB::table('jurnal_detail')
-                ->join('akun', 'jurnal_detail.kode_akun', '=', 'akun.kode_akun')
-                ->join('jurnal_umum', 'jurnal_detail.id_jurnal', '=', 'jurnal_umum.id_jurnal')
-                ->where('jurnal_umum.tanggal', '<=', $perTanggal)
-                ->select(
-                    'akun.kode_akun', 
-                    'akun.nama_akun', 
-                    'akun.tipe_akun', 
-                    'akun.saldo_normal',
-                    DB::raw('SUM(debit) as debit'), 
-                    DB::raw('SUM(kredit) as kredit')
-                )
-                ->groupBy('akun.kode_akun', 'akun.nama_akun', 'akun.tipe_akun', 'akun.saldo_normal')
-                ->get()
-                ->map(function($item) {
-                    $item->balance = ($item->saldo_normal == 'Debit') ? ($item->debit - $item->kredit) : ($item->kredit - $item->debit);
-                    return $item;
-                });
+            // 6. Detailed Account Balances (Safe Collection Approach)
+            $details = JurnalDetail::whereHas('jurnal', function($q) use ($perTanggal) {
+                $q->where('tanggal', '<=', $perTanggal);
+            })->get();
+
+            $accountBalances = $details->groupBy('kode_akun')->map(function($rows, $kode) {
+                $akun = Akun::where('kode_akun', $kode)->first();
+                if (!$akun) return null;
+                
+                $d = $rows->sum('debit');
+                $k = $rows->sum('kredit');
+                $balance = ($akun->saldo_normal == 'Debit') ? ($d - $k) : ($k - $d);
+                
+                return (object)[
+                    'kode_akun' => $kode,
+                    'nama_akun' => $akun->nama_akun,
+                    'tipe_akun' => $akun->tipe_akun,
+                    'debit' => $d,
+                    'kredit' => $k,
+                    'balance' => $balance
+                ];
+            })->filter()->values();
 
             return view('audit.neraca', compact(
                 'perTanggal', 'unbalancedData', 'invalidAccounts', 'allowedTypes',
