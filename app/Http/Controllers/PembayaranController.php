@@ -85,6 +85,7 @@ class PembayaranController extends Controller
                 'no_transaksi' => $noTransaksi,
                 'tanggal' => $request->tanggal,
                 'deskripsi' => $request->keterangan,
+                'id_pemasok' => $request->id_pemasok,
                 'sumber_jurnal' => 'Pengeluaran Kas',
                 'is_locked' => 0
             ]);

@@ -271,6 +271,17 @@ class JurnalController extends Controller
                 'keterangan' => $request->deskripsi
             ]);
 
+            // Produksi (Manufacturing)
+            DB::table('produksi')->where('id_jurnal', $jurnal->id_jurnal)->update([
+                'tanggal' => $request->tanggal,
+                'keterangan' => $request->deskripsi
+            ]);
+
+            // Fixed Assets (Perolehan/Disposal)
+            DB::table('fixed_assets')->where('id_jurnal', $jurnal->id_jurnal)->update([
+                'tanggal_perolehan' => $request->tanggal,
+            ]);
+
             DB::commit();
             return redirect()->route('jurnal.index')->with('success', 'Jurnal berhasil diupdate.');
         } catch (\Exception $e) {
@@ -287,12 +298,34 @@ class JurnalController extends Controller
             // Cek periode tutup buku
             $this->validatePeriodOpen($jurnal->tanggal);
 
+            // 1. Revert Pelanggan Piutang if Receipt
+            if ($jurnal->sumber_jurnal === 'Penerimaan Kas' && $jurnal->id_pelanggan) {
+                $totalPiutang = $jurnal->details()
+                    ->whereHas('akun', function($q) { $q->where('tipe_akun', 'Piutang'); })
+                    ->sum('kredit');
+                if ($totalPiutang > 0) {
+                    Pelanggan::where('id_pelanggan', $jurnal->id_pelanggan)->increment('saldo_terkini_piutang', $totalPiutang);
+                }
+            }
+
+            // 2. Revert Pemasok Hutang if Payment
+            if ($jurnal->sumber_jurnal === 'Pengeluaran Kas' && $jurnal->id_pemasok) {
+                $totalHutang = $jurnal->details()
+                    ->whereHas('akun', function($q) { $q->where('tipe_akun', 'Utang Usaha'); })
+                    ->sum('debit');
+                if ($totalHutang > 0) {
+                    Pemasok::where('id_pemasok', $jurnal->id_pemasok)->increment('saldo_terkini_hutang', $totalHutang);
+                }
+            }
+
             // Sinkronisasi dengan modul terkait (Unpost)
             DB::table('penjualan')->where('id_jurnal', $jurnal->id_jurnal)->update(['id_jurnal' => null]);
             DB::table('pembelian')->where('id_jurnal', $jurnal->id_jurnal)->update(['id_jurnal' => null]);
             DB::table('simpanan')->where('id_jurnal', $jurnal->id_jurnal)->update(['id_jurnal' => null]);
             DB::table('pinjaman')->where('id_jurnal_pencairan', $jurnal->id_jurnal)->update(['id_jurnal_pencairan' => null]);
             DB::table('pinjaman_angsuran')->where('id_jurnal', $jurnal->id_jurnal)->update(['id_jurnal' => null]);
+            DB::table('produksi')->where('id_jurnal', $jurnal->id_jurnal)->update(['id_jurnal' => null]);
+            DB::table('fixed_assets')->where('id_jurnal', $jurnal->id_jurnal)->update(['id_jurnal' => null]);
 
             // Hapus Detail
             $jurnal->details()->delete();

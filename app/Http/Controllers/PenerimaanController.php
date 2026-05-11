@@ -77,6 +77,7 @@ class PenerimaanController extends Controller
                 'no_transaksi' => $noTransaksi,
                 'tanggal' => $request->tanggal,
                 'deskripsi' => $request->keterangan,
+                'id_pelanggan' => $request->id_pelanggan,
                 'sumber_jurnal' => 'Penerimaan Kas',
                 'is_locked' => 0
             ]);
