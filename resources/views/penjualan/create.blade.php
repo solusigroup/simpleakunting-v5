@@ -175,18 +175,19 @@
 
 @push('scripts')
 <script>
-    // Ensure barangData is an array
-    let barangData = {!! json_encode($barang) !!};
+    // Robustly convert to array using Object.values
+    let rawBarang = {!! json_encode($barang) !!};
+    let barangData = Array.isArray(rawBarang) ? rawBarang : Object.values(rawBarang);
     let rowCount = 0;
 
     // Pre-calculate options HTML once for performance
     let globalOptionsHtml = '';
-    if (Array.isArray(barangData)) {
+    if (barangData && barangData.length > 0) {
         globalOptionsHtml = barangData.map(b => {
-            const label = `${b.kode_barang} - ${b.nama_barang} (Stok: ${b.stok_saat_ini || 0})`;
+            const label = `${b.kode_barang || ''} - ${b.nama_barang || ''} (Stok: ${b.stok_saat_ini || 0})`;
             return `<div class="searchable-select-option" 
                         data-value="${b.id_barang}" 
-                        data-label="${b.kode_barang} - ${b.nama_barang}"
+                        data-label="${b.kode_barang || ''} - ${b.nama_barang || ''}"
                         data-harga="${b.harga_jual || 0}"
                         data-barcode="${b.barcode || ''}"
                         data-kode="${b.kode_barang || ''}">${label}</div>`;
@@ -216,7 +217,7 @@
                                 <input type="text" placeholder="Ketik kode atau nama barang..." id="ss_search_${currentRow}" autocomplete="off">
                             </div>
                             <div class="searchable-select-options" id="ss_options_${currentRow}">
-                                ${globalOptionsHtml}
+                                ${globalOptionsHtml || '<div class="searchable-select-empty">Data persediaan tidak ditemukan</div>'}
                             </div>
                         </div>
                     </div>
@@ -356,7 +357,7 @@
     });
 
     function processBarcode(code) {
-        if (!Array.isArray(barangData)) return;
+        if (!barangData || barangData.length === 0) return;
         let barang = barangData.find(b => (b.barcode === code) || (b.kode_barang === code));
         
         if (barang) {
