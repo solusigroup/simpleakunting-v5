@@ -172,6 +172,18 @@
                         {{ $orphanedDetails }} Record {{ $orphanedDetails > 0 ? '⚠️' : '✅' }}
                     </span>
                 </div>
+                
+                <hr>
+                
+                <div class="d-flex justify-content-between">
+                    <span>Integritas Total Debit vs Kredit (Seluruh DB):</span>
+                    <span class="fw-bold {{ $grandDiff > 0.01 ? 'text-danger' : 'text-success' }}">
+                        {{ $grandDiff > 0.01 ? 'Selisih Rp '.number_format($grandDiff, 2) : 'Balance ✅' }}
+                    </span>
+                </div>
+            </div>
+        </div>
+
     <!-- Missing Master Accounts Alert -->
     @if(count($missingMasterAccounts) > 0)
     <div class="row mt-3">

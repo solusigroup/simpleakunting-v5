@@ -1130,15 +1130,18 @@ class LaporanController extends Controller
 
             // 5. Missing Master Accounts
             $usedAccounts = DB::table('jurnal_detail')->distinct()->pluck('kode_akun');
-            // Temporarily disabled to find 500 cause
-            $missingMasterAccounts = collect([]);
-            $accountBalances = collect([]);
+            // 5. Grand Integrity Check (Total Debit vs Total Kredit in whole DB)
+            $grandTotals = DB::table('jurnal_detail')
+                ->select(DB::raw('SUM(debit) as td'), DB::raw('SUM(kredit) as tk'))
+                ->first();
+            
+            $grandDiff = abs(($grandTotals->td ?? 0) - ($grandTotals->tk ?? 0));
 
             return view('audit.neraca', compact(
                 'perTanggal', 'unbalancedData', 'invalidAccounts', 'allowedTypes',
                 'totalAset', 'totalKewajiban', 'totalEkuitas', 'labaBerjalan', 
                 'totalPasiva', 'gap', 'orphanedDetails', 'missingMasterAccounts',
-                'accountBalances'
+                'accountBalances', 'grandDiff'
             ));
         } catch (\Exception $e) {
             return "Audit Error: " . $e->getMessage();
