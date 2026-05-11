@@ -40,7 +40,6 @@
         .searchable-select-option.hidden { display: none; }
         .searchable-select-empty { padding: 20px; text-align: center; color: #999; font-size: 0.875rem; }
 
-        /* Table responsive fix */
         .table-responsive { overflow: visible !important; }
         td { position: relative; }
     </style>
@@ -176,8 +175,23 @@
 
 @push('scripts')
 <script>
-    let barangData = @json($barang);
+    // Ensure barangData is an array
+    let barangData = {!! json_encode($barang) !!};
     let rowCount = 0;
+
+    // Pre-calculate options HTML once for performance
+    let globalOptionsHtml = '';
+    if (Array.isArray(barangData)) {
+        globalOptionsHtml = barangData.map(b => {
+            const label = `${b.kode_barang} - ${b.nama_barang} (Stok: ${b.stok_saat_ini || 0})`;
+            return `<div class="searchable-select-option" 
+                        data-value="${b.id_barang}" 
+                        data-label="${b.kode_barang} - ${b.nama_barang}"
+                        data-harga="${b.harga_jual || 0}"
+                        data-barcode="${b.barcode || ''}"
+                        data-kode="${b.kode_barang || ''}">${label}</div>`;
+        }).join('');
+    }
 
     function formatRupiah(angka) {
         return new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR' }).format(angka);
@@ -185,16 +199,6 @@
 
     function tambahBaris() {
         const currentRow = rowCount;
-        let optionsHtml = barangData.map(b => {
-            const label = `${b.kode_barang} - ${b.nama_barang} (Stok: ${b.stok_saat_ini})`;
-            return `<div class="searchable-select-option" 
-                        data-value="${b.id_barang}" 
-                        data-label="${b.kode_barang} - ${b.nama_barang}"
-                        data-harga="${b.harga_jual}"
-                        data-barcode="${b.barcode || ''}"
-                        data-kode="${b.kode_barang}">${label}</div>`;
-        }).join('');
-
         let html = `
             <tr id="row_${currentRow}">
                 <td>
@@ -212,7 +216,7 @@
                                 <input type="text" placeholder="Ketik kode atau nama barang..." id="ss_search_${currentRow}" autocomplete="off">
                             </div>
                             <div class="searchable-select-options" id="ss_options_${currentRow}">
-                                ${optionsHtml}
+                                ${globalOptionsHtml}
                             </div>
                         </div>
                     </div>
@@ -309,7 +313,7 @@
 
         options.forEach(option => {
             const label = option.textContent.toLowerCase();
-            const barcode = option.dataset.barcode.toLowerCase();
+            const barcode = (option.dataset.barcode || '').toLowerCase();
             if (!q || label.includes(q) || barcode.includes(q)) {
                 option.classList.remove('hidden');
                 visibleCount++;
@@ -352,6 +356,7 @@
     });
 
     function processBarcode(code) {
+        if (!Array.isArray(barangData)) return;
         let barang = barangData.find(b => (b.barcode === code) || (b.kode_barang === code));
         
         if (barang) {
