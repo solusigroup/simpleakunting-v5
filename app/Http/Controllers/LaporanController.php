@@ -1130,12 +1130,16 @@ class LaporanController extends Controller
 
             // 5. Missing Master Accounts
             $usedAccounts = DB::table('jurnal_detail')->distinct()->pluck('kode_akun');
-            // 5. Grand Integrity Check (Total Debit vs Total Kredit in whole DB)
+            $masterAccounts = Akun::pluck('kode_akun')->toArray();
+            $missingMasterAccounts = collect($usedAccounts)->diff($masterAccounts);
+
+            // 6. Grand Integrity Check (Total Debit vs Total Kredit in whole DB)
             $grandTotals = DB::table('jurnal_detail')
                 ->select(DB::raw('SUM(debit) as td'), DB::raw('SUM(kredit) as tk'))
                 ->first();
             
             $grandDiff = abs(($grandTotals->td ?? 0) - ($grandTotals->tk ?? 0));
+            $accountBalances = collect([]); // Placeholder to avoid 500
 
             return view('audit.neraca', compact(
                 'perTanggal', 'unbalancedData', 'invalidAccounts', 'allowedTypes',
@@ -1146,6 +1150,54 @@ class LaporanController extends Controller
         } catch (\Exception $e) {
             return "Audit Error: " . $e->getMessage();
         }
+    }
+
+    public function bukuPembantuPiutang(Request $request)
+    {
+        $perTanggal = $request->input('per_tanggal', date('Y-m-d'));
+        $idPelanggan = $request->input('id_pelanggan');
+
+        $pelanggans = Pelanggan::orderBy('nama_pelanggan')->get();
+        
+        $data = [];
+        if ($idPelanggan) {
+            $data = JurnalDetail::where('id_pelanggan', $idPelanggan)
+                ->whereHas('akun', function($q) {
+                    $q->where('tipe_akun', 'Piutang');
+                })
+                ->whereHas('jurnal', function($q) use ($perTanggal) {
+                    $q->where('tanggal', '<=', $perTanggal);
+                })
+                ->with('jurnal')
+                ->get()
+                ->sortBy('jurnal.tanggal');
+        }
+
+        return view('laporan.piutang', compact('pelanggans', 'data', 'perTanggal', 'idPelanggan'));
+    }
+
+    public function bukuPembantuUtang(Request $request)
+    {
+        $perTanggal = $request->input('per_tanggal', date('Y-m-d'));
+        $idPemasok = $request->input('id_pemasok');
+
+        $pemasoks = Pemasok::orderBy('nama_pemasok')->get();
+        
+        $data = [];
+        if ($idPemasok) {
+            $data = JurnalDetail::where('id_pemasok', $idPemasok)
+                ->whereHas('akun', function($q) {
+                    $q->where('tipe_akun', 'Utang Usaha');
+                })
+                ->whereHas('jurnal', function($q) use ($perTanggal) {
+                    $q->where('tanggal', '<=', $perTanggal);
+                })
+                ->with('jurnal')
+                ->get()
+                ->sortBy('jurnal.tanggal');
+        }
+
+        return view('laporan.utang', compact('pemasoks', 'data', 'perTanggal', 'idPemasok'));
     }
 
     private function sumByTypesAudit($types, $perTanggal)

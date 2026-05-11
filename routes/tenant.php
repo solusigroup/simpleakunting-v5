@@ -67,6 +67,8 @@ Route::middleware([
         // Audit Diagnostics (Debug Position)
         Route::get('test-diagnosa', function() { return "Test OK"; });
         Route::get('laporan/diagnosa-neraca', [LaporanController::class, 'checkNeraca'])->name('audit.neraca');
+        Route::get('laporan/buku-pembantu-piutang', [LaporanController::class, 'bukuPembantuPiutang'])->name('laporan.piutang');
+        Route::get('laporan/buku-pembantu-utang', [LaporanController::class, 'bukuPembantuUtang'])->name('laporan.utang');
         
         // =====================================================
         // DASHBOARD - All authenticated users

@@ -773,6 +773,18 @@
                             </a>
                         </li>
                         <li class="sidebar-nav-item">
+                            <a class="sidebar-nav-link {{ request()->routeIs('laporan.piutang') ? 'active' : '' }}" href="{{ route('laporan.piutang') }}">
+                                <span data-feather="users"></span>
+                                Buku Pembantu Piutang
+                            </a>
+                        </li>
+                        <li class="sidebar-nav-item">
+                            <a class="sidebar-nav-link {{ request()->routeIs('laporan.utang') ? 'active' : '' }}" href="{{ route('laporan.utang') }}">
+                                <span data-feather="truck"></span>
+                                Buku Pembantu Utang
+                            </a>
+                        </li>
+                        <li class="sidebar-nav-item">
                             <a class="sidebar-nav-link {{ request()->routeIs('laporan.neraca_lajur') ? 'active' : '' }}" href="{{ route('laporan.neraca_lajur') }}">
                                 <span data-feather="grid"></span>
                                 Neraca Lajur (10 Kolom)
