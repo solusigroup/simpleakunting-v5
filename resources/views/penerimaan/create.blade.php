@@ -105,8 +105,7 @@
 
 @push('styles')
 <style>
-        <style>
-            .searchable-select { position: relative; width: 100%; }
+    .searchable-select { position: relative; width: 100%; }
             .searchable-select-trigger { display: flex; align-items: center; justify-content: space-between; width: 100%; padding: 0.5rem 1rem; font-size: 0.875rem; border: 1px solid var(--color-border, #dee2e6); border-radius: 8px; background: var(--color-bg, #fff); color: var(--color-text, #333); cursor: pointer; transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; min-height: 40px; position: relative; }
             .searchable-select-trigger:hover { border-color: var(--color-primary, #8b5cf6); background: #fcfaff; }
             .searchable-select-trigger.open { border-color: var(--color-primary, #8b5cf6); box-shadow: 0 0 0 4px rgba(139, 92, 246, 0.15); background: #fff; z-index: 1051; }
@@ -133,7 +132,6 @@
             .table-responsive { overflow: visible !important; }
             .data-table td { overflow: visible !important; position: relative; }
             .data-table tr:hover { background-color: transparent !important; }
-        </style>
 </style>
 @endpush
 
