@@ -186,11 +186,10 @@
 
     <!-- CHAPTER 1 -->
     <div class="section">
-        <h2><span class="icon">🚀</span> Chapter 1: Pendahuluan & Konsep Dasar</h2>
-        <p>Simple Akunting v5 adalah sistem informasi akuntansi terpadu yang dirancang khusus untuk memenuhi kebutuhan UMKM di Indonesia dengan standar SAK EP dan KepKemendesa 136/2022. Aplikasi ini mengusung konsep <em>Real-time Multi-Unit Accounting</em>, di mana setiap transaksi yang diinput akan langsung membentuk laporan keuangan tanpa perlu proses posting manual yang rumit.</p>
+        <p>Simple Akunting v5 adalah sistem informasi akuntansi terpadu yang dirancang khusus untuk memenuhi kebutuhan UMKM di Indonesia dengan standar SAK EP dan KepKemendesa 136/2022. Aplikasi ini mengusung konsep <em>Real-time Multi-Unit Accounting</em> dengan antarmuka modern <strong>Pasuruan Emerald Green</strong> yang ergonomis.</p>
         
-        <h3>1.1 Arsitektur Sistem</h3>
-        <p>Aplikasi ini dibangun dengan arsitektur berbasis web yang memungkinkan akses dari berbagai perangkat (Desktop, Tablet, Mobile) secara bersamaan. Keamanan data dijaga melalui enkripsi basis data dan sistem <em>Audit Trail</em> yang mencatat setiap aktivitas pengguna.</p>
+        <h3>1.1 Arsitektur & Aksesibilitas</h3>
+        <p>Aplikasi ini dibangun dengan arsitektur berbasis web yang memungkinkan akses dari berbagai perangkat. Kini mendukung teknologi <strong>Progressive Web App (PWA)</strong>, sehingga Anda dapat menginstal aplikasi langsung di layar utama smartphone atau desktop untuk akses yang lebih cepat tanpa melalui browser.</p>
         
         <div class="tip">
             <strong>Kunci Utama:</strong> Setiap transaksi dalam Simple Akunting v5 mengikuti prinsip <em>Single Entry - Multi Effect</em>. Anda cukup menginput satu bukti transaksi, dan sistem akan mengupdate stok, piutang, hutang, kas, dan jurnal secara otomatis.
@@ -280,14 +279,18 @@
         <h2><span class="icon">💸</span> Chapter 4: Modul Transaksi & Operasional</h2>
         <p>Bab ini membahas alur pencatatan harian yang paling sering digunakan dalam aplikasi.</p>
         
-        <h3>4.1 Alur Penjualan (Accounts Receivable)</h3>
-        <p>Transaksi penjualan dapat dilakukan secara tunai maupun kredit. Saat Anda menyimpan faktur penjualan, sistem melakukan:</p>
+        <h3>4.1 Alur Penjualan & Pencarian Barang</h3>
+        <p>Transaksi penjualan kini lebih cepat dengan fitur <strong>Searchable Dropdown</strong>. Anda cukup mengetikkan nama barang atau barcode, dan sistem akan langsung memfilter pilihan yang tersedia. Saat Anda menyimpan faktur penjualan, sistem melakukan:</p>
         <ol>
             <li>Debit Kas/Piutang.</li>
             <li>Kredit Pendapatan Penjualan.</li>
             <li>Debit Beban Pokok Penjualan (HPP).</li>
             <li>Kredit Persediaan (Stok Berkurang).</li>
         </ol>
+
+        <div class="tip">
+            <strong>Info Ritase:</strong> Jika Anda menggunakan modul Ritase, pastikan data telah melalui proses <strong>Approval</strong>. Hanya data Ritase yang disetujui yang akan masuk ke modul penagihan dan laporan pendapatan.
+        </div>
 
         <h3>4.2 Alur Pembelian (Accounts Payable)</h3>
         <p>Pencatatan barang masuk dari supplier. Penting untuk selalu melampirkan nomor faktur fisik dari supplier ke dalam sistem untuk memudahkan rekonsiliasi utang di akhir bulan.</p>
@@ -370,6 +373,9 @@
         
         <h3>10.2 Laporan Laba Rugi</h3>
         <p>Menampilkan performa operasional. Apakah bisnis Anda menghasilkan laba atau menderita rugi dalam periode tertentu.</p>
+
+        <h3>10.3 Diagnosa & Integritas Data</h3>
+        <p>Fitur <strong>Diagnosa Neraca</strong> memungkinkan Anda untuk melakukan audit mandiri terhadap kesehatan data. Alat ini mendeteksi jurnal yang tidak seimbang, akun yang belum terpetakan, serta potensi error database lainnya untuk memastikan laporan Anda 100% valid.</p>
     </div>
 
     <!-- CHAPTER 11 -->
@@ -378,7 +384,7 @@
         <p>Keamanan data dan integritas periode akuntansi dikelola di sini.</p>
         
         <h3>11.1 User & Role Management</h3>
-        <p>Tentukan hak akses secara spesifik. Misalnya: Admin Cabang A tidak boleh melihat data Cabang B.</p>
+        <p>Tentukan hak akses secara spesifik. Akun <strong>Superadmin</strong> memiliki proteksi khusus untuk menjaga integritas sistem dari modifikasi yang tidak diinginkan.</p>
         
         <h3>11.2 Tutup Buku (Closing)</h3>
         <p>Lakukan tutup buku setiap akhir tahun. Proses ini akan mengenolkan akun-akun pendapatan dan beban, lalu memindahkan selisihnya ke akun Laba Ditahan (Retained Earnings).</p>

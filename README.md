@@ -7,7 +7,15 @@
 
 Sistem Akuntansi Terpadu berbasis Laravel dengan dukungan multi-bisnis: Dagang, Manufaktur, Pertanian (PSAK 69), dan Koperasi Simpan Pinjam.
 
-## 🌟 Fitur Utama
+## 🌟 Fitur Utama & Pemutakhiran Terbaru
+
+### 🆕 Update v5.1+
+- **📱 PWA Support**: Aplikasi kini dapat diinstal langsung di smartphone dan desktop sebagai Progressive Web App (PWA).
+- **🔍 Diagnosa Neraca**: Alat audit otomatis untuk mendeteksi jurnal tidak balance dan integritas data secara real-time.
+- **⚡ Searchable Dropdown**: Integrasi Tom Select untuk pencarian barang dan pelanggan yang super cepat dan akurat.
+- **✅ Ritase Approval**: Alur persetujuan operasional yang sinkron dengan modul penagihan dan laporan.
+- **🎨 Pasuruan Emerald Theme**: Antarmuka baru bertema "Bunga Sedap Malam" yang lebih elegan dan premium.
+- **🛡️ Superadmin Protection**: Keamanan berlapis untuk akun pengelola sistem utama.
 
 ### 📊 Akuntansi Dasar - Base On SAK EP; KepKemendesa 136/2022
 - **Manajemen Akun (COA)** - Chart of Accounts dengan template standar per jenis usaha

@@ -41,6 +41,26 @@
                 <div class="card-body p-4 p-md-5">
                     <h2 class="fw-bold mb-4">🚀 Pendahuluan</h2>
                     <p class="lead text-secondary">Selamat datang di Panduan Pengoperasian Simple Akunting v5. Aplikasi ini dirancang untuk memudahkan pengelolaan keuangan bisnis Anda dengan standar akuntansi yang benar namun tetap mudah digunakan.</p>
+                    <div class="row g-3 mb-4">
+                        <div class="col-md-4">
+                            <div class="p-3 rounded-4 border border-primary border-opacity-25 bg-primary bg-opacity-5 h-100">
+                                <h6 class="fw-bold text-primary mb-1 small"><span data-feather="smartphone" class="me-1"></span> PWA Ready</h6>
+                                <p class="extra-small mb-0 text-secondary">Dapat diinstal di Android/iOS/Desktop untuk akses cepat tanpa browser.</p>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="p-3 rounded-4 border border-success border-opacity-25 bg-success bg-opacity-5 h-100">
+                                <h6 class="fw-bold text-success mb-1 small"><span data-feather="eye" class="me-1"></span> Pasuruan Theme</h6>
+                                <p class="extra-small mb-0 text-secondary">Desain Emerald Green yang elegan & ergonomis untuk penggunaan lama.</p>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="p-3 rounded-4 border border-info border-opacity-25 bg-info bg-opacity-5 h-100">
+                                <h6 class="fw-bold text-info mb-1 small"><span data-feather="shield" class="me-1"></span> Enterprise Security</h6>
+                                <p class="extra-small mb-0 text-secondary">Proteksi akun Superadmin dan enkripsi data tingkat tinggi.</p>
+                            </div>
+                        </div>
+                    </div>
                     <div class="alert alert-primary border-0 rounded-4 p-4 mt-4 bg-primary bg-opacity-10 text-theme">
                         <div class="d-flex gap-3">
                             <span class="fs-4">💡</span>
@@ -134,7 +154,10 @@
                         <h5 class="fw-bold text-primary">🛒 Penjualan & Pembelian</h5>
                         <p>Digunakan untuk mencatat transaksi barang/jasa. Sistem akan otomatis membentuk jurnal akuntansi dan memutasi stok barang.</p>
                         <div class="bg-theme-subtle p-3 rounded-3 mt-2 border-start border-4 border-primary">
-                            <p class="mb-0 small fw-medium">Alur: Input Data → Simpan → (Otomatis) Jurnal Baru → Update Stok.</p>
+                            <p class="mb-0 small fw-medium">Alur: Pilih Barang (Searchable) → Input Data → Simpan → (Otomatis) Jurnal Baru → Update Stok.</p>
+                        </div>
+                        <div class="mt-3 alert alert-light border border-secondary-subtle rounded-3 small py-2">
+                            <span class="badge bg-primary me-1">New</span> Kini menggunakan <strong>Searchable Dropdown</strong> untuk pemilihan barang yang lebih cepat dan akurat.
                         </div>
                     </div>
 
@@ -322,8 +345,11 @@
         <section id="agri" class="mb-5 pt-2">
             <div class="card border-0 shadow-sm rounded-4 border-top border-4 border-success">
                 <div class="card-body p-4 p-md-5">
-                    <h2 class="fw-bold mb-4">🌱 Pertanian (PSAK 69)</h2>
-                    <p>Pencatatan aset biologis sesuai standar akuntansi internasional (Fair Value).</p>
+                    <h2 class="fw-bold mb-4">🌱 Pertanian (PSAK 69) & Ritase</h2>
+                    <p>Pencatatan aset biologis sesuai standar akuntansi internasional (Fair Value) serta manajemen operasional pengangkutan (Ritase).</p>
+                    <div class="alert alert-warning border-0 rounded-4 p-3 mb-4 bg-warning bg-opacity-10 text-theme small">
+                        <strong>Info Penting:</strong> Hanya data <strong>Ritase yang telah disetujui (Approved)</strong> yang akan dikalkulasi dalam laporan pendapatan dan penagihan/invoice.
+                    </div>
                     <div class="row g-3">
                         <div class="col-sm-6">
                             <div class="p-3 border rounded-3 bg-success bg-opacity-10 border-success border-opacity-25 h-100 text-theme">
@@ -394,6 +420,14 @@
                                 <tr>
                                     <td class="fw-bold">Daftar Aset Tetap</td>
                                     <td>Rincian nilai buku dan akumulasi penyusutan per aset inventaris.</td>
+                                </tr>
+                                <tr class="table-primary bg-opacity-10">
+                                    <td class="fw-bold">✨ Diagnosa Neraca</td>
+                                    <td>Audit otomatis untuk mendeteksi ketidakseimbangan jurnal & integritas data.</td>
+                                </tr>
+                                <tr>
+                                    <td class="fw-bold">Hasil Pilahan</td>
+                                    <td>Laporan khusus pengelolaan sampah dengan filter borongan per karyawan.</td>
                                 </tr>
                             </tbody>
                         </table>
@@ -640,6 +674,7 @@
                                             <li>- User Management</li>
                                             <li>- Profil Perusahaan</li>
                                             <li>- Audit Trail</li>
+                                            <li>- Diagnosa Neraca</li>
                                         </ul>
                                     </li>
                                 </ul>
@@ -671,6 +706,10 @@
                         <div class="col-md-6">
                             <h6 class="fw-bold">💾 Database Management</h6>
                             <p class="small text-secondary">Fitur lanjutan untuk membersihkan data atau seeding data awal (Hanya Superuser).</p>
+                        </div>
+                        <div class="col-md-6">
+                            <h6 class="fw-bold text-primary">🔍 Diagnosa Neraca</h6>
+                            <p class="small text-secondary">Melakukan validasi kesehatan database dan memastikan laporan keuangan 100% akurat tanpa error 500.</p>
                         </div>
                     </div>
                 </div>
