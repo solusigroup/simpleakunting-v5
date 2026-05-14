@@ -7,6 +7,8 @@ use App\Models\Cabang;
 use App\Models\UnitUsaha;
 use App\Models\JurnalDetail;
 use App\Models\Persediaan;
+use App\Models\Pelanggan;
+use App\Models\Pemasok;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Barryvdh\DomPDF\Facade\Pdf;
@@ -1156,48 +1158,72 @@ class LaporanController extends Controller
     {
         $perTanggal = $request->input('per_tanggal', date('Y-m-d'));
         $idPelanggan = $request->input('id_pelanggan');
+        $cabangId = $request->input('id_cabang', session('active_cabang'));
+        $unitId = $request->input('id_unit_usaha', session('active_unit'));
 
         $pelanggans = Pelanggan::orderBy('nama_pelanggan')->get();
         
         $data = [];
         if ($idPelanggan) {
-            $data = JurnalDetail::where('id_pelanggan', $idPelanggan)
+            $selected = $pelanggans->firstWhere('id_pelanggan', $idPelanggan);
+            if (!$selected) {
+                $idPelanggan = null;
+            } else {
+                $data = JurnalDetail::whereHas('jurnal', function($q) use ($idPelanggan, $perTanggal, $cabangId, $unitId) {
+                    $q->where('id_pelanggan', $idPelanggan)
+                      ->where('tanggal', '<=', $perTanggal);
+                    if ($cabangId) $q->where('id_cabang', $cabangId);
+                    if ($unitId) $q->where('id_unit_usaha', $unitId);
+                })
                 ->whereHas('akun', function($q) {
                     $q->where('tipe_akun', 'Piutang');
-                })
-                ->whereHas('jurnal', function($q) use ($perTanggal) {
-                    $q->where('tanggal', '<=', $perTanggal);
                 })
                 ->with('jurnal')
                 ->get()
                 ->sortBy('jurnal.tanggal');
+            }
         }
 
-        return view('laporan.piutang', compact('pelanggans', 'data', 'perTanggal', 'idPelanggan'));
+        $cabang = Cabang::orderBy('nama_cabang')->get();
+        $unitUsaha = UnitUsaha::active()->orderBy('nama_unit')->get();
+
+        return view('laporan.piutang', compact('pelanggans', 'data', 'perTanggal', 'idPelanggan', 'cabang', 'unitUsaha'));
     }
 
     public function bukuPembantuUtang(Request $request)
     {
         $perTanggal = $request->input('per_tanggal', date('Y-m-d'));
         $idPemasok = $request->input('id_pemasok');
+        $cabangId = $request->input('id_cabang', session('active_cabang'));
+        $unitId = $request->input('id_unit_usaha', session('active_unit'));
 
         $pemasoks = Pemasok::orderBy('nama_pemasok')->get();
         
         $data = [];
         if ($idPemasok) {
-            $data = JurnalDetail::where('id_pemasok', $idPemasok)
+            $selected = $pemasoks->firstWhere('id_pemasok', $idPemasok);
+            if (!$selected) {
+                $idPemasok = null;
+            } else {
+                $data = JurnalDetail::whereHas('jurnal', function($q) use ($idPemasok, $perTanggal, $cabangId, $unitId) {
+                    $q->where('id_pemasok', $idPemasok)
+                      ->where('tanggal', '<=', $perTanggal);
+                    if ($cabangId) $q->where('id_cabang', $cabangId);
+                    if ($unitId) $q->where('id_unit_usaha', $unitId);
+                })
                 ->whereHas('akun', function($q) {
                     $q->where('tipe_akun', 'Utang Usaha');
-                })
-                ->whereHas('jurnal', function($q) use ($perTanggal) {
-                    $q->where('tanggal', '<=', $perTanggal);
                 })
                 ->with('jurnal')
                 ->get()
                 ->sortBy('jurnal.tanggal');
+            }
         }
 
-        return view('laporan.utang', compact('pemasoks', 'data', 'perTanggal', 'idPemasok'));
+        $cabang = Cabang::orderBy('nama_cabang')->get();
+        $unitUsaha = UnitUsaha::active()->orderBy('nama_unit')->get();
+
+        return view('laporan.utang', compact('pemasoks', 'data', 'perTanggal', 'idPemasok', 'cabang', 'unitUsaha'));
     }
 
     private function sumByTypesAudit($types, $perTanggal)

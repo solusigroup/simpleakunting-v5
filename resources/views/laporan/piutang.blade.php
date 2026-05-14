@@ -12,7 +12,7 @@
     <div class="card shadow-sm border-0 mb-4">
         <div class="card-body">
             <form action="{{ route('laporan.piutang') }}" method="GET" class="row g-3 align-items-end">
-                <div class="col-md-4">
+                <div class="col-md-3">
                     <label class="form-label fw-bold">Pilih Pelanggan</label>
                     <select name="id_pelanggan" class="form-select select2" required>
                         <option value="">-- Pilih Pelanggan --</option>
@@ -23,7 +23,30 @@
                         @endforeach
                     </select>
                 </div>
-                <div class="col-md-3">
+                <div class="col-md-2">
+                    <label class="form-label fw-bold">Cabang</label>
+                    <select name="id_cabang" id="id_cabang" class="form-select">
+                        <option value="">Semua Cabang</option>
+                        @foreach($cabang as $c)
+                            <option value="{{ $c->id }}" {{ request('id_cabang', session('active_cabang')) == $c->id ? 'selected' : '' }}>
+                                {{ $c->nama_cabang }}
+                            </option>
+                        @endforeach
+                    </select>
+                </div>
+                <div class="col-md-2">
+                    <label class="form-label fw-bold">Unit Usaha</label>
+                    <select name="id_unit_usaha" id="id_unit_usaha" class="form-select">
+                        <option value="">Semua Unit</option>
+                        @foreach($unitUsaha as $u)
+                            <option value="{{ $u->id }}" data-cabang="{{ $u->id_cabang }}" 
+                                {{ request('id_unit_usaha', session('active_unit')) == $u->id ? 'selected' : '' }}>
+                                {{ $u->nama_unit }}
+                            </option>
+                        @endforeach
+                    </select>
+                </div>
+                <div class="col-md-2">
                     <label class="form-label fw-bold">Per Tanggal</label>
                     <input type="date" name="per_tanggal" class="form-control" value="{{ $perTanggal }}">
                 </div>
@@ -35,6 +58,41 @@
             </form>
         </div>
     </div>
+
+    @push('scripts')
+    <script>
+        document.getElementById('id_cabang').addEventListener('change', function() {
+            let cabangId = this.value;
+            let unitSelect = document.getElementById('id_unit_usaha');
+            let units = unitSelect.querySelectorAll('option');
+            
+            unitSelect.value = "";
+            units.forEach(opt => {
+                if (opt.value === "") return;
+                if (opt.getAttribute('data-cabang') == cabangId || !cabangId) {
+                    opt.style.display = "";
+                } else {
+                    opt.style.display = "none";
+                }
+            });
+        });
+
+        // Trigger on load
+        if (document.getElementById('id_cabang').value) {
+            let cabangId = document.getElementById('id_cabang').value;
+            let unitSelect = document.getElementById('id_unit_usaha');
+            
+            unitSelect.querySelectorAll('option').forEach(opt => {
+                if (opt.value === "") return;
+                if (opt.getAttribute('data-cabang') == cabangId) {
+                    opt.style.display = "";
+                } else {
+                    opt.style.display = "none";
+                }
+            });
+        }
+    </script>
+    @endpush
 
     @if($idPelanggan)
     <div class="card shadow-sm border-0">
@@ -58,9 +116,9 @@
                     @forelse($data as $row)
                         @php $saldo += ($row->debit - $row->kredit); @endphp
                         <tr>
-                            <td>{{ date('d/m/Y', strtotime($row->jurnal->tanggal)) }}</td>
-                            <td class="fw-bold">{{ $row->jurnal->no_jurnal }}</td>
-                            <td>{{ $row->jurnal->keterangan }}</td>
+                            <td>{{ $row->jurnal ? date('d/m/Y', strtotime($row->jurnal->tanggal)) : '-' }}</td>
+                            <td class="fw-bold">{{ $row->jurnal->no_transaksi ?? '-' }}</td>
+                            <td>{{ $row->jurnal->deskripsi ?? $row->jurnal->keterangan ?? '-' }}</td>
                             <td class="text-end text-success">{{ number_format($row->debit, 2) }}</td>
                             <td class="text-end text-danger">{{ number_format($row->kredit, 2) }}</td>
                             <td class="text-end fw-bold">{{ number_format($saldo, 2) }}</td>
