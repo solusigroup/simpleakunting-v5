@@ -417,6 +417,13 @@
     </header>
 
     <!-- Sidebar -->
+    @php
+        $perusahaan = DB::table('perusahaan')->find(1);
+        $sidebarSettings = json_decode($perusahaan->sidebar_settings ?? '{}', true);
+        $showMenu = function($key) use ($sidebarSettings) {
+            return ($sidebarSettings[$key] ?? '1') == '1';
+        };
+    @endphp
     <aside class="app-sidebar" id="sidebarMenu">
         <div class="sidebar-content">
             <ul class="sidebar-nav">
@@ -429,7 +436,7 @@
             </ul>
 
             <!-- Master Data -->
-            @if(auth()->user()->canViewMasterData())
+            @if($showMenu('master_data') && auth()->user()->canViewMasterData())
             @php
                 $isMasterActive = request()->routeIs('pelanggan.*') || request()->routeIs('pemasok.*') || request()->routeIs('persediaan.*') || request()->routeIs('akun.*');
             @endphp
@@ -476,7 +483,7 @@
             @endphp
 
             <!-- Manufacturing -->
-            @if($showManufacturing && auth()->user()->hasRole(['superuser','admin','manajer']))
+            @if($showMenu('manufaktur') && $showManufacturing && auth()->user()->hasRole(['superuser','admin','manajer']))
             @php
                 $isMfgActive = request()->routeIs('manufacturing.*');
             @endphp
@@ -528,7 +535,7 @@
             @endif
 
             <!-- Agriculture (PSAK 69) -->
-            @if($showAgriculture && auth()->user()->hasRole(['superuser','admin','manajer']))
+            @if($showMenu('pertanian') && $showAgriculture && auth()->user()->hasRole(['superuser','admin','manajer']))
             @php
                 $isAgriActive = request()->routeIs('agriculture.*');
             @endphp
@@ -580,7 +587,7 @@
             @endif
 
             <!-- Point of Sales -->
-            @if(auth()->user()->canAccessPos())
+            @if($showMenu('pos') && auth()->user()->canAccessPos())
             @php
                 $isPosActive = request()->routeIs('pos.*');
             @endphp
@@ -618,7 +625,7 @@
             @php
                 $isTransaksiActive = request()->routeIs('penjualan.*') || request()->routeIs('pembelian.*') || request()->routeIs('jurnal.*');
             @endphp
-            <div class="sidebar-section">
+            <div class="sidebar-section" @if(!$showMenu('transaksi')) style="display:none;" @endif>
                 <div class="sidebar-section-header" data-bs-toggle="collapse" data-bs-target="#transaksiMenu" aria-expanded="{{ $isTransaksiActive ? 'true' : 'false' }}">
                     <span>Transaksi</span>
                     <span data-feather="chevron-down" class="chevron"></span>
@@ -672,7 +679,7 @@
             @php
                 $isKasActive = request()->routeIs('penerimaan.*') || request()->routeIs('pembayaran.*') || request()->routeIs('kas.*');
             @endphp
-            <div class="sidebar-section">
+            <div class="sidebar-section" @if(!$showMenu('kas_bank')) style="display:none;" @endif>
                 <div class="sidebar-section-header" data-bs-toggle="collapse" data-bs-target="#kasMenu" aria-expanded="{{ $isKasActive ? 'true' : 'false' }}">
                     <span>Kas & Bank</span>
                     <span data-feather="chevron-down" class="chevron"></span>
@@ -706,7 +713,7 @@
             @php
                 $isAkuntansiActive = request()->routeIs('accounting.closing.*') || request()->routeIs('aset-tetap-group.*') || request()->routeIs('aset-tetap.*');
             @endphp
-            <div class="sidebar-section">
+            <div class="sidebar-section" @if(!$showMenu('akuntansi')) style="display:none;" @endif>
                 <div class="sidebar-section-header" data-bs-toggle="collapse" data-bs-target="#akuntansiMenu" aria-expanded="{{ $isAkuntansiActive ? 'true' : 'false' }}">
                     <span>📊 Akuntansi</span>
                     <span data-feather="chevron-down" class="chevron"></span>
@@ -753,7 +760,7 @@
             @php
                 $isLaporanActive = request()->routeIs('bukubesar.*') || request()->routeIs('laporan.*');
             @endphp
-            <div class="sidebar-section">
+            <div class="sidebar-section" @if(!$showMenu('laporan')) style="display:none;" @endif>
                 <div class="sidebar-section-header" data-bs-toggle="collapse" data-bs-target="#laporanMenu" aria-expanded="{{ $isLaporanActive ? 'true' : 'false' }}">
                     <span>Laporan</span>
                     <span data-feather="chevron-down" class="chevron"></span>
@@ -841,7 +848,7 @@
             @php
                 $isKoperasiActive = request()->routeIs('anggota.*') || request()->routeIs('simpanan.*') || request()->routeIs('pinjaman.*') || request()->routeIs('approval.*');
             @endphp
-            <div class="sidebar-section">
+            <div class="sidebar-section" @if(!$showMenu('simpan_pinjam')) style="display:none;" @endif>
                 <div class="sidebar-section-header" data-bs-toggle="collapse" data-bs-target="#koperasiMenu" aria-expanded="{{ $isKoperasiActive ? 'true' : 'false' }}">
                     <span>🏦 Simpan Pinjam</span>
                     <span data-feather="chevron-down" class="chevron"></span>
@@ -902,7 +909,7 @@
             </div>
 
             <!-- Import/Export -->
-            @if(auth()->user()->canImportExport())
+            @if($showMenu('import_export') && auth()->user()->canImportExport())
             <ul class="sidebar-nav mt-3">
                 <li class="sidebar-nav-item">
                     <a class="sidebar-nav-link {{ request()->routeIs('import-export.*') ? 'active' : '' }}" href="{{ route('import-export.index') }}">

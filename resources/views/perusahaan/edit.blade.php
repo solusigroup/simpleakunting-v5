@@ -251,8 +251,40 @@
                                 </select>
                             </div>
                         </div>
+                        
+                        <h6 class="text-primary mt-4">Pengaturan Sidebar Menu (Hide/Reveal)</h6>
+                        <p class="text-muted small mb-3">Pilih menu yang ingin ditampilkan di sidebar. Uncheck untuk menyembunyikan.</p>
+                        @php
+                            $sidebarSettings = json_decode($perusahaan->sidebar_settings ?? '{}', true);
+                            $menus = [
+                                'master_data' => 'Master Data',
+                                'manufaktur' => 'Manufaktur',
+                                'pertanian' => 'Pertanian',
+                                'pos' => 'Point of Sales (POS)',
+                                'transaksi' => 'Transaksi',
+                                'kas_bank' => 'Kas & Bank',
+                                'akuntansi' => 'Akuntansi',
+                                'laporan' => 'Laporan',
+                                'simpan_pinjam' => 'Simpan Pinjam',
+                                'import_export' => 'Import/Export'
+                            ];
+                        @endphp
+                        <div class="row mb-4">
+                            @foreach($menus as $key => $label)
+                            <div class="col-md-4 mb-2">
+                                <div class="form-check form-switch">
+                                    <input class="form-check-input" type="checkbox" name="sidebar_settings[{{ $key }}]" id="menu_{{ $key }}" value="1" {{ ($sidebarSettings[$key] ?? '1') == '1' ? 'checked' : '' }}>
+                                    <label class="form-check-label" for="menu_{{ $key }}">{{ $label }}</label>
+                                </div>
+                            </div>
+                            @endforeach
+                        </div>
 
-                        <button type="submit" class="btn btn-primary">Simpan Perubahan</button>
+                        <div class="d-grid gap-2 d-md-flex justify-content-md-end mt-4">
+                            <button type="submit" class="btn btn-primary px-5 shadow-sm">
+                                <span data-feather="save" class="me-1"></span> Simpan Perubahan
+                            </button>
+                        </div>
                     </form>
                 </div>
             </div>

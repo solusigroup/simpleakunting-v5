@@ -47,6 +47,7 @@ class PerusahaanController extends Controller
             'pos_akun_hpp_default' => 'nullable|string|max:20',
             'pos_akun_persediaan_default' => 'nullable|string|max:20',
             'pos_akun_utang_default' => 'nullable|string|max:20',
+            'sidebar_settings' => 'nullable|array',
         ]);
 
         $oldPerusahaan = DB::table('perusahaan')->find(1);
@@ -81,6 +82,7 @@ class PerusahaanController extends Controller
                 'pos_akun_hpp_default' => $request->pos_akun_hpp_default,
                 'pos_akun_persediaan_default' => $request->pos_akun_persediaan_default,
                 'pos_akun_utang_default' => $request->pos_akun_utang_default,
+                'sidebar_settings' => $request->sidebar_settings ? json_encode($request->sidebar_settings) : null,
                 'updated_at' => now(),
             ]
         );
