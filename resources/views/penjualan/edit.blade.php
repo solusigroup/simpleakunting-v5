@@ -33,7 +33,8 @@
         .searchable-select-option.hidden { display: none; }
         .searchable-select-empty { padding: 12px; text-align: center; color: var(--color-text-muted, #999); font-size: 0.8125rem; }
         
-        .table-responsive { overflow: visible !important; }
+        .card, .card-body, .table-responsive { overflow: visible !important; }
+        .table-responsive { min-height: 250px; }
         td { position: relative; }
     </style>
 
@@ -180,7 +181,7 @@
     function tambahBaris(data = null) {
         const idx = rowCount;
         let optionsHtml = barangData.map(b => {
-            const label = `${b.kode_barang ?? ''} - ${b.nama_barang ?? ''}`;
+            const label = `${b.kode_barang || ''} - ${b.nama_barang || ''}`;
             const formatNum = (val) => new Intl.NumberFormat('id-ID').format(val || 0);
             
             const stok = formatNum(b.stok_saat_ini);
@@ -195,14 +196,14 @@
 
             return `<div class="searchable-select-option ${isSelected}" 
                 data-value="${b.id_barang}" 
-                data-harga="${b.harga_jual ?? 0}" 
-                data-barcode="${b.barcode ?? ''}" 
-                data-kode="${b.kode_barang ?? ''}" 
+                data-harga="${b.harga_jual || 0}" 
+                data-barcode="${b.barcode || ''}" 
+                data-kode="${b.kode_barang || ''}" 
                 data-label="${label}">
                 <div class="d-flex justify-content-between align-items-center w-100" style="gap: 15px;">
                     <div style="flex: 1; min-width: 0;">
                         <div style="font-weight: 600; text-overflow: ellipsis; overflow: hidden; white-space: nowrap; color: var(--color-text, #333);">
-                            <span class="text-primary" style="font-weight: 700;">${b.kode_barang ?? ''}</span> - ${b.nama_barang ?? ''}
+                            <span class="text-primary" style="font-weight: 700;">${b.kode_barang || ''}</span> - ${b.nama_barang || ''}
                         </div>
                         <div class="text-muted style-barcode-satuan" style="font-size: 0.72rem; margin-top: 3px;">
                             Barcode: <span style="color: #666; font-weight: 500;">${barcode}</span> | Satuan: <span style="color: #666; font-weight: 500;">${satuan}</span>
