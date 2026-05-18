@@ -22,11 +22,11 @@
         .searchable-select-trigger .trigger-text.placeholder { color: var(--color-text-muted, #999); }
         .searchable-select-trigger .trigger-chevron { margin-left: 8px; transition: transform 0.2s; flex-shrink: 0; }
         .searchable-select-trigger.open .trigger-chevron { transform: rotate(180deg); }
-        .searchable-select-dropdown { display: none; position: absolute; top: calc(100% + 4px); left: 0; right: 0; background: var(--color-bg-card, #fff); border: 1px solid var(--color-border, #dee2e6); border-radius: var(--radius-sm, 6px); box-shadow: 0 8px 24px rgba(0,0,0,0.12); z-index: 1050; max-height: 280px; overflow: hidden; }
+        .searchable-select-dropdown { display: none; position: absolute; top: calc(100% + 4px); left: 0; min-width: 420px; background: var(--color-bg-card, #fff); border: 1px solid var(--color-border, #dee2e6); border-radius: var(--radius-sm, 6px); box-shadow: 0 8px 24px rgba(0,0,0,0.12); z-index: 1050; max-height: 340px; overflow: hidden; }
         .searchable-select-dropdown.show { display: block; }
         .searchable-select-search { padding: 8px; border-bottom: 1px solid var(--color-border, #eee); position: sticky; top: 0; background: var(--color-bg-card, #fff); z-index: 1; }
         .searchable-select-search input { width: 100%; padding: 6px 10px; border: 1px solid var(--color-border, #dee2e6); border-radius: var(--radius-sm, 4px); font-size: 0.8125rem; outline: none; transition: border-color 0.2s; background: var(--color-bg, #fff); color: var(--color-text, #333); }
-        .searchable-select-options { max-height: 220px; overflow-y: auto; padding: 4px 0; }
+        .searchable-select-options { max-height: 280px; overflow-y: auto; padding: 4px 0; }
         .searchable-select-option { padding: 7px 12px; cursor: pointer; font-size: 0.8125rem; color: var(--color-text, #333); transition: background 0.15s; text-align: left; }
         .searchable-select-option:hover { background: rgba(139, 92, 246, 0.08); }
         .searchable-select-option.selected { background: rgba(139, 92, 246, 0.12); color: var(--color-primary, #8b5cf6); font-weight: 600; }
@@ -181,14 +181,37 @@
         const idx = rowCount;
         let optionsHtml = barangData.map(b => {
             const label = `${b.kode_barang ?? ''} - ${b.nama_barang ?? ''}`;
-            const fullLabel = `${label} (Stok: ${b.stok_saat_ini ?? 0})`;
+            const formatNum = (val) => new Intl.NumberFormat('id-ID').format(val || 0);
+            
+            const stok = formatNum(b.stok_saat_ini);
+            const beli = formatNum(b.harga_beli);
+            const jual = formatNum(b.harga_jual);
+            const barcode = b.barcode && b.barcode.trim() !== '' ? b.barcode : '-';
+            const satuan = b.satuan && b.satuan.trim() !== '' ? b.satuan : '-';
+            
             const isSelected = data && data.id_barang == b.id_barang ? 'selected' : '';
+
             return `<div class="searchable-select-option ${isSelected}" 
                 data-value="${b.id_barang}" 
                 data-harga="${b.harga_jual ?? 0}" 
                 data-barcode="${b.barcode ?? ''}" 
                 data-kode="${b.kode_barang ?? ''}" 
-                data-label="${label}">${fullLabel}</div>`;
+                data-label="${label}">
+                <div class="d-flex justify-content-between align-items-center w-100" style="gap: 15px;">
+                    <div style="flex: 1; min-width: 0;">
+                        <div style="font-weight: 600; text-overflow: ellipsis; overflow: hidden; white-space: nowrap; color: var(--color-text, #333);">
+                            <span class="text-primary" style="font-weight: 700;">${b.kode_barang ?? ''}</span> - ${b.nama_barang ?? ''}
+                        </div>
+                        <div class="text-muted style-barcode-satuan" style="font-size: 0.72rem; margin-top: 3px;">
+                            Barcode: <span style="color: #666; font-weight: 500;">${barcode}</span> | Satuan: <span style="color: #666; font-weight: 500;">${satuan}</span>
+                        </div>
+                    </div>
+                    <div class="text-end" style="font-size: 0.72rem; line-height: 1.35; flex-shrink: 0; min-width: 140px; border-left: 1px solid #f0f0f0; padding-left: 10px;">
+                        <div>Stok: <strong class="text-success">${stok}</strong></div>
+                        <div class="text-muted" style="font-size: 0.68rem; margin-top: 1px;">Beli: Rp ${beli} | Jual: Rp ${jual}</div>
+                    </div>
+                </div>
+            </div>`;
         }).join('');
 
         const html = `
