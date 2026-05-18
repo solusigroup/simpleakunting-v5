@@ -12,53 +12,31 @@
         </div>
     </div>
 
-    <!-- Searchable Dropdown Styles -->
+    <!-- Searchable Dropdown Styles (Perfect alignment with Penjualan) -->
     <style>
         .searchable-select { position: relative; width: 100%; }
-        .searchable-select-trigger { display: flex; align-items: center; justify-content: space-between; width: 100%; padding: 0.5rem 1rem; font-size: 0.875rem; border: 1px solid #dee2e6; border-radius: 8px; background: #fff; color: #333; cursor: pointer; transition: all 0.2s ease; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; min-height: 40px; position: relative; }
-        .searchable-select-trigger:hover { border-color: #8b5cf6; background: #fcfaff; }
-        .searchable-select-trigger.open { border-color: #8b5cf6; box-shadow: 0 0 0 4px rgba(139, 92, 246, 0.15); background: #fff; z-index: 1051; }
-        .searchable-select-trigger .trigger-text { flex: 1; overflow: hidden; text-overflow: ellipsis; display: flex; align-items: center; gap: 10px; }
-        .searchable-select-trigger .trigger-text.placeholder { color: #999; }
-        .searchable-select-trigger .trigger-chevron { margin-left: 8px; transition: transform 0.3s; flex-shrink: 0; color: #666; }
-        .searchable-select-trigger.open .trigger-chevron { transform: rotate(180deg); color: #8b5cf6; }
-        
-        .searchable-select-dropdown { display: none; position: absolute; top: calc(100% + 8px); left: 0; min-width: 100%; width: max-content; max-width: 450px; background: #fff; border: 1px solid #dee2e6; border-radius: 12px; box-shadow: 0 15px 50px rgba(0,0,0,0.2); z-index: 9999; overflow: hidden; }
+        .searchable-select-trigger { display: flex; align-items: center; justify-content: space-between; width: 100%; padding: 6px 12px; font-size: 0.875rem; border: 1px solid var(--color-border, #dee2e6); border-radius: var(--radius-sm, 6px); background: var(--color-bg, #fff); color: var(--color-text, #333); cursor: pointer; transition: border-color 0.2s, box-shadow 0.2s; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; min-height: 34px; }
+        .searchable-select-trigger:hover { border-color: var(--color-primary, #8b5cf6); }
+        .searchable-select-trigger.open { border-color: var(--color-primary, #8b5cf6); box-shadow: 0 0 0 3px rgba(139, 92, 246, 0.15); }
+        .searchable-select-trigger .trigger-text { flex: 1; overflow: hidden; text-overflow: ellipsis; text-align: left; }
+        .searchable-select-trigger .trigger-text.placeholder { color: var(--color-text-muted, #999); }
+        .searchable-select-trigger .trigger-chevron { margin-left: 8px; transition: transform 0.2s; flex-shrink: 0; }
+        .searchable-select-trigger.open .trigger-chevron { transform: rotate(180deg); }
+        .searchable-select-dropdown { display: none; position: absolute; top: calc(100% + 4px); left: 0; min-width: 420px; background: var(--color-bg-card, #fff); border: 1px solid var(--color-border, #dee2e6); border-radius: var(--radius-sm, 6px); box-shadow: 0 8px 24px rgba(0,0,0,0.12); z-index: 1050; max-height: 340px; overflow: hidden; }
         .searchable-select-dropdown.show { display: block; }
-        
-        .searchable-select-search { padding: 12px; border-bottom: 1px solid #f0f0f0; position: sticky; top: 0; background: #f8f9fa; z-index: 1; }
-        .searchable-select-search input { width: 100%; padding: 10px 14px; border: 1px solid #e0e0e0; border-radius: 8px; font-size: 0.875rem; outline: none; transition: all 0.2s; background: #fff; color: #333; }
-        .searchable-select-search input:focus { border-color: #8b5cf6; box-shadow: 0 0 0 3px rgba(139, 92, 246, 0.1); }
-        
-        .searchable-select-options { max-height: 260px; overflow-y: auto; padding: 6px 0; scrollbar-width: thin; }
-        .searchable-select-options::-webkit-scrollbar { width: 6px; }
-        .searchable-select-options::-webkit-scrollbar-thumb { background: #ccc; border-radius: 10px; }
-        
-        .searchable-select-option { padding: 10px 16px; cursor: pointer; font-size: 0.875rem; color: #444; transition: all 0.15s; white-space: nowrap; }
-        .searchable-select-option:hover { background: #f5f3ff; color: #8b5cf6; padding-left: 20px; }
-        .searchable-select-option.selected { background: #f5f3ff; color: #8b5cf6; font-weight: 600; }
+        .searchable-select-search { padding: 8px; border-bottom: 1px solid var(--color-border, #eee); position: sticky; top: 0; background: var(--color-bg-card, #fff); z-index: 1; }
+        .searchable-select-search input { width: 100%; padding: 6px 10px; border: 1px solid var(--color-border, #dee2e6); border-radius: var(--radius-sm, 4px); font-size: 0.8125rem; outline: none; transition: border-color 0.2s; background: var(--color-bg, #fff); color: var(--color-text, #333); }
+        .searchable-select-options { max-height: 280px; overflow-y: auto; padding: 4px 0; }
+        .searchable-select-option { padding: 7px 12px; cursor: pointer; font-size: 0.8125rem; color: var(--color-text, #333); transition: background 0.15s; text-align: left; }
+        .searchable-select-option:hover { background: rgba(139, 92, 246, 0.08); }
+        .searchable-select-option.selected { background: rgba(139, 92, 246, 0.12); color: var(--color-primary, #8b5cf6); font-weight: 600; }
         .searchable-select-option.hidden { display: none; }
-        .searchable-select-empty { padding: 20px; text-align: center; color: #999; font-size: 0.875rem; }
-
-        .table-responsive { overflow: visible !important; }
+        .searchable-select-empty { padding: 12px; text-align: center; color: var(--color-text-muted, #999); font-size: 0.8125rem; }
+        
+        .card, .card-body, .table-responsive { overflow: visible !important; }
+        .table-responsive { min-height: 250px; }
         td { position: relative; }
     </style>
-
-    @php
-        $barangOptionsHtml = '';
-        foreach($barang as $b) {
-            $label = ($b->kode_barang ?? '') . ' - ' . ($b->nama_barang ?? '');
-            $barcode = $b->barcode ?? '';
-            $kode = $b->kode_barang ?? '';
-            
-            $barangOptionsHtml .= '<div class="searchable-select-option" 
-                data-value="'.$b->id_barang.'" 
-                data-harga="'.($b->harga_beli ?? 0).'" 
-                data-barcode="'.htmlspecialchars($barcode).'" 
-                data-kode="'.htmlspecialchars($kode).'" 
-                data-label="'.htmlspecialchars($label).'">'.htmlspecialchars($label).'</div>';
-        }
-    @endphp
 
     <form action="{{ route('pembelian.store') }}" method="POST">
         @csrf
@@ -192,7 +170,6 @@
 @push('scripts')
 <script>
     let rowCount = 0;
-    const barangOptionsHtml = `{!! $barangOptionsHtml !!}`;
     const rawBarangData = @json($barang);
     let barangData = Array.isArray(rawBarangData) ? rawBarangData : Object.values(rawBarangData || {});
 
@@ -202,24 +179,56 @@
 
     function tambahBaris() {
         const idx = rowCount;
+        let optionsHtml = barangData.map(b => {
+            const label = `${b.kode_barang || ''} - ${b.nama_barang || ''}`;
+            const formatNum = (val) => new Intl.NumberFormat('id-ID').format(val || 0);
+            
+            const stok = formatNum(b.stok_saat_ini);
+            const beli = formatNum(b.harga_beli);
+            const jual = formatNum(b.harga_jual);
+            const barcodeStr = b.barcode ? String(b.barcode).trim() : '';
+            const barcode = barcodeStr !== '' ? barcodeStr : '-';
+            const satuanStr = b.satuan ? String(b.satuan).trim() : '';
+            const satuan = satuanStr !== '' ? satuanStr : '-';
+
+            return `<div class="searchable-select-option" 
+                data-value="${b.id_barang}" 
+                data-harga="${b.harga_beli || 0}" 
+                data-barcode="${b.barcode || ''}" 
+                data-kode="${b.kode_barang || ''}" 
+                data-label="${label}">
+                <div class="d-flex justify-content-between align-items-center w-100" style="gap: 15px;">
+                    <div style="flex: 1; min-width: 0;">
+                        <div style="font-weight: 600; text-overflow: ellipsis; overflow: hidden; white-space: nowrap; color: var(--color-text, #333);">
+                            <span class="text-primary" style="font-weight: 700;">${b.kode_barang || ''}</span> - ${b.nama_barang || ''}
+                        </div>
+                        <div class="text-muted style-barcode-satuan" style="font-size: 0.72rem; margin-top: 3px;">
+                            Barcode: <span style="color: #666; font-weight: 500;">${barcode}</span> | Satuan: <span style="color: #666; font-weight: 500;">${satuan}</span>
+                        </div>
+                    </div>
+                    <div class="text-end" style="font-size: 0.72rem; line-height: 1.35; flex-shrink: 0; min-width: 140px; border-left: 1px solid #f0f0f0; padding-left: 10px;">
+                        <div>Stok: <strong class="text-success">${stok}</strong></div>
+                        <div class="text-muted" style="font-size: 0.68rem; margin-top: 1px;">Beli: Rp ${beli} | Jual: Rp ${jual}</div>
+                    </div>
+                </div>
+            </div>`;
+        }).join('');
+
         const html = `
             <tr id="row_${idx}">
                 <td>
                     <div class="searchable-select" id="ss_${idx}">
                         <input type="hidden" name="details[${idx}][id_barang]" id="ss_input_${idx}" required>
                         <div class="searchable-select-trigger" id="ss_trigger_${idx}">
-                            <div class="trigger-text placeholder">
-                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#8b5cf6" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
-                                <span>Cari atau Pilih Barang...</span>
-                            </div>
-                            <svg class="trigger-chevron" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg>
+                            <span class="trigger-text placeholder">🔍 Cari atau pilih barang...</span>
+                            <svg class="trigger-chevron" xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg>
                         </div>
                         <div class="searchable-select-dropdown" id="ss_dropdown_${idx}">
                             <div class="searchable-select-search">
                                 <input type="text" placeholder="Ketik kode atau nama barang..." id="ss_search_${idx}" autocomplete="off">
                             </div>
                             <div class="searchable-select-options" id="ss_options_${idx}">
-                                ${barangOptionsHtml || '<div class="searchable-select-empty">Data Barang Kosong</div>'}
+                                ${optionsHtml || '<div class="searchable-select-empty">Data Barang Kosong</div>'}
                             </div>
                         </div>
                     </div>
@@ -288,10 +297,7 @@
         const hiddenInput = document.getElementById(`ss_input_${idx}`);
 
         hiddenInput.value = opt.dataset.value;
-        trigger.querySelector('.trigger-text').innerHTML = `
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#8b5cf6" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
-            <span>${opt.dataset.label}</span>
-        `;
+        trigger.querySelector('.trigger-text').textContent = opt.dataset.label;
         trigger.querySelector('.trigger-text').classList.remove('placeholder');
         
         dropdown.classList.remove('show');
