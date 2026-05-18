@@ -185,8 +185,10 @@
             const stok = formatNum(b.stok_saat_ini);
             const beli = formatNum(b.harga_beli);
             const jual = formatNum(b.harga_jual);
-            const barcode = b.barcode && b.barcode.trim() !== '' ? b.barcode : '-';
-            const satuan = b.satuan && b.satuan.trim() !== '' ? b.satuan : '-';
+            const barcodeStr = b.barcode ? String(b.barcode).trim() : '';
+            const barcode = barcodeStr !== '' ? barcodeStr : '-';
+            const satuanStr = b.satuan ? String(b.satuan).trim() : '';
+            const satuan = satuanStr !== '' ? satuanStr : '-';
 
             return `<div class="searchable-select-option" 
                 data-value="${b.id_barang}" 
