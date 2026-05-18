@@ -7,6 +7,8 @@ use App\Models\JurnalDetail;
 use App\Models\Akun;
 use App\Models\Cabang;
 use App\Models\UnitUsaha;
+use App\Models\Pelanggan;
+use App\Models\Pemasok;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 
