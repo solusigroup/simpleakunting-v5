@@ -256,6 +256,9 @@ Route::middleware([
             Route::get('manufacturing/production', [ManufacturingController::class, 'productionIndex'])->name('manufacturing.production.index');
             Route::get('manufacturing/production/create', [ManufacturingController::class, 'productionCreate'])->name('manufacturing.production.create');
             Route::post('manufacturing/production', [ManufacturingController::class, 'productionStore'])->name('manufacturing.production.store');
+            Route::get('manufacturing/production/{id}/edit', [ManufacturingController::class, 'productionEdit'])->name('manufacturing.production.edit');
+            Route::put('manufacturing/production/{id}', [ManufacturingController::class, 'productionUpdate'])->name('manufacturing.production.update');
+            Route::delete('manufacturing/production/{id}', [ManufacturingController::class, 'productionDestroy'])->name('manufacturing.production.destroy');
 
             // Laporan Manufaktur
             Route::get('manufacturing/laporan/biaya-produksi', [ManufacturingController::class, 'laporanBiayaProduksi'])->name('manufacturing.laporan.biaya_produksi');
