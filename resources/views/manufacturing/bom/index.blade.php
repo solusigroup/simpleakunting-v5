@@ -37,8 +37,12 @@
                 <td>{{ $bom->kuantitas_hasil }}</td>
                 <td>{{ $bom->deskripsi }}</td>
                 <td>
-                    <button class="btn btn-xs btn-outline-secondary" disabled>Edit</button>
-                    <!-- Add edit/delete if needed -->
+                    <a href="{{ route('manufacturing.bom.edit', $bom->id) }}" class="btn btn-xs btn-outline-primary">Edit</a>
+                    <form action="{{ route('manufacturing.bom.destroy', $bom->id) }}" method="POST" class="d-inline" onsubmit="return confirm('Apakah Anda yakin ingin menghapus BOM ini?')">
+                        @csrf
+                        @method('DELETE')
+                        <button type="submit" class="btn btn-xs btn-outline-danger">Hapus</button>
+                    </form>
                 </td>
             </tr>
             @empty

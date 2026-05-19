@@ -252,6 +252,9 @@ Route::middleware([
             Route::get('manufacturing/bom', [ManufacturingController::class, 'bomIndex'])->name('manufacturing.bom.index');
             Route::get('manufacturing/bom/create', [ManufacturingController::class, 'bomCreate'])->name('manufacturing.bom.create');
             Route::post('manufacturing/bom', [ManufacturingController::class, 'bomStore'])->name('manufacturing.bom.store');
+            Route::get('manufacturing/bom/{id}/edit', [ManufacturingController::class, 'bomEdit'])->name('manufacturing.bom.edit');
+            Route::put('manufacturing/bom/{id}', [ManufacturingController::class, 'bomUpdate'])->name('manufacturing.bom.update');
+            Route::delete('manufacturing/bom/{id}', [ManufacturingController::class, 'bomDestroy'])->name('manufacturing.bom.destroy');
             
             Route::get('manufacturing/production', [ManufacturingController::class, 'productionIndex'])->name('manufacturing.production.index');
             Route::get('manufacturing/production/create', [ManufacturingController::class, 'productionCreate'])->name('manufacturing.production.create');

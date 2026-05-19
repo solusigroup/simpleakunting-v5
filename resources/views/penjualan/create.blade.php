@@ -234,7 +234,7 @@
                     </div>
                 </td>
                 <td>
-                    <input type="number" class="form-control form-control-sm" id="harga_${idx}" readonly>
+                    <input type="number" class="form-control form-control-sm" name="details[${idx}][harga]" id="harga_${idx}" onkeyup="hitungSubtotal(${idx})" onchange="hitungSubtotal(${idx})" required>
                 </td>
                 <td>
                     <input type="number" class="form-control form-control-sm" name="details[${idx}][kuantitas]" id="qty_${idx}" min="1" value="1" onkeyup="hitungSubtotal(${idx})" onchange="hitungSubtotal(${idx})">

@@ -66,6 +66,7 @@ class PenjualanController extends Controller
             'details' => 'required|array|min:1',
             'details.*.id_barang' => 'required|exists:master_persediaan,id_barang',
             'details.*.kuantitas' => 'required|numeric|min:1',
+            'details.*.harga' => 'required|numeric|min:0',
         ]);
 
         try {
@@ -90,13 +91,14 @@ class PenjualanController extends Controller
                     throw new \Exception("Stok barang {$barang->nama_barang} tidak mencukupi. Sisa: {$barang->stok_saat_ini}");
                 }
 
-                $subtotal = $barang->harga_jual * $item['kuantitas'];
+                $hargaInput = (float)($item['harga'] ?? $barang->harga_jual);
+                $subtotal = $hargaInput * $item['kuantitas'];
                 $totalPenjualan += $subtotal;
 
                 $detailsData[] = [
                     'barang' => $barang,
                     'kuantitas' => $item['kuantitas'],
-                    'harga' => $barang->harga_jual,
+                    'harga' => $hargaInput,
                     'subtotal' => $subtotal,
                 ];
             }
@@ -247,6 +249,7 @@ class PenjualanController extends Controller
             'details' => 'required|array|min:1',
             'details.*.id_barang' => 'required|exists:master_persediaan,id_barang',
             'details.*.kuantitas' => 'required|numeric|min:1',
+            'details.*.harga' => 'required|numeric|min:0',
         ]);
 
         // Proteksi Sesi POS (Shift)
@@ -284,6 +287,7 @@ class PenjualanController extends Controller
             JurnalDetail::where('id_jurnal', $penjualan->id_jurnal)->delete();
 
             // 2. APPLY NEW IMPACT
+            $jurnal = Jurnal::findOrFail($penjualan->id_jurnal);
             $jurnal->update([
                 'id_pelanggan' => $request->id_pelanggan,
             ]);
@@ -298,19 +302,19 @@ class PenjualanController extends Controller
                     throw new \Exception("Stok barang {$barang->nama_barang} tidak mencukupi. Sisa: {$barang->stok_saat_ini}");
                 }
 
-                $subtotal = $barang->harga_jual * $item['kuantitas'];
+                $hargaInput = (float)($item['harga'] ?? $barang->harga_jual);
+                $subtotal = $hargaInput * $item['kuantitas'];
                 $totalPenjualan += $subtotal;
 
                 $detailsData[] = [
                     'barang' => $barang,
                     'kuantitas' => $item['kuantitas'],
-                    'harga' => $barang->harga_jual,
+                    'harga' => $hargaInput,
                     'subtotal' => $subtotal,
                 ];
             }
 
             // Update Jurnal Header
-            $jurnal = Jurnal::findOrFail($penjualan->id_jurnal);
             $jurnal->update([
                 'tanggal' => $request->tanggal_faktur,
                 'id_cabang' => $request->id_cabang,

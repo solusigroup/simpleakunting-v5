@@ -69,6 +69,79 @@ class ManufacturingController extends Controller
         }
     }
 
+    public function bomEdit($id)
+    {
+        $bom = Bom::with('details.material')->findOrFail($id);
+        $products = Persediaan::where('jenis_barang', 'barang_jadi')->get();
+        $materials = Persediaan::whereIn('jenis_barang', ['bahan_baku', 'barang_dalam_proses'])->get();
+        return view('manufacturing.bom.edit', compact('bom', 'products', 'materials'));
+    }
+
+    public function bomUpdate(Request $request, $id)
+    {
+        $request->validate([
+            'nama_bom' => 'required|string',
+            'barang_jadi_id' => 'required|exists:master_persediaan,id_barang',
+            'kuantitas_hasil' => 'required|numeric|min:1',
+            'details' => 'required|array|min:1',
+            'details.*.material_id' => 'required|exists:master_persediaan,id_barang',
+            'details.*.kuantitas' => 'required|numeric|min:0.0001',
+        ]);
+
+        try {
+            DB::beginTransaction();
+
+            $bom = Bom::findOrFail($id);
+            $bom->update([
+                'nama_bom' => $request->nama_bom,
+                'barang_jadi_id' => $request->barang_jadi_id,
+                'kuantitas_hasil' => $request->kuantitas_hasil,
+                'deskripsi' => $request->deskripsi,
+            ]);
+
+            // Clear old details and create new ones
+            $bom->details()->delete();
+
+            foreach ($request->details as $detail) {
+                BomDetail::create([
+                    'bom_id' => $bom->id,
+                    'material_id' => $detail['material_id'],
+                    'kuantitas' => $detail['kuantitas'],
+                    'satuan' => 'pcs', // Default
+                ]);
+            }
+
+            DB::commit();
+            return redirect()->route('manufacturing.bom.index')->with('success', 'BOM berhasil diperbarui.');
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return back()->with('error', 'Gagal memperbarui BOM: ' . $e->getMessage());
+        }
+    }
+
+    public function bomDestroy($id)
+    {
+        try {
+            DB::beginTransaction();
+
+            $bom = Bom::findOrFail($id);
+            // Check if this BOM has been used in any production.
+            $used = Produksi::where('bom_id', $id)->exists();
+            if ($used) {
+                return back()->with('error', 'BOM tidak dapat dihapus karena sudah digunakan dalam produksi.');
+            }
+
+            $bom->details()->delete();
+            $bom->delete();
+
+            DB::commit();
+            return redirect()->route('manufacturing.bom.index')->with('success', 'BOM berhasil dihapus.');
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return back()->with('error', 'Gagal menghapus BOM: ' . $e->getMessage());
+        }
+    }
+
     // Production Management
     public function productionIndex()
     {
