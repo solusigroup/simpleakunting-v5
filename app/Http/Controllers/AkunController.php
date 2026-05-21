@@ -77,11 +77,16 @@ class AkunController extends Controller
 
     public function destroy(Akun $akun)
     {
+        $isUsed = \Illuminate\Support\Facades\DB::table('jurnal_detail')->where('kode_akun', $akun->kode_akun)->exists();
+        if ($isUsed) {
+            return back()->with('error', 'Gagal menghapus: Akun ini sudah digunakan dalam jurnal transaksi.');
+        }
+
         try {
             $akun->delete();
             return redirect()->route('akun.index')->with('success', 'Akun berhasil dihapus.');
         } catch (\Exception $e) {
-            return back()->with('error', 'Gagal menghapus akun. Pastikan akun tidak digunakan dalam transaksi.');
+            return back()->with('error', 'Gagal menghapus akun: ' . $e->getMessage());
         }
     }
 }

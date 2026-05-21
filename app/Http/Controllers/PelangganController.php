@@ -163,8 +163,14 @@ class PelangganController extends Controller
      */
     public function destroy(Pelanggan $pelanggan)
     {
-        // Cek apakah ada transaksi terkait (opsional, tapi disarankan)
-        // Untuk saat ini kita hapus saja
+        // Cek apakah ada transaksi terkait
+        $hasPenjualan = \App\Models\Penjualan::where('id_pelanggan', $pelanggan->id_pelanggan)->exists();
+        $hasJurnal = \App\Models\JurnalUmum::where('id_pelanggan', $pelanggan->id_pelanggan)->exists();
+
+        if ($hasPenjualan || $hasJurnal) {
+            return back()->with('error', 'Gagal menghapus: Pelanggan ini sudah memiliki transaksi terkait.');
+        }
+
         $pelanggan->delete();
 
         return redirect()->route('pelanggan.index')->with('success', 'Data pelanggan berhasil dihapus.');

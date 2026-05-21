@@ -121,6 +121,15 @@ class PersediaanController extends Controller
     public function destroy($id)
     {
         $persediaan = Persediaan::findOrFail($id);
+
+        $hasKartuStok = \Illuminate\Support\Facades\DB::table('kartu_stok')->where('id_barang', $persediaan->id_barang)->exists();
+        $hasPenjualan = \Illuminate\Support\Facades\DB::table('penjualan_detail')->where('id_barang', $persediaan->id_barang)->exists();
+        $hasPembelian = \Illuminate\Support\Facades\DB::table('pembelian_detail')->where('id_barang', $persediaan->id_barang)->exists();
+
+        if ($hasKartuStok || $hasPenjualan || $hasPembelian) {
+            return back()->with('error', 'Gagal menghapus: Barang ini sudah memiliki riwayat transaksi atau kartu stok.');
+        }
+
         $persediaan->delete();
         return redirect()->route('persediaan.index')->with('success', 'Data barang berhasil dihapus.');
     }
