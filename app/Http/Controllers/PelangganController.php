@@ -115,47 +115,9 @@ class PelangganController extends Controller
 
     public function recalculate()
     {
-        try {
-            \Illuminate\Support\Facades\DB::beginTransaction();
-
-            // 1. BACKFILL: Hubungkan kembali jurnal lama (Multi-strategy)
-            // Strategi A: Berdasarkan link id_jurnal di tabel penjualan
-            \Illuminate\Support\Facades\DB::statement("
-                UPDATE jurnal_umum j
-                JOIN penjualan p ON j.id_jurnal = p.id_jurnal
-                SET j.id_pelanggan = p.id_pelanggan
-                WHERE j.id_pelanggan IS NULL
-            ");
-
-            // Strategi B: Berdasarkan kecocokan no_transaksi (Fallback)
-            \Illuminate\Support\Facades\DB::statement("
-                UPDATE jurnal_umum j
-                JOIN penjualan p ON j.no_transaksi = p.no_faktur
-                SET j.id_pelanggan = p.id_pelanggan
-                WHERE j.id_pelanggan IS NULL
-            ");
-
-            $pelanggan = Pelanggan::all();
-            foreach ($pelanggan as $p) {
-                $netChange = \App\Models\JurnalDetail::whereHas('jurnal', function($q) use ($p) {
-                        $q->where('id_pelanggan', $p->id_pelanggan);
-                    })
-                    ->whereHas('akun', function($q) {
-                        $q->where('tipe_akun', 'Piutang');
-                    })
-                    ->select(\Illuminate\Support\Facades\DB::raw('SUM(debit) - SUM(kredit) as net_change'))
-                    ->value('net_change') ?? 0;
-
-                $p->saldo_terkini_piutang = $p->saldo_awal_piutang + $netChange;
-                $p->save();
-            }
-
-            \Illuminate\Support\Facades\DB::commit();
-            return redirect()->route('pelanggan.index')->with('success', 'Sinkronisasi saldo piutang berhasil disempurnakan.');
-        } catch (\Exception $e) {
-            \Illuminate\Support\Facades\DB::rollBack();
-            return redirect()->route('pelanggan.index')->with('error', 'Gagal sinkronisasi: ' . $e->getMessage());
-        }
+        \App\Jobs\RecalculatePelangganJob::dispatch();
+        
+        return redirect()->route('pelanggan.index')->with('success', 'Proses sinkronisasi saldo piutang sedang berjalan di latar belakang (Background Job).');
     }
 
     /**

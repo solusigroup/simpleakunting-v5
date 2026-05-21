@@ -164,6 +164,8 @@ Route::middleware('role:superuser,admin,manajer,staff,kasir')->group(function ()
     Route::get('/laporan/neraca-lajur', [LaporanController::class, 'neracaLajur'])->name('laporan.neraca_lajur');
     Route::get('/laporan/mutasi-persediaan', [LaporanController::class, 'mutasiPersediaan'])->name('laporan.mutasi_persediaan');
     Route::get('/laporan/aset-tetap', [LaporanController::class, 'daftarAsetTetap'])->name('laporan.aset_tetap');
+    Route::get('/laporan/downloads', [LaporanController::class, 'downloads'])->name('laporan.downloads');
+    Route::get('/laporan/downloads/{id}', [LaporanController::class, 'downloadFile'])->name('laporan.download_file');
 });
 
 // =====================================================
