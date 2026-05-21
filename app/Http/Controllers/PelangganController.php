@@ -76,7 +76,7 @@ class PelangganController extends Controller
             ->select(\Illuminate\Support\Facades\DB::raw('SUM(debit) - SUM(kredit) as total'))
             ->value('total') ?? 0;
 
-        $saldoAwalPeriode = $pelanggan->saldo_awal_piutang + $saldoSebelumnya;
+        $saldoAwalPeriode = (float)($pelanggan->saldo_awal_piutang ?? 0) + (float)($saldoSebelumnya ?? 0);
 
         return view('pelanggan.show', compact('pelanggan', 'transactions', 'saldoAwalPeriode', 'startDate', 'endDate'));
     }

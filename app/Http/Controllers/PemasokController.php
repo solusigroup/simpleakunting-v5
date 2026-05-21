@@ -131,7 +131,7 @@ class PemasokController extends Controller
             ->select(\Illuminate\Support\Facades\DB::raw('SUM(kredit) - SUM(debit) as total'))
             ->value('total') ?? 0;
 
-        $saldoAwalPeriode = $pemasok->saldo_awal_hutang + $saldoSebelumnya;
+        $saldoAwalPeriode = (float)($pemasok->saldo_awal_hutang ?? 0) + (float)($saldoSebelumnya ?? 0);
 
         return view('pemasok.show', compact('pemasok', 'transactions', 'saldoAwalPeriode', 'startDate', 'endDate'));
     }
