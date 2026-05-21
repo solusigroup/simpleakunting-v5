@@ -23,6 +23,7 @@
     
     <!-- Custom CSS -->
     <link href="{{ asset('css/custom.css') }}" rel="stylesheet">
+    <link href="{{ asset('css/searchable-select.css') }}" rel="stylesheet">
     
     <style>
         /* ========================================
@@ -1183,6 +1184,7 @@
             });
         }
     </script>
+    <script src="{{ asset('js/searchable-select.js') }}"></script>
     @stack('scripts')
 </body>
 </html>

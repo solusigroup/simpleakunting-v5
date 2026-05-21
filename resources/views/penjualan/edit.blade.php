@@ -12,31 +12,7 @@
         </div>
     </div>
 
-    <!-- Searchable Dropdown Styles (Perfect alignment with Jurnal Kas) -->
-    <style>
-        .searchable-select { position: relative; width: 100%; }
-        .searchable-select-trigger { display: flex; align-items: center; justify-content: space-between; width: 100%; padding: 6px 12px; font-size: 0.875rem; border: 1px solid var(--color-border, #dee2e6); border-radius: var(--radius-sm, 6px); background: var(--color-bg, #fff); color: var(--color-text, #333); cursor: pointer; transition: border-color 0.2s, box-shadow 0.2s; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; min-height: 34px; }
-        .searchable-select-trigger:hover { border-color: var(--color-primary, #8b5cf6); }
-        .searchable-select-trigger.open { border-color: var(--color-primary, #8b5cf6); box-shadow: 0 0 0 3px rgba(139, 92, 246, 0.15); }
-        .searchable-select-trigger .trigger-text { flex: 1; overflow: hidden; text-overflow: ellipsis; text-align: left; }
-        .searchable-select-trigger .trigger-text.placeholder { color: var(--color-text-muted, #999); }
-        .searchable-select-trigger .trigger-chevron { margin-left: 8px; transition: transform 0.2s; flex-shrink: 0; }
-        .searchable-select-trigger.open .trigger-chevron { transform: rotate(180deg); }
-        .searchable-select-dropdown { display: none; position: absolute; top: calc(100% + 4px); left: 0; min-width: 420px; background: var(--color-bg-card, #fff); border: 1px solid var(--color-border, #dee2e6); border-radius: var(--radius-sm, 6px); box-shadow: 0 8px 24px rgba(0,0,0,0.12); z-index: 1050; max-height: 340px; overflow: hidden; }
-        .searchable-select-dropdown.show { display: block; }
-        .searchable-select-search { padding: 8px; border-bottom: 1px solid var(--color-border, #eee); position: sticky; top: 0; background: var(--color-bg-card, #fff); z-index: 1; }
-        .searchable-select-search input { width: 100%; padding: 6px 10px; border: 1px solid var(--color-border, #dee2e6); border-radius: var(--radius-sm, 4px); font-size: 0.8125rem; outline: none; transition: border-color 0.2s; background: var(--color-bg, #fff); color: var(--color-text, #333); }
-        .searchable-select-options { max-height: 280px; overflow-y: auto; padding: 4px 0; }
-        .searchable-select-option { padding: 7px 12px; cursor: pointer; font-size: 0.8125rem; color: var(--color-text, #333); transition: background 0.15s; text-align: left; }
-        .searchable-select-option:hover { background: rgba(139, 92, 246, 0.08); }
-        .searchable-select-option.selected { background: rgba(139, 92, 246, 0.12); color: var(--color-primary, #8b5cf6); font-weight: 600; }
-        .searchable-select-option.hidden { display: none; }
-        .searchable-select-empty { padding: 12px; text-align: center; color: var(--color-text-muted, #999); font-size: 0.8125rem; }
-        
-        .card, .card-body, .table-responsive { overflow: visible !important; }
-        .table-responsive { min-height: 250px; }
-        td { position: relative; }
-    </style>
+    <!-- Custom styles using global searchable-select.css -->
 
     <form action="{{ route('penjualan.update', $penjualan->id_penjualan) }}" method="POST">
         @csrf
@@ -199,6 +175,7 @@
                 data-harga="${b.harga_jual || 0}" 
                 data-barcode="${b.barcode || ''}" 
                 data-kode="${b.kode_barang || ''}" 
+                data-search="${b.barcode || ''} ${b.kode_barang || ''}"
                 data-label="${label}">
                 <div class="d-flex justify-content-between align-items-center w-100" style="gap: 15px;">
                     <div style="flex: 1; min-width: 0;">
@@ -253,99 +230,19 @@
         `;
         document.getElementById('container_barang').insertAdjacentHTML('beforeend', html);
         initSearchableSelect(idx);
-        rowCount++;
-    }
-
-    function initSearchableSelect(idx) {
-        const trigger = document.getElementById(`ss_trigger_${idx}`);
-        const dropdown = document.getElementById(`ss_dropdown_${idx}`);
-        const searchInput = document.getElementById(`ss_search_${idx}`);
-        const optionsContainer = document.getElementById(`ss_options_${idx}`);
-        const hiddenInput = document.getElementById(`ss_input_${idx}`);
-
-        trigger.addEventListener('click', function(e) {
-            e.stopPropagation();
-            document.querySelectorAll('.searchable-select-dropdown.show').forEach(d => {
-                if (d !== dropdown) {
-                    d.classList.remove('show');
-                    d.closest('.searchable-select').querySelector('.searchable-select-trigger').classList.remove('open');
-                }
-            });
-            const isOpen = dropdown.classList.toggle('show');
-            trigger.classList.toggle('open', isOpen);
-            if (isOpen) {
-                searchInput.value = '';
-                filterOptions(idx, '');
-                setTimeout(() => searchInput.focus(), 50);
-            }
-        });
-
-        searchInput.addEventListener('input', function() {
-            filterOptions(idx, this.value);
-        });
-
-        optionsContainer.addEventListener('click', function(e) {
-            const opt = e.target.closest('.searchable-select-option');
-            if (!opt) return;
-            e.stopPropagation();
-
-            selectOption(idx, opt);
-        });
-    }
-
-    function selectOption(idx, opt) {
-        const trigger = document.getElementById(`ss_trigger_${idx}`);
-        const dropdown = document.getElementById(`ss_dropdown_${idx}`);
-        const hiddenInput = document.getElementById(`ss_input_${idx}`);
-
-        hiddenInput.value = opt.dataset.value;
-        const triggerText = trigger.querySelector('.trigger-text');
-        triggerText.textContent = opt.dataset.label;
-        triggerText.classList.remove('placeholder');
         
-        dropdown.classList.remove('show');
-        trigger.classList.remove('open');
-
-        const optionsContainer = document.getElementById(`ss_options_${idx}`);
-        optionsContainer.querySelectorAll('.selected').forEach(o => o.classList.remove('selected'));
-        opt.classList.add('selected');
-
-        // Update Price
-        document.getElementById(`harga_${idx}`).value = opt.dataset.harga || 0;
-        hitungSubtotal(idx);
-    }
-
-    function filterOptions(idx, query) {
-        const container = document.getElementById(`ss_options_${idx}`);
-        const options = container.querySelectorAll('.searchable-select-option');
-        const q = query.toLowerCase().trim();
-        let count = 0;
-
-        options.forEach(opt => {
-            const label = opt.dataset.label.toLowerCase();
-            const barcode = (opt.dataset.barcode || '').toLowerCase();
-            const kode = (opt.dataset.kode || '').toLowerCase();
-            
-            if (!q || label.includes(q) || barcode.includes(q) || kode.includes(q)) {
-                opt.classList.remove('hidden');
-                count++;
-            } else {
-                opt.classList.add('hidden');
+        // Listen to change event from searchable-select.js
+        document.getElementById(`ss_input_${idx}`).addEventListener('change', function(e) {
+            const val = this.value;
+            if (!val) return;
+            const opt = document.querySelector(`#ss_options_${idx} .searchable-select-option[data-value="${val}"]`);
+            if (opt) {
+                document.getElementById(`harga_${idx}`).value = opt.dataset.harga || 0;
+                hitungSubtotal(idx);
             }
         });
-
-        let emptyMsg = container.querySelector('.searchable-select-empty');
-        if (count === 0) {
-            if (!emptyMsg) {
-                emptyMsg = document.createElement('div');
-                emptyMsg.className = 'searchable-select-empty';
-                emptyMsg.textContent = 'Barang tidak ditemukan';
-                container.appendChild(emptyMsg);
-            }
-            emptyMsg.style.display = '';
-        } else if (emptyMsg) {
-            emptyMsg.style.display = 'none';
-        }
+        
+        rowCount++;
     }
 
     function hitungSubtotal(idx) {
@@ -376,13 +273,6 @@
         else d.style.display = 'none';
     }
 
-    document.addEventListener('click', () => {
-        document.querySelectorAll('.searchable-select-dropdown.show').forEach(d => {
-            d.classList.remove('show');
-            d.closest('.searchable-select').querySelector('.searchable-select-trigger').classList.remove('open');
-        });
-    });
-
     // Barcode Logic
     document.getElementById('scan_barcode').addEventListener('keypress', function(e) {
         if (e.key === 'Enter') {
@@ -399,14 +289,15 @@
                     }
                     if (targetIdx === -1) { tambahBaris(); targetIdx = rowCount-1; }
                     
-                    const dummyOpt = {
-                        dataset: {
-                            value: b.id_barang,
-                            label: `${b.kode_barang} - ${b.nama_barang}`,
-                            harga: b.harga_jual || 0
-                        }
-                    };
-                    selectOption(targetIdx, dummyOpt);
+                    const input = document.getElementById(`ss_input_${targetIdx}`);
+                    input.value = b.id_barang;
+                    
+                    const triggerText = document.querySelector(`#ss_trigger_${targetIdx} .trigger-text`);
+                    triggerText.textContent = `${b.kode_barang} - ${b.nama_barang}`;
+                    triggerText.classList.remove('placeholder');
+                    
+                    document.getElementById(`harga_${targetIdx}`).value = b.harga_jual || 0;
+                    hitungSubtotal(targetIdx);
                 } else {
                     alert('Barang tidak ditemukan!');
                 }
