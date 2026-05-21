@@ -25,7 +25,7 @@
                 </div>
                 <div class="col-md-6 text-md-end">
                     <p class="text-muted mb-1">Saldo Hutang Terkini</p>
-                    <h3 class="fw-bold">Rp {{ number_format($pemasok->saldo_terkini_hutang, 2, ',', '.') }}</h3>
+                    <h3 class="fw-bold">Rp {{ number_format((float)($pemasok->saldo_terkini_hutang ?? 0), 2, ',', '.') }}</h3>
                 </div>
             </div>
         </div>
@@ -71,25 +71,25 @@
                         <td class="px-3 text-muted italic" colspan="3">Saldo Awal per {{ date('d/m/Y', strtotime($startDate)) }}</td>
                         <td class="text-end">-</td>
                         <td class="text-end">-</td>
-                        <td class="text-end px-3 fw-bold">Rp {{ number_format($saldoAwalPeriode, 2, ',', '.') }}</td>
+                        <td class="text-end px-3 fw-bold">Rp {{ number_format((float)($saldoAwalPeriode ?? 0), 2, ',', '.') }}</td>
                     </tr>
                     @php $runningBalance = $saldoAwalPeriode; @endphp
                     @foreach($transactions as $t)
                         @php $runningBalance += ($t->kredit - $t->debit); @endphp
                         <tr>
-                            <td class="px-3">{{ date('d/m/Y', strtotime($t->jurnal->tanggal)) }}</td>
+                            <td class="px-3">{{ $t->jurnal ? date('d/m/Y', strtotime($t->jurnal->tanggal)) : '-' }}</td>
                             <td>
-                                <span class="badge bg-light text-dark border">{{ $t->jurnal->no_transaksi }}</span>
+                                <span class="badge bg-light text-dark border">{{ $t->jurnal ? $t->jurnal->no_transaksi : '-' }}</span>
                             </td>
-                            <td>{{ $t->jurnal->deskripsi }}</td>
+                            <td>{{ $t->jurnal ? $t->jurnal->deskripsi : '-' }}</td>
                             <td class="text-end text-success">
-                                {{ $t->debit > 0 ? 'Rp ' . number_format($t->debit, 2, ',', '.') : '-' }}
+                                {{ $t->debit > 0 ? 'Rp ' . number_format((float)$t->debit, 2, ',', '.') : '-' }}
                             </td>
                             <td class="text-end text-danger">
-                                {{ $t->kredit > 0 ? 'Rp ' . number_format($t->kredit, 2, ',', '.') : '-' }}
+                                {{ $t->kredit > 0 ? 'Rp ' . number_format((float)$t->kredit, 2, ',', '.') : '-' }}
                             </td>
                             <td class="text-end px-3 fw-bold">
-                                Rp {{ number_format($runningBalance, 2, ',', '.') }}
+                                Rp {{ number_format((float)($runningBalance ?? 0), 2, ',', '.') }}
                             </td>
                         </tr>
                     @endforeach
@@ -97,7 +97,7 @@
                 <tfoot class="table-light">
                     <tr>
                         <th colspan="5" class="text-end px-3">Total Saldo Akhir</th>
-                        <th class="text-end px-3">Rp {{ number_format($runningBalance, 2, ',', '.') }}</th>
+                        <th class="text-end px-3">Rp {{ number_format((float)($runningBalance ?? 0), 2, ',', '.') }}</th>
                     </tr>
                 </tfoot>
             </table>
