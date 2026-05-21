@@ -80,34 +80,6 @@ class PenjualanController extends Controller
             $nextNo = $lastFaktur ? (int)substr($lastFaktur->no_faktur, 4) + 1 : 1;
             $noFaktur = 'INV-' . str_pad($nextNo, 5, '0', STR_PAD_LEFT);
 
-            // 1. Hitung Total & Validasi Stok
-            $totalPenjualan = 0;
-            $detailsData = [];
-            
-            foreach ($request->details as $item) {
-                $barang = Persediaan::findOrFail($item['id_barang']);
-                
-                if ($barang->stok_saat_ini < $item['kuantitas']) {
-                    throw new \Exception("Stok barang {$barang->nama_barang} tidak mencukupi. Sisa: {$barang->stok_saat_ini}");
-                }
-
-                $hargaInput = (float)($item['harga'] ?? $barang->harga_jual);
-                $subtotal = $hargaInput * $item['kuantitas'];
-                $totalPenjualan += $subtotal;
-
-                $detailsData[] = [
-                    'barang' => $barang,
-                    'kuantitas' => $item['kuantitas'],
-                    'harga' => $hargaInput,
-                    'subtotal' => $subtotal,
-                ];
-            }
-
-            // H1: Dynamic account codes dari settings
-            $perusahaan = DB::table('perusahaan')->first();
-            $akunPiutang = $perusahaan->akun_piutang ?? '1-10100';
-            $akunPendapatanDefault = $perusahaan->akun_pendapatan ?? '4-10000';
-
             $jurnal = Jurnal::create([
                 'no_transaksi' => $noFaktur,
                 'tanggal' => $request->tanggal_faktur,
@@ -119,53 +91,6 @@ class PenjualanController extends Controller
                 'is_locked' => 1
             ]);
 
-            // Debit: Kas (Tunai) atau Piutang (Kredit)
-            $akunDebit = ($request->metode_pembayaran == 'Tunai') ? $request->akun_kas_bank : $akunPiutang;
-            
-            JurnalDetail::create([
-                'id_jurnal' => $jurnal->id_jurnal,
-                'kode_akun' => $akunDebit,
-                'debit' => $totalPenjualan,
-                'kredit' => 0
-            ]);
-
-            // Kredit: Pendapatan (Per Barang)
-            foreach ($detailsData as $data) {
-                $akunKredit = $data['barang']->akun_penjualan ?? $akunPendapatanDefault;
-                JurnalDetail::create([
-                    'id_jurnal' => $jurnal->id_jurnal,
-                    'kode_akun' => $akunKredit,
-                    'debit' => 0,
-                    'kredit' => $data['subtotal']
-                ]);
-                
-                // Jurnal HPP & Persediaan (Perpetual)
-                // Debit: HPP
-                // Kredit: Persediaan
-                // Skip HPP untuk perusahaan jasa
-                $jenisUsaha = DB::table('perusahaan')->where('id', 1)->value('jenis_usaha') ?? 'dagang';
-                if ($jenisUsaha !== 'jasa' && $data['barang']->akun_hpp && $data['barang']->akun_persediaan) {
-                    $totalHPP = $data['barang']->harga_beli * $data['kuantitas'];
-                    
-                    // Debit HPP
-                    JurnalDetail::create([
-                        'id_jurnal' => $jurnal->id_jurnal,
-                        'kode_akun' => $data['barang']->akun_hpp,
-                        'debit' => $totalHPP,
-                        'kredit' => 0
-                    ]);
-                    
-                    // Kredit Persediaan
-                    JurnalDetail::create([
-                        'id_jurnal' => $jurnal->id_jurnal,
-                        'kode_akun' => $data['barang']->akun_persediaan,
-                        'debit' => 0,
-                        'kredit' => $totalHPP
-                    ]);
-                }
-            }
-
-            // 3. Simpan Penjualan
             $penjualan = Penjualan::create([
                 'id_pelanggan' => $request->id_pelanggan,
                 'id_jurnal' => $jurnal->id_jurnal,
@@ -173,44 +98,13 @@ class PenjualanController extends Controller
                 'id_unit_usaha' => $request->id_unit_usaha,
                 'no_faktur' => $noFaktur,
                 'tanggal_faktur' => $request->tanggal_faktur,
-                'total' => $totalPenjualan,
-                'keterangan' => $request->keterangan,
+                'total' => 0,
                 'metode_pembayaran' => $request->metode_pembayaran,
-                'akun_kas_bank' => ($request->metode_pembayaran == 'Tunai') ? $request->akun_kas_bank : null,
-                'sisa_tagihan' => ($request->metode_pembayaran == 'Kredit') ? $totalPenjualan : 0,
-                'status_pembayaran' => ($request->metode_pembayaran == 'Kredit') ? 'Belum Lunas' : 'Lunas',
+                'status_pembayaran' => 'Belum Lunas',
+                'sisa_tagihan' => 0,
             ]);
 
-            // 4. Simpan Detail & Update Stok
-            foreach ($detailsData as $data) {
-                PenjualanDetail::create([
-                    'id_penjualan' => $penjualan->id_penjualan,
-                    'id_barang' => $data['barang']->id_barang,
-                    'kuantitas' => $data['kuantitas'],
-                    'harga' => $data['harga'],
-                    'subtotal' => $data['subtotal'],
-                    'akun_pendapatan' => $data['barang']->akun_penjualan
-                ]);
-
-                // Kurangi Stok
-                $data['barang']->decrement('stok_saat_ini', $data['kuantitas']);
-
-                // Catat Kartu Stok
-                DB::table('kartu_stok')->insert([
-                    'id_barang' => $data['barang']->id_barang,
-                    'tipe_transaksi' => 'OUT',
-                    'kuantitas' => $data['kuantitas'],
-                    'keterangan' => "Penjualan #{$noFaktur}",
-                    'created_at' => now(),
-                    'updated_at' => now(),
-                ]);
-            }
-
-            // 5. Update Saldo Pelanggan (Jika Kredit)
-            if ($request->metode_pembayaran == 'Kredit') {
-                Pelanggan::where('id_pelanggan', $request->id_pelanggan)
-                    ->increment('saldo_terkini_piutang', $totalPenjualan);
-            }
+            $this->applyPenjualanImpact($penjualan, $request);
 
             DB::commit();
             return redirect()->route('penjualan.index')->with('success', 'Transaksi penjualan berhasil disimpan.');
@@ -267,153 +161,11 @@ class PenjualanController extends Controller
             $this->validatePeriodOpen($penjualan->tanggal_faktur);
             $this->validatePeriodOpen($request->tanggal_faktur);
 
-            // 1. REVERSE OLD IMPACT
-            foreach ($penjualan->details as $oldDetail) {
-                $barang = Persediaan::find($oldDetail->id_barang);
-                if ($barang) {
-                    $barang->increment('stok_saat_ini', $oldDetail->kuantitas);
-                }
-                DB::table('kartu_stok')
-                    ->where('id_barang', $oldDetail->id_barang)
-                    ->where('keterangan', 'LIKE', "%#{$penjualan->no_faktur}%")
-                    ->delete();
-            }
+            $this->reversePenjualanImpact($penjualan);
 
-            if ($penjualan->metode_pembayaran == 'Kredit') {
-                Pelanggan::where('id_pelanggan', $penjualan->id_pelanggan)
-                    ->decrement('saldo_terkini_piutang', $penjualan->total);
-            }
+            $this->applyPenjualanImpact($penjualan, $request);
 
-            JurnalDetail::where('id_jurnal', $penjualan->id_jurnal)->delete();
-
-            // 2. APPLY NEW IMPACT
-            $jurnal = Jurnal::findOrFail($penjualan->id_jurnal);
-            $jurnal->update([
-                'id_pelanggan' => $request->id_pelanggan,
-            ]);
-
-            $totalPenjualan = 0;
-            $detailsData = [];
-            foreach ($request->details as $item) {
-                $barang = Persediaan::findOrFail($item['id_barang']);
-                
-                // Validasi Stok Baru (setelah dikembalikan stok lama)
-                if ($barang->stok_saat_ini < $item['kuantitas']) {
-                    throw new \Exception("Stok barang {$barang->nama_barang} tidak mencukupi. Sisa: {$barang->stok_saat_ini}");
-                }
-
-                $hargaInput = (float)($item['harga'] ?? $barang->harga_jual);
-                $subtotal = $hargaInput * $item['kuantitas'];
-                $totalPenjualan += $subtotal;
-
-                $detailsData[] = [
-                    'barang' => $barang,
-                    'kuantitas' => $item['kuantitas'],
-                    'harga' => $hargaInput,
-                    'subtotal' => $subtotal,
-                ];
-            }
-
-            // Update Jurnal Header
-            $jurnal->update([
-                'tanggal' => $request->tanggal_faktur,
-                'id_cabang' => $request->id_cabang,
-                'id_unit_usaha' => $request->id_unit_usaha,
-                'deskripsi' => "Update Penjualan Faktur #{$penjualan->no_faktur}",
-            ]);
-
-            $perusahaan = DB::table('perusahaan')->first();
-            $akunPiutang = $perusahaan->akun_piutang ?? '1-10100';
-            $akunPendapatanDefault = $perusahaan->akun_pendapatan ?? '4-10000';
-            $jenisUsaha = $perusahaan->jenis_usaha ?? 'dagang';
-
-            // Debit: Kas or Piutang
-            $akunDebit = ($request->metode_pembayaran == 'Tunai') ? $request->akun_kas_bank : $akunPiutang;
-            JurnalDetail::create([
-                'id_jurnal' => $jurnal->id_jurnal,
-                'kode_akun' => $akunDebit,
-                'debit' => $totalPenjualan,
-                'kredit' => 0
-            ]);
-
-            // Kredit: Pendapatan & Jurnal HPP
-            foreach ($detailsData as $data) {
-                $akunKredit = $data['barang']->akun_penjualan ?? $akunPendapatanDefault;
-                JurnalDetail::create([
-                    'id_jurnal' => $jurnal->id_jurnal,
-                    'kode_akun' => $akunKredit,
-                    'debit' => 0,
-                    'kredit' => $data['subtotal']
-                ]);
-
-                if ($jenisUsaha !== 'jasa' && $data['barang']->akun_hpp && $data['barang']->akun_persediaan) {
-                    $totalHPP = $data['barang']->harga_beli * $data['kuantitas'];
-                    JurnalDetail::create([
-                        'id_jurnal' => $jurnal->id_jurnal,
-                        'kode_akun' => $data['barang']->akun_hpp,
-                        'debit' => $totalHPP,
-                        'kredit' => 0
-                    ]);
-                    JurnalDetail::create([
-                        'id_jurnal' => $jurnal->id_jurnal,
-                        'kode_akun' => $data['barang']->akun_persediaan,
-                        'debit' => 0,
-                        'kredit' => $totalHPP
-                    ]);
-                }
-            }
-
-            // Update Penjualan Header
-            $penjualan->update([
-                'id_pelanggan' => $request->id_pelanggan,
-                'id_cabang' => $request->id_cabang,
-                'id_unit_usaha' => $request->id_unit_usaha,
-                'tanggal_faktur' => $request->tanggal_faktur,
-                'total' => $totalPenjualan,
-                'keterangan' => $request->keterangan,
-                'metode_pembayaran' => $request->metode_pembayaran,
-                'akun_kas_bank' => ($request->metode_pembayaran == 'Tunai') ? $request->akun_kas_bank : null,
-                'sisa_tagihan' => ($request->metode_pembayaran == 'Kredit') ? $totalPenjualan : 0,
-                'status_pembayaran' => ($request->metode_pembayaran == 'Kredit') ? 'Belum Lunas' : 'Lunas',
-            ]);
-
-            $penjualan->details()->delete();
-
-            foreach ($detailsData as $data) {
-                PenjualanDetail::create([
-                    'id_penjualan' => $penjualan->id_penjualan,
-                    'id_barang' => $data['barang']->id_barang,
-                    'kuantitas' => $data['kuantitas'],
-                    'harga' => $data['harga'],
-                    'subtotal' => $data['subtotal'],
-                    'akun_pendapatan' => $data['barang']->akun_penjualan
-                ]);
-
-                $data['barang']->decrement('stok_saat_ini', $data['kuantitas']);
-
-                DB::table('kartu_stok')->insert([
-                    'id_barang' => $data['barang']->id_barang,
-                    'tipe_transaksi' => 'OUT',
-                    'kuantitas' => $data['kuantitas'],
-                    'keterangan' => "Update Penjualan #{$penjualan->no_faktur}",
-                    'created_at' => now(),
-                    'updated_at' => now(),
-                ]);
-            }
-
-            if ($request->metode_pembayaran == 'Kredit') {
-                Pelanggan::where('id_pelanggan', $request->id_pelanggan)
-                    ->increment('saldo_terkini_piutang', $totalPenjualan);
-            }
-
-            // Sync POS Session Total
-            if ($penjualan->id_pos_session) {
-                $session = \App\Models\PosSession::find($penjualan->id_pos_session);
-                if ($session) {
-                    $newTotal = Penjualan::where('id_pos_session', $session->id)->sum('total');
-                    $session->update(['total_penjualan' => $newTotal]);
-                }
-            }
+            $this->syncPosSessionTotal($penjualan->id_pos_session);
 
             DB::commit();
             return redirect()->route('penjualan.index')->with('success', 'Transaksi penjualan berhasil diperbarui.');
@@ -440,45 +192,186 @@ class PenjualanController extends Controller
 
             $this->validatePeriodOpen($penjualan->tanggal_faktur);
 
-            foreach ($penjualan->details as $detail) {
-                $barang = Persediaan::find($detail->id_barang);
-                if ($barang) {
-                    $barang->increment('stok_saat_ini', $detail->kuantitas);
-                }
-                
-                DB::table('kartu_stok')
-                    ->where('id_barang', $detail->id_barang)
-                    ->where('keterangan', 'LIKE', "%#{$penjualan->no_faktur}%")
-                    ->delete();
-            }
-
-            if ($penjualan->metode_pembayaran == 'Kredit') {
-                Pelanggan::where('id_pelanggan', $penjualan->id_pelanggan)
-                    ->decrement('saldo_terkini_piutang', $penjualan->total);
-            }
+            $this->reversePenjualanImpact($penjualan);
 
             if ($penjualan->id_jurnal) {
-                JurnalDetail::where('id_jurnal', $penjualan->id_jurnal)->delete();
                 Jurnal::where('id_jurnal', $penjualan->id_jurnal)->delete();
             }
 
-            $penjualan->details()->delete();
+            $posSessionId = $penjualan->id_pos_session;
             $penjualan->delete();
 
-            // Sync POS Session Total
-            if ($penjualan->id_pos_session) {
-                $session = \App\Models\PosSession::find($penjualan->id_pos_session);
-                if ($session) {
-                    $newTotal = Penjualan::where('id_pos_session', $session->id)->sum('total');
-                    $session->update(['total_penjualan' => $newTotal]);
-                }
-            }
+            $this->syncPosSessionTotal($posSessionId);
 
             DB::commit();
             return redirect()->route('penjualan.index')->with('success', 'Transaksi penjualan berhasil dihapus dan stok telah disesuaikan.');
         } catch (\Exception $e) {
             DB::rollBack();
             return back()->with('error', 'Gagal menghapus transaksi: ' . $e->getMessage());
+        }
+    }
+
+    private function reversePenjualanImpact(Penjualan $penjualan)
+    {
+        foreach ($penjualan->details as $oldDetail) {
+            $barang = Persediaan::find($oldDetail->id_barang);
+            if ($barang) {
+                $barang->increment('stok_saat_ini', $oldDetail->kuantitas);
+            }
+            DB::table('kartu_stok')
+                ->where('id_barang', $oldDetail->id_barang)
+                ->where('keterangan', 'LIKE', "%#{$penjualan->no_faktur}%")
+                ->delete();
+        }
+
+        if ($penjualan->metode_pembayaran == 'Kredit') {
+            Pelanggan::where('id_pelanggan', $penjualan->id_pelanggan)
+                ->decrement('saldo_terkini_piutang', $penjualan->total);
+        }
+
+        if ($penjualan->id_jurnal) {
+            JurnalDetail::where('id_jurnal', $penjualan->id_jurnal)->delete();
+        }
+
+        $penjualan->details()->delete();
+    }
+
+    private function applyPenjualanImpact(Penjualan $penjualan, Request $request)
+    {
+        // 1. Hitung Total & Validasi Stok
+        $totalPenjualan = 0;
+        $detailsData = [];
+        
+        foreach ($request->details as $item) {
+            $barang = Persediaan::findOrFail($item['id_barang']);
+            
+            if ($barang->stok_saat_ini < $item['kuantitas']) {
+                throw new \Exception("Stok barang {$barang->nama_barang} tidak mencukupi. Sisa: {$barang->stok_saat_ini}");
+            }
+
+            $hargaInput = (float)($item['harga'] ?? $barang->harga_jual);
+            $subtotal = $hargaInput * $item['kuantitas'];
+            $totalPenjualan += $subtotal;
+
+            $detailsData[] = [
+                'barang' => $barang,
+                'kuantitas' => $item['kuantitas'],
+                'harga' => $hargaInput,
+                'subtotal' => $subtotal,
+            ];
+        }
+
+        // Update Jurnal Header
+        $jurnal = Jurnal::findOrFail($penjualan->id_jurnal);
+        $jurnal->update([
+            'tanggal' => $request->tanggal_faktur,
+            'id_cabang' => $request->id_cabang,
+            'id_unit_usaha' => $request->id_unit_usaha,
+            'id_pelanggan' => $request->id_pelanggan,
+            'deskripsi' => "Penjualan Faktur #{$penjualan->no_faktur}",
+        ]);
+
+        $perusahaan = DB::table('perusahaan')->first();
+        $akunPiutang = $perusahaan->akun_piutang ?? '1-10100';
+        $akunPendapatanDefault = $perusahaan->akun_pendapatan ?? '4-10000';
+        $jenisUsaha = $perusahaan->jenis_usaha ?? 'dagang';
+
+        // Debit: Kas (Tunai) atau Piutang (Kredit)
+        $akunDebit = ($request->metode_pembayaran == 'Tunai') ? $request->akun_kas_bank : $akunPiutang;
+        
+        JurnalDetail::create([
+            'id_jurnal' => $jurnal->id_jurnal,
+            'kode_akun' => $akunDebit,
+            'debit' => $totalPenjualan,
+            'kredit' => 0
+        ]);
+
+        // Kredit: Pendapatan (Per Barang)
+        foreach ($detailsData as $data) {
+            $akunKredit = $data['barang']->akun_penjualan ?? $akunPendapatanDefault;
+            JurnalDetail::create([
+                'id_jurnal' => $jurnal->id_jurnal,
+                'kode_akun' => $akunKredit,
+                'debit' => 0,
+                'kredit' => $data['subtotal']
+            ]);
+            
+            // Jurnal HPP & Persediaan (Perpetual)
+            if ($jenisUsaha !== 'jasa' && $data['barang']->akun_hpp && $data['barang']->akun_persediaan) {
+                $totalHPP = $data['barang']->harga_beli * $data['kuantitas'];
+                
+                // Debit HPP
+                JurnalDetail::create([
+                    'id_jurnal' => $jurnal->id_jurnal,
+                    'kode_akun' => $data['barang']->akun_hpp,
+                    'debit' => $totalHPP,
+                    'kredit' => 0
+                ]);
+                
+                // Kredit Persediaan
+                JurnalDetail::create([
+                    'id_jurnal' => $jurnal->id_jurnal,
+                    'kode_akun' => $data['barang']->akun_persediaan,
+                    'debit' => 0,
+                    'kredit' => $totalHPP
+                ]);
+            }
+        }
+
+        // Update Penjualan Header
+        $penjualan->update([
+            'id_pelanggan' => $request->id_pelanggan,
+            'id_cabang' => $request->id_cabang,
+            'id_unit_usaha' => $request->id_unit_usaha,
+            'tanggal_faktur' => $request->tanggal_faktur,
+            'total' => $totalPenjualan,
+            'keterangan' => $request->keterangan,
+            'metode_pembayaran' => $request->metode_pembayaran,
+            'akun_kas_bank' => ($request->metode_pembayaran == 'Tunai') ? $request->akun_kas_bank : null,
+            'sisa_tagihan' => ($request->metode_pembayaran == 'Kredit') ? $totalPenjualan : 0,
+            'status_pembayaran' => ($request->metode_pembayaran == 'Kredit') ? 'Belum Lunas' : 'Lunas',
+        ]);
+
+        // Simpan Detail & Update Stok
+        foreach ($detailsData as $data) {
+            PenjualanDetail::create([
+                'id_penjualan' => $penjualan->id_penjualan,
+                'id_barang' => $data['barang']->id_barang,
+                'kuantitas' => $data['kuantitas'],
+                'harga' => $data['harga'],
+                'subtotal' => $data['subtotal'],
+                'akun_pendapatan' => $data['barang']->akun_penjualan
+            ]);
+
+            // Kurangi Stok
+            $data['barang']->decrement('stok_saat_ini', $data['kuantitas']);
+
+            // Catat Kartu Stok
+            DB::table('kartu_stok')->insert([
+                'id_barang' => $data['barang']->id_barang,
+                'tipe_transaksi' => 'OUT',
+                'kuantitas' => $data['kuantitas'],
+                'keterangan' => "Penjualan #{$penjualan->no_faktur}",
+                'created_at' => now(),
+                'updated_at' => now(),
+            ]);
+        }
+
+        // Update Saldo Pelanggan (Jika Kredit)
+        if ($request->metode_pembayaran == 'Kredit') {
+            Pelanggan::where('id_pelanggan', $request->id_pelanggan)
+                ->increment('saldo_terkini_piutang', $totalPenjualan);
+        }
+    }
+
+    private function syncPosSessionTotal($posSessionId)
+    {
+        if ($posSessionId) {
+            $session = \App\Models\PosSession::find($posSessionId);
+            if ($session) {
+                $newTotal = Penjualan::where('id_pos_session', $session->id)->sum('total');
+                $session->update(['total_penjualan' => $newTotal]);
+            }
         }
     }
 }
