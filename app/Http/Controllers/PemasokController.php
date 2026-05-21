@@ -139,7 +139,7 @@ class PemasokController extends Controller
     public function destroy(Pemasok $pemasok)
     {
         $hasPembelian = \App\Models\Pembelian::where('id_pemasok', $pemasok->id_pemasok)->exists();
-        $hasJurnal = \App\Models\JurnalUmum::where('id_pemasok', $pemasok->id_pemasok)->exists();
+        $hasJurnal = \App\Models\Jurnal::where('id_pemasok', $pemasok->id_pemasok)->exists();
 
         if ($hasPembelian || $hasJurnal) {
             return back()->with('error', 'Gagal menghapus: Pemasok ini sudah memiliki transaksi terkait.');
