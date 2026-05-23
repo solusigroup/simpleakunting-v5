@@ -125,43 +125,79 @@
             </div>
         </div>
 
-        <!-- Detail Jurnal (Read Only) -->
+        @php
+            $canEditDetails = auth()->user()->hasPermission('jurnal.edit') && auth()->user()->hasPermission('jurnal.delete');
+        @endphp
+
+        <!-- Detail Jurnal -->
         <div class="form-card mb-4">
             <div class="form-card-header">
-                <h3 class="form-card-title">Detail Jurnal (Tidak dapat diubah)</h3>
+                <h3 class="form-card-title">Detail Jurnal {{ $canEditDetails ? '' : '(Tidak dapat diubah)' }}</h3>
             </div>
             <div class="table-responsive">
                 <table class="data-table">
                     <thead>
                         <tr>
-                            <th>Akun</th>
-                            <th style="text-align: right;">Debit</th>
-                            <th style="text-align: right;">Kredit</th>
+                            <th style="{{ $canEditDetails ? 'width: 40%;' : '' }}">Akun</th>
+                            <th style="{{ $canEditDetails ? 'width: 25%;' : 'text-align: right;' }}">Debit</th>
+                            <th style="{{ $canEditDetails ? 'width: 25%;' : 'text-align: right;' }}">Kredit</th>
+                            @if($canEditDetails)
+                                <th style="width: 10%;">Aksi</th>
+                            @endif
                         </tr>
                     </thead>
-                    <tbody>
-                        @php
-                            $totalDebit = 0;
-                            $totalKredit = 0;
-                        @endphp
-                        @foreach($jurnal->details as $detail)
-                            <tr>
-                                <td>{{ $detail->kode_akun }} - {{ $detail->akun->nama_akun ?? 'N/A' }}</td>
-                                <td style="text-align: right;">{{ number_format($detail->debit, 2, ',', '.') }}</td>
-                                <td style="text-align: right;">{{ number_format($detail->kredit, 2, ',', '.') }}</td>
-                            </tr>
+                    <tbody id="container_jurnal">
+                        @if(!$canEditDetails)
                             @php
-                                $totalDebit += $detail->debit;
-                                $totalKredit += $detail->kredit;
+                                $totalDebit = 0;
+                                $totalKredit = 0;
                             @endphp
-                        @endforeach
+                            @foreach($jurnal->details as $detail)
+                                <tr>
+                                    <td>{{ $detail->kode_akun }} - {{ $detail->akun->nama_akun ?? 'N/A' }}</td>
+                                    <td style="text-align: right;">{{ number_format($detail->debit, 2, ',', '.') }}</td>
+                                    <td style="text-align: right;">{{ number_format($detail->kredit, 2, ',', '.') }}</td>
+                                </tr>
+                                @php
+                                    $totalDebit += $detail->debit;
+                                    $totalKredit += $detail->kredit;
+                                @endphp
+                            @endforeach
+                        @endif
                     </tbody>
                     <tfoot>
                         <tr style="background: var(--color-bg-light); font-weight: bold;">
-                            <td style="text-align: right;">Total</td>
-                            <td style="text-align: right;">{{ number_format($totalDebit, 2, ',', '.') }}</td>
-                            <td style="text-align: right;">{{ number_format($totalKredit, 2, ',', '.') }}</td>
+                            <td class="text-right fw-bold" style="text-align: right;">Total</td>
+                            <td>
+                                @if($canEditDetails)
+                                    <input type="text" class="form-control form-control-sm" id="total_debit_display" readonly style="background: var(--color-bg-light); font-weight: 600;">
+                                    <input type="hidden" id="total_debit" value="0">
+                                @else
+                                    <span style="float: right;">{{ number_format($totalDebit, 2, ',', '.') }}</span>
+                                @endif
+                            </td>
+                            <td>
+                                @if($canEditDetails)
+                                    <input type="text" class="form-control form-control-sm" id="total_kredit_display" readonly style="background: var(--color-bg-light); font-weight: 600;">
+                                    <input type="hidden" id="total_kredit" value="0">
+                                @else
+                                    <span style="float: right;">{{ number_format($totalKredit, 2, ',', '.') }}</span>
+                                @endif
+                            </td>
+                            @if($canEditDetails)
+                                <td></td>
+                            @endif
                         </tr>
+                        @if($canEditDetails)
+                            <tr>
+                                <td colspan="4" style="padding: var(--space-md);">
+                                    <button type="button" class="btn btn-success btn-sm" onclick="tambahBaris()">
+                                        <span data-feather="plus" style="width: 14px; height: 14px; margin-right: 4px;"></span>
+                                        Tambah Baris
+                                    </button>
+                                </td>
+                            </tr>
+                        @endif
                     </tfoot>
                 </table>
             </div>
@@ -170,7 +206,13 @@
         <!-- Submit Section -->
         <div class="form-card">
             <div class="form-card-body">
-                <button type="submit" class="btn btn-primary btn-block" style="padding: 16px; width: 100%;">
+                @if($canEditDetails)
+                    <div id="balance_alert" class="alert alert-danger" style="display: none;">
+                        <span data-feather="alert-circle" style="width: 18px; height: 18px; margin-right: 8px;"></span>
+                        Jurnal tidak seimbang (Balance)! Selisih: <strong><span id="selisih_display">0</span></strong>
+                    </div>
+                @endif
+                <button type="submit" class="btn btn-primary btn-block" id="btnSubmit" {{ $canEditDetails ? 'disabled' : '' }} style="padding: 16px; width: 100%;">
                     <span data-feather="save" style="width: 18px; height: 18px; margin-right: 8px;"></span>
                     Simpan Perubahan
                 </button>
@@ -255,6 +297,141 @@
                 }
             }
         }
+    }
+
+    @if($canEditDetails)
+    let akunData = @json($akun);
+    let rowCount = 0;
+
+    function formatRupiah(angka) {
+        return new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR' }).format(angka);
+    }
+
+    function tambahBaris(kodeAkun = '', debit = 0, kredit = 0) {
+        const currentRow = rowCount;
+        let optionsHtml = akunData.map(a =>
+            `<div class="searchable-select-option" data-value="${a.kode_akun}" data-label="${a.kode_akun} - ${a.nama_akun}">${a.kode_akun} - ${a.nama_akun}</div>`
+        ).join('');
+
+        let html = `
+            <tr id="row_${currentRow}">
+                <td>
+                    <div class="searchable-select" id="ss_${currentRow}">
+                        <input type="hidden" name="details[${currentRow}][kode_akun]" id="ss_input_${currentRow}" required>
+                        <div class="searchable-select-trigger" id="ss_trigger_${currentRow}">
+                            <span class="trigger-text placeholder">🔍 Cari akun...</span>
+                            <svg class="trigger-chevron" xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg>
+                        </div>
+                        <div class="searchable-select-dropdown" id="ss_dropdown_${currentRow}">
+                            <div class="searchable-select-search">
+                                <input type="text" placeholder="Ketik kode atau nama akun..." id="ss_search_${currentRow}" autocomplete="off">
+                            </div>
+                            <div class="searchable-select-options" id="ss_options_${currentRow}">
+                                ${optionsHtml}
+                            </div>
+                        </div>
+                    </div>
+                </td>
+                <td>
+                    <input type="number" class="form-control form-control-sm input-debit" name="details[${currentRow}][debit]" value="${debit}" min="0" onkeyup="hitungTotal()" onchange="hitungTotal()">
+                </td>
+                <td>
+                    <input type="number" class="form-control form-control-sm input-kredit" name="details[${currentRow}][kredit]" value="${kredit}" min="0" onkeyup="hitungTotal()" onchange="hitungTotal()">
+                </td>
+                <td>
+                    <button type="button" class="btn btn-danger btn-icon btn-sm" onclick="hapusBaris(${currentRow})">
+                        <span data-feather="x" style="width: 14px; height: 14px;"></span>
+                    </button>
+                </td>
+            </tr>
+        `;
+        document.getElementById('container_jurnal').insertAdjacentHTML('beforeend', html);
+        feather.replace();
+        initSearchableSelect(currentRow);
+
+        // Pre-select account if provided
+        if (kodeAkun) {
+            const hiddenInput = document.getElementById(`ss_input_${currentRow}`);
+            const trigger = document.getElementById(`ss_trigger_${currentRow}`);
+            const optionsContainer = document.getElementById(`ss_options_${currentRow}`);
+            
+            if (hiddenInput && trigger && optionsContainer) {
+                const option = optionsContainer.querySelector(`.searchable-select-option[data-value="${kodeAkun}"]`);
+                if (option) {
+                    option.classList.add('selected');
+                    hiddenInput.value = kodeAkun;
+                    const triggerText = trigger.querySelector('.trigger-text');
+                    triggerText.textContent = option.dataset.label;
+                    triggerText.classList.remove('placeholder');
+                }
+            }
+        }
+
+        rowCount++;
+    }
+
+    function hapusBaris(id) {
+        document.getElementById(`row_${id}`).remove();
+        hitungTotal();
+    }
+
+    function hitungTotal() {
+        let totalDebit = 0;
+        let totalKredit = 0;
+
+        document.querySelectorAll('.input-debit').forEach(input => totalDebit += parseFloat(input.value) || 0);
+        document.querySelectorAll('.input-kredit').forEach(input => totalKredit += parseFloat(input.value) || 0);
+
+        document.getElementById('total_debit').value = totalDebit;
+        document.getElementById('total_kredit').value = totalKredit;
+        
+        document.getElementById('total_debit_display').value = formatRupiah(totalDebit);
+        document.getElementById('total_kredit_display').value = formatRupiah(totalKredit);
+
+        let balance = Math.abs(totalDebit - totalKredit) < 0.01; // Tolerance for float
+        let btn = document.getElementById('btnSubmit');
+        let alert = document.getElementById('balance_alert');
+
+        if (balance && totalDebit > 0) {
+            btn.removeAttribute('disabled');
+            alert.style.display = 'none';
+        } else {
+            btn.setAttribute('disabled', 'disabled');
+            if (totalDebit > 0 || totalKredit > 0) {
+                alert.style.display = 'flex';
+                alert.style.alignItems = 'center';
+            }
+            document.getElementById('selisih_display').innerText = formatRupiah(Math.abs(totalDebit - totalKredit));
+        }
+    }
+
+    // Restore old details if validation failed, otherwise load from DB details
+    let oldDetails = @json(old('details', []));
+    if (oldDetails && typeof oldDetails === 'object') {
+        oldDetails = Object.values(oldDetails);
+    }
+    
+    if (oldDetails && oldDetails.length > 0) {
+        oldDetails.forEach(detail => {
+            if (detail.kode_akun || detail.debit > 0 || detail.kredit > 0) {
+                tambahBaris(detail.kode_akun, detail.debit || 0, detail.kredit || 0);
+            }
+        });
+        hitungTotal();
+    } else {
+        // Load from database details
+        let dbDetails = @json($jurnal->details);
+        if (dbDetails && dbDetails.length > 0) {
+            dbDetails.forEach(detail => {
+                tambahBaris(detail.kode_akun, detail.debit, detail.kredit);
+            });
+            hitungTotal();
+        } else {
+            tambahBaris();
+            tambahBaris();
+        }
+    }
+    @endif
     }
 </script>
 @endpush

@@ -275,7 +275,9 @@ class JurnalController extends Controller
 
     public function update(Request $request, Jurnal $jurnal)
     {
-        $request->validate([
+        $canEditDetails = auth()->user()->hasPermission('jurnal.edit') && auth()->user()->hasPermission('jurnal.delete');
+
+        $rules = [
             'tanggal' => 'required|date|before_or_equal:today',
             'id_cabang' => 'required|exists:cabang,id',
             'id_unit_usaha' => 'required|exists:unit_usaha,id',
@@ -285,7 +287,25 @@ class JurnalController extends Controller
             'deskripsi' => 'required|string',
             'sumber_jurnal' => 'required|string',
             'foto_bukti' => 'nullable|image|mimes:jpeg,png,jpg,webp|max:5120',
-        ]);
+        ];
+
+        if ($canEditDetails) {
+            $rules['details'] = 'required|array|min:2';
+            $rules['details.*.kode_akun'] = 'required|exists:akun,kode_akun';
+            $rules['details.*.debit'] = 'required|numeric|min:0';
+            $rules['details.*.kredit'] = 'required|numeric|min:0';
+        }
+
+        $request->validate($rules);
+
+        if ($canEditDetails) {
+            $totalDebit = collect($request->details)->sum('debit');
+            $totalKredit = collect($request->details)->sum('kredit');
+
+            if ($totalDebit != $totalKredit) {
+                return back()->with('error', 'Jurnal tidak seimbang (Balance). Total Debit: ' . $totalDebit . ', Total Kredit: ' . $totalKredit)->withInput();
+            }
+        }
 
         try {
             DB::beginTransaction();
@@ -294,33 +314,67 @@ class JurnalController extends Controller
             $this->validatePeriodOpen($jurnal->tanggal);
             $this->validatePeriodOpen($request->tanggal);
 
-            // Adjust Pelanggan/Pemasok balance if changed
-            if ($jurnal->id_pelanggan != $request->id_pelanggan) {
-                $totalPiutang = $jurnal->details()
-                    ->whereHas('akun', function($q) { $q->where('tipe_akun', 'Piutang'); })
-                    ->select(DB::raw('SUM(debit) - SUM(kredit) as net_change'))
-                    ->value('net_change');
-                if ($totalPiutang != 0) {
-                    if ($jurnal->id_pelanggan) {
-                        \App\Models\Pelanggan::where('id_pelanggan', $jurnal->id_pelanggan)->decrement('saldo_terkini_piutang', $totalPiutang);
-                    }
-                    if ($request->id_pelanggan) {
-                        \App\Models\Pelanggan::where('id_pelanggan', $request->id_pelanggan)->increment('saldo_terkini_piutang', $totalPiutang);
+            if ($canEditDetails) {
+                // Cek Saldo untuk setiap akun yang di-Kredit jika itu adalah Kas & Bank
+                foreach ($request->details as $detail) {
+                    if ($detail['kredit'] > 0) {
+                        $akun = Akun::where('kode_akun', $detail['kode_akun'])->first();
+                        if ($akun && $akun->tipe_akun == 'Kas & Bank') {
+                            $debit = JurnalDetail::where('kode_akun', $detail['kode_akun'])->where('id_jurnal', '!=', $jurnal->id_jurnal)->sum('debit');
+                            $kredit = JurnalDetail::where('kode_akun', $detail['kode_akun'])->where('id_jurnal', '!=', $jurnal->id_jurnal)->sum('kredit');
+                            $saldoSebelumnya = $debit - $kredit;
+                            if (($saldoSebelumnya - $detail['kredit']) < 0) {
+                                throw new \Exception("Saldo akun " . $akun->nama_akun . " tidak mencukupi! Saldo saat ini: Rp " . number_format($saldoSebelumnya, 2, ',', '.'));
+                            }
+                        }
                     }
                 }
-            }
 
-            if ($jurnal->id_pemasok != $request->id_pemasok) {
-                $totalHutang = $jurnal->details()
-                    ->whereHas('akun', function($q) { $q->where('tipe_akun', 'Utang Usaha'); })
-                    ->select(DB::raw('SUM(kredit) - SUM(debit) as net_change'))
-                    ->value('net_change');
-                if ($totalHutang != 0) {
-                    if ($jurnal->id_pemasok) {
-                        \App\Models\Pemasok::where('id_pemasok', $jurnal->id_pemasok)->decrement('saldo_terkini_hutang', $totalHutang);
+                // 1. Revert OLD details Pelanggan/Pemasok balances (menggunakan partner LAMA)
+                foreach ($jurnal->details as $oldDetail) {
+                    $akun = Akun::where('kode_akun', $oldDetail->kode_akun)->first();
+                    if ($akun) {
+                        if ($akun->tipe_akun == 'Piutang' && $jurnal->id_pelanggan) {
+                            $selisih = $oldDetail->debit - $oldDetail->kredit;
+                            \App\Models\Pelanggan::where('id_pelanggan', $jurnal->id_pelanggan)->decrement('saldo_terkini_piutang', $selisih);
+                        } elseif ($akun->tipe_akun == 'Utang Usaha' && $jurnal->id_pemasok) {
+                            $selisih = $oldDetail->kredit - $oldDetail->debit;
+                            \App\Models\Pemasok::where('id_pemasok', $jurnal->id_pemasok)->decrement('saldo_terkini_hutang', $selisih);
+                        }
                     }
-                    if ($request->id_pemasok) {
-                        \App\Models\Pemasok::where('id_pemasok', $request->id_pemasok)->increment('saldo_terkini_hutang', $totalHutang);
+                }
+
+                // 2. Delete OLD details
+                $jurnal->details()->delete();
+            } else {
+                // Adjust Pelanggan/Pemasok balance if changed (tanpa edit detail)
+                if ($jurnal->id_pelanggan != $request->id_pelanggan) {
+                    $totalPiutang = $jurnal->details()
+                        ->whereHas('akun', function($q) { $q->where('tipe_akun', 'Piutang'); })
+                        ->select(DB::raw('SUM(debit) - SUM(kredit) as net_change'))
+                        ->value('net_change');
+                    if ($totalPiutang != 0) {
+                        if ($jurnal->id_pelanggan) {
+                            \App\Models\Pelanggan::where('id_pelanggan', $jurnal->id_pelanggan)->decrement('saldo_terkini_piutang', $totalPiutang);
+                        }
+                        if ($request->id_pelanggan) {
+                            \App\Models\Pelanggan::where('id_pelanggan', $request->id_pelanggan)->increment('saldo_terkini_piutang', $totalPiutang);
+                        }
+                    }
+                }
+
+                if ($jurnal->id_pemasok != $request->id_pemasok) {
+                    $totalHutang = $jurnal->details()
+                        ->whereHas('akun', function($q) { $q->where('tipe_akun', 'Utang Usaha'); })
+                        ->select(DB::raw('SUM(kredit) - SUM(debit) as net_change'))
+                        ->value('net_change');
+                    if ($totalHutang != 0) {
+                        if ($jurnal->id_pemasok) {
+                            \App\Models\Pemasok::where('id_pemasok', $jurnal->id_pemasok)->decrement('saldo_terkini_hutang', $totalHutang);
+                        }
+                        if ($request->id_pemasok) {
+                            \App\Models\Pemasok::where('id_pemasok', $request->id_pemasok)->increment('saldo_terkini_hutang', $totalHutang);
+                        }
                     }
                 }
             }
@@ -347,6 +401,31 @@ class JurnalController extends Controller
                 'sumber_jurnal' => $request->sumber_jurnal,
                 'foto_bukti' => $fotoBukti,
             ]);
+
+            if ($canEditDetails) {
+                // 3. Create NEW details & apply Pelanggan/Pemasok balances (menggunakan partner BARU)
+                foreach ($request->details as $detail) {
+                    if ($detail['debit'] > 0 || $detail['kredit'] > 0) {
+                        JurnalDetail::create([
+                            'id_jurnal' => $jurnal->id_jurnal,
+                            'kode_akun' => $detail['kode_akun'],
+                            'debit' => $detail['debit'],
+                            'kredit' => $detail['kredit'],
+                        ]);
+
+                        $akun = Akun::where('kode_akun', $detail['kode_akun'])->first();
+                        if ($akun) {
+                            if ($akun->tipe_akun == 'Piutang' && $request->id_pelanggan) {
+                                $selisih = $detail['debit'] - $detail['kredit'];
+                                \App\Models\Pelanggan::where('id_pelanggan', $request->id_pelanggan)->increment('saldo_terkini_piutang', $selisih);
+                            } elseif ($akun->tipe_akun == 'Utang Usaha' && $request->id_pemasok) {
+                                $selisih = $detail['kredit'] - $detail['debit'];
+                                \App\Models\Pemasok::where('id_pemasok', $request->id_pemasok)->increment('saldo_terkini_hutang', $selisih);
+                            }
+                        }
+                    }
+                }
+            }
 
             // Sinkronisasi dengan modul terkait
             // Penjualan
