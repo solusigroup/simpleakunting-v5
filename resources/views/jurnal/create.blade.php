@@ -177,7 +177,7 @@
         return new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR' }).format(angka);
     }
 
-    function tambahBaris() {
+    function tambahBaris(kodeAkun = '', debit = 0, kredit = 0) {
         const currentRow = rowCount;
         let optionsHtml = akunData.map(a =>
             `<div class="searchable-select-option" data-value="${a.kode_akun}" data-label="${a.kode_akun} - ${a.nama_akun}">${a.kode_akun} - ${a.nama_akun}</div>`
@@ -203,10 +203,10 @@
                     </div>
                 </td>
                 <td>
-                    <input type="number" class="form-control form-control-sm input-debit" name="details[${currentRow}][debit]" value="0" min="0" onkeyup="hitungTotal()" onchange="hitungTotal()">
+                    <input type="number" class="form-control form-control-sm input-debit" name="details[${currentRow}][debit]" value="${debit}" min="0" onkeyup="hitungTotal()" onchange="hitungTotal()">
                 </td>
                 <td>
-                    <input type="number" class="form-control form-control-sm input-kredit" name="details[${currentRow}][kredit]" value="0" min="0" onkeyup="hitungTotal()" onchange="hitungTotal()">
+                    <input type="number" class="form-control form-control-sm input-kredit" name="details[${currentRow}][kredit]" value="${kredit}" min="0" onkeyup="hitungTotal()" onchange="hitungTotal()">
                 </td>
                 <td>
                     <button type="button" class="btn btn-danger btn-icon btn-sm" onclick="hapusBaris(${currentRow})">
@@ -218,6 +218,25 @@
         document.getElementById('container_jurnal').insertAdjacentHTML('beforeend', html);
         feather.replace();
         initSearchableSelect(currentRow);
+
+        // Pre-select account if provided
+        if (kodeAkun) {
+            const hiddenInput = document.getElementById(`ss_input_${currentRow}`);
+            const trigger = document.getElementById(`ss_trigger_${currentRow}`);
+            const optionsContainer = document.getElementById(`ss_options_${currentRow}`);
+            
+            if (hiddenInput && trigger && optionsContainer) {
+                const option = optionsContainer.querySelector(`.searchable-select-option[data-value="${kodeAkun}"]`);
+                if (option) {
+                    option.classList.add('selected');
+                    hiddenInput.value = kodeAkun;
+                    const triggerText = trigger.querySelector('.trigger-text');
+                    triggerText.textContent = option.dataset.label;
+                    triggerText.classList.remove('placeholder');
+                }
+            }
+        }
+
         rowCount++;
     }
 
@@ -301,8 +320,23 @@
         document.getElementById('id_cabang').dispatchEvent(new Event('change'));
     }
 
-    // Init 2 rows
-    tambahBaris();
-    tambahBaris();
+    // Restore old details if validation failed
+    let oldDetails = @json(old('details', []));
+    if (oldDetails && typeof oldDetails === 'object') {
+        oldDetails = Object.values(oldDetails);
+    }
+    
+    if (oldDetails && oldDetails.length > 0) {
+        oldDetails.forEach(detail => {
+            if (detail.kode_akun || detail.debit > 0 || detail.kredit > 0) {
+                tambahBaris(detail.kode_akun, detail.debit || 0, detail.kredit || 0);
+            }
+        });
+        hitungTotal();
+    } else {
+        // Init 2 rows by default
+        tambahBaris();
+        tambahBaris();
+    }
 </script>
 @endpush

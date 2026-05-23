@@ -10,9 +10,20 @@ class Jurnal extends Model
 {
     use HasFactory, LogsActivity, \App\Traits\HasCabang;
 
+    public static $applyApprovalFilter = false;
+
     protected $table = 'jurnal_umum';
     protected $primaryKey = 'id_jurnal';
     protected $guarded = ['id_jurnal'];
+
+    protected static function booted()
+    {
+        static::addGlobalScope('approved_only', function ($builder) {
+            if (static::$applyApprovalFilter) {
+                $builder->where('is_approved', 1);
+            }
+        });
+    }
 
     public function details()
     {

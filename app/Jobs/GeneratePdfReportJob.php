@@ -28,6 +28,8 @@ class GeneratePdfReportJob implements ShouldQueue
             tenancy()->initialize($this->tenantId);
         }
 
+        \App\Models\Jurnal::$applyApprovalFilter = true;
+
         $report = \App\Models\ReportDownload::find($this->downloadId);
         if (!$report) {
             return;

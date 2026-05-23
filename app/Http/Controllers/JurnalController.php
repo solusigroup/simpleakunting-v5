@@ -277,7 +277,14 @@ class JurnalController extends Controller
     {
         $request->validate([
             'tanggal' => 'required|date|before_or_equal:today',
+            'id_cabang' => 'required|exists:cabang,id',
+            'id_unit_usaha' => 'required|exists:unit_usaha,id',
+            'id_project' => 'nullable|exists:projects,id_project',
+            'id_pelanggan' => 'nullable|exists:pelanggan,id_pelanggan',
+            'id_pemasok' => 'nullable|exists:pemasok,id_pemasok',
             'deskripsi' => 'required|string',
+            'sumber_jurnal' => 'required|string',
+            'foto_bukti' => 'nullable|image|mimes:jpeg,png,jpg,webp|max:5120',
         ]);
 
         try {
@@ -287,51 +294,117 @@ class JurnalController extends Controller
             $this->validatePeriodOpen($jurnal->tanggal);
             $this->validatePeriodOpen($request->tanggal);
 
+            // Adjust Pelanggan/Pemasok balance if changed
+            if ($jurnal->id_pelanggan != $request->id_pelanggan) {
+                $totalPiutang = $jurnal->details()
+                    ->whereHas('akun', function($q) { $q->where('tipe_akun', 'Piutang'); })
+                    ->select(DB::raw('SUM(debit) - SUM(kredit) as net_change'))
+                    ->value('net_change');
+                if ($totalPiutang != 0) {
+                    if ($jurnal->id_pelanggan) {
+                        \App\Models\Pelanggan::where('id_pelanggan', $jurnal->id_pelanggan)->decrement('saldo_terkini_piutang', $totalPiutang);
+                    }
+                    if ($request->id_pelanggan) {
+                        \App\Models\Pelanggan::where('id_pelanggan', $request->id_pelanggan)->increment('saldo_terkini_piutang', $totalPiutang);
+                    }
+                }
+            }
+
+            if ($jurnal->id_pemasok != $request->id_pemasok) {
+                $totalHutang = $jurnal->details()
+                    ->whereHas('akun', function($q) { $q->where('tipe_akun', 'Utang Usaha'); })
+                    ->select(DB::raw('SUM(kredit) - SUM(debit) as net_change'))
+                    ->value('net_change');
+                if ($totalHutang != 0) {
+                    if ($jurnal->id_pemasok) {
+                        \App\Models\Pemasok::where('id_pemasok', $jurnal->id_pemasok)->decrement('saldo_terkini_hutang', $totalHutang);
+                    }
+                    if ($request->id_pemasok) {
+                        \App\Models\Pemasok::where('id_pemasok', $request->id_pemasok)->increment('saldo_terkini_hutang', $totalHutang);
+                    }
+                }
+            }
+
+            $fotoBukti = $jurnal->foto_bukti;
+            if ($request->hasFile('foto_bukti')) {
+                if ($jurnal->foto_bukti) {
+                    \Illuminate\Support\Facades\Storage::delete('public/bukti_transaksi/' . $jurnal->foto_bukti);
+                }
+                $foto = $request->file('foto_bukti');
+                $filename = 'bukti_jurnal_' . time() . '_' . uniqid() . '.' . $foto->getClientOriginalExtension();
+                $foto->storeAs('public/bukti_transaksi', $filename);
+                $fotoBukti = $filename;
+            }
+
             $jurnal->update([
                 'tanggal' => $request->tanggal,
+                'id_cabang' => $request->id_cabang,
+                'id_unit_usaha' => $request->id_unit_usaha,
+                'id_project' => $request->id_project,
+                'id_pelanggan' => $request->id_pelanggan,
+                'id_pemasok' => $request->id_pemasok,
                 'deskripsi' => $request->deskripsi,
+                'sumber_jurnal' => $request->sumber_jurnal,
+                'foto_bukti' => $fotoBukti,
             ]);
 
             // Sinkronisasi dengan modul terkait
             // Penjualan
             DB::table('penjualan')->where('id_jurnal', $jurnal->id_jurnal)->update([
                 'tanggal_faktur' => $request->tanggal,
+                'id_cabang' => $request->id_cabang,
+                'id_unit_usaha' => $request->id_unit_usaha,
+                'id_project' => $request->id_project,
+                'id_pelanggan' => $request->id_pelanggan,
                 'keterangan' => $request->deskripsi
             ]);
 
             // Pembelian
             DB::table('pembelian')->where('id_jurnal', $jurnal->id_jurnal)->update([
                 'tanggal_faktur' => $request->tanggal,
+                'id_cabang' => $request->id_cabang,
+                'id_unit_usaha' => $request->id_unit_usaha,
+                'id_project' => $request->id_project,
+                'id_pemasok' => $request->id_pemasok,
                 'keterangan' => $request->deskripsi
             ]);
             
             // Simpanan
             DB::table('simpanan')->where('id_jurnal', $jurnal->id_jurnal)->update([
                 'tanggal' => $request->tanggal,
+                'id_cabang' => $request->id_cabang,
+                'id_unit_usaha' => $request->id_unit_usaha,
                 'keterangan' => $request->deskripsi
             ]);
             
             // Pinjaman Pencairan
             DB::table('pinjaman')->where('id_jurnal_pencairan', $jurnal->id_jurnal)->update([
                 'tanggal_pencairan' => $request->tanggal,
+                'id_cabang' => $request->id_cabang,
+                'id_unit_usaha' => $request->id_unit_usaha,
                 'keterangan' => $request->deskripsi
             ]);
             
             // Pinjaman Angsuran
             DB::table('pinjaman_angsuran')->where('id_jurnal', $jurnal->id_jurnal)->update([
                 'tanggal_bayar' => $request->tanggal,
+                'id_cabang' => $request->id_cabang,
+                'id_unit_usaha' => $request->id_unit_usaha,
                 'keterangan' => $request->deskripsi
             ]);
 
             // Produksi (Manufacturing)
             DB::table('produksi')->where('id_jurnal', $jurnal->id_jurnal)->update([
                 'tanggal' => $request->tanggal,
+                'id_cabang' => $request->id_cabang,
+                'id_unit_usaha' => $request->id_unit_usaha,
                 'keterangan' => $request->deskripsi
             ]);
 
             // Fixed Assets (Perolehan/Disposal)
             DB::table('fixed_assets')->where('id_jurnal', $jurnal->id_jurnal)->update([
                 'tanggal_perolehan' => $request->tanggal,
+                'cabang_id' => $request->id_cabang,
             ]);
 
             DB::commit();
@@ -339,6 +412,29 @@ class JurnalController extends Controller
         } catch (\Exception $e) {
             DB::rollBack();
             return back()->with('error', $e->getMessage())->withInput();
+        }
+    }
+
+    public function approve(Request $request, $id)
+    {
+        try {
+            DB::beginTransaction();
+            $jurnal = Jurnal::findOrFail($id);
+            
+            if ($jurnal->is_approved) {
+                return back()->with('error', 'Jurnal sudah disetujui.');
+            }
+
+            // Cek periode tutup buku
+            $this->validatePeriodOpen($jurnal->tanggal);
+
+            $jurnal->update(['is_approved' => 1]);
+
+            DB::commit();
+            return redirect()->route('jurnal.index')->with('success', 'Jurnal ' . $jurnal->no_transaksi . ' berhasil disetujui.');
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return back()->with('error', $e->getMessage());
         }
     }
 

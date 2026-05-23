@@ -31,6 +31,7 @@
                         <th>No Transaksi</th>
                         <th>Deskripsi</th>
                         <th>Sumber</th>
+                        <th>Status</th>
                         <th>Aksi</th>
                     </tr>
                 </thead>
@@ -46,7 +47,22 @@
                                 </span>
                             </td>
                             <td>
+                                @if($j->is_approved)
+                                    <span class="badge bg-success">Disetujui</span>
+                                @else
+                                    <span class="badge bg-warning text-dark">Menunggu Persetujuan</span>
+                                @endif
+                            </td>
+                            <td>
                                 <div class="action-buttons">
+                                    @if(!$j->is_approved)
+                                    <form action="{{ route('jurnal.approve', $j->id_jurnal) }}" method="POST" style="display: inline-block;" onsubmit="return confirm('Apakah Anda yakin ingin menyetujui jurnal ini?')">
+                                        @csrf
+                                        <button type="submit" class="btn btn-sm btn-success" title="Setujui (Approve)">
+                                            <span data-feather="check-circle" style="width: 14px; height: 14px;"></span>
+                                        </button>
+                                    </form>
+                                    @endif
                                     <a href="{{ route('jurnal.show', $j->id_jurnal) }}" class="btn btn-sm btn-info" title="Detail">
                                         <span data-feather="eye" style="width: 14px; height: 14px;"></span>
                                     </a>
@@ -65,7 +81,7 @@
                         </tr>
                     @empty
                         <tr>
-                            <td colspan="5">
+                            <td colspan="6">
                                 <div class="table-empty">
                                     <div class="table-empty-icon">📋</div>
                                     <p>Belum ada data jurnal.</p>

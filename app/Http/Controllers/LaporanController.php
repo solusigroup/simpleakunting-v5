@@ -16,6 +16,11 @@ use Barryvdh\DomPDF\Facade\Pdf;
 
 class LaporanController extends Controller
 {
+    public function __construct()
+    {
+        \App\Models\Jurnal::$applyApprovalFilter = true;
+    }
+
     public function index()
     {
         return view('laporan.index');
