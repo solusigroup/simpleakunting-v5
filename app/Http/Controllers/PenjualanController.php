@@ -36,7 +36,7 @@ class PenjualanController extends Controller
         return view('penjualan.show', compact('penjualan'));
     }
 
-    public function create()
+    public function create(Request $request)
     {
         $pelanggan = Pelanggan::all();
         $barang = Persediaan::all();
@@ -50,7 +50,13 @@ class PenjualanController extends Controller
         $cabang = Cabang::orderBy('nama_cabang')->get();
         $unitUsaha = UnitUsaha::active()->orderBy('nama_unit')->get();
 
-        return view('penjualan.create', compact('pelanggan', 'barang', 'akunKas', 'noFaktur', 'cabang', 'unitUsaha'));
+        // Check if prefilling from a quotation
+        $penawaran = null;
+        if ($request->has('from_penawaran')) {
+            $penawaran = \App\Models\PenjualanPenawaran::with('details.barang')->find($request->from_penawaran);
+        }
+
+        return view('penjualan.create', compact('pelanggan', 'barang', 'akunKas', 'noFaktur', 'cabang', 'unitUsaha', 'penawaran'));
     }
 
     public function store(Request $request)
@@ -59,6 +65,7 @@ class PenjualanController extends Controller
             'id_pelanggan' => 'required|exists:pelanggan,id_pelanggan',
             'id_cabang' => 'required|exists:cabang,id',
             'id_unit_usaha' => 'required|exists:unit_usaha,id',
+            'id_penawaran' => 'nullable|integer',
             'no_faktur' => 'required|unique:penjualan,no_faktur',
             'tanggal_faktur' => 'required|date|before_or_equal:today',
             'metode_pembayaran' => 'required|in:Tunai,Kredit',
@@ -96,6 +103,7 @@ class PenjualanController extends Controller
                 'id_jurnal' => $jurnal->id_jurnal,
                 'id_cabang' => $request->id_cabang,
                 'id_unit_usaha' => $request->id_unit_usaha,
+                'id_penawaran' => $request->id_penawaran,
                 'no_faktur' => $noFaktur,
                 'tanggal_faktur' => $request->tanggal_faktur,
                 'total' => 0,
@@ -105,6 +113,10 @@ class PenjualanController extends Controller
             ]);
 
             $this->applyPenjualanImpact($penjualan, $request);
+
+            if ($request->filled('id_penawaran')) {
+                \App\Models\PenjualanPenawaran::where('id_penawaran', $request->id_penawaran)->update(['status' => 'Dikonversi']);
+            }
 
             DB::commit();
             return redirect()->route('penjualan.index')->with('success', 'Transaksi penjualan berhasil disimpan.');

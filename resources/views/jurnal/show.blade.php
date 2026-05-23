@@ -63,6 +63,26 @@
                     </tfoot>
                 </table>
             </div>
+            @if($jurnal->foto_bukti)
+                <div class="row mt-4">
+                    <div class="col-12">
+                        <hr>
+                        <h5 class="mb-3">
+                            <span data-feather="image" class="me-1"></span> Bukti Transaksi
+                        </h5>
+                        <div class="card bg-light border" style="max-width: 450px;">
+                            <div class="card-body p-2 text-center">
+                                <img src="{{ asset('storage/bukti_transaksi/' . $jurnal->foto_bukti) }}" alt="Bukti Transaksi" class="img-fluid rounded border mb-2" style="max-height: 350px; width: 100%; object-fit: contain;">
+                                <div>
+                                    <a href="{{ asset('storage/bukti_transaksi/' . $jurnal->foto_bukti) }}" target="_blank" class="btn btn-sm btn-outline-primary">
+                                        <span data-feather="external-link"></span> Buka Gambar Penuh
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            @endif
         </div>
     </div>
 @endsection

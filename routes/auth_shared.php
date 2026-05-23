@@ -39,6 +39,8 @@ use App\Http\Controllers\FixedAssetDisposalController;
 use App\Http\Controllers\DatabaseController;
 use App\Http\Controllers\ImportExportController;
 use App\Http\Controllers\AuditTrailController;
+use App\Http\Controllers\PenjualanPenawaranController;
+use App\Http\Controllers\PembelianRfqController;
 
 Route::post('logout', [AuthController::class, 'logout'])->name('logout');
 
@@ -123,7 +125,12 @@ Route::middleware('role:superuser,admin,manajer,staff,kasir')->group(function ()
 // TRANSAKSI - Staff level and above
 // =====================================================
 Route::middleware('role:superuser,admin,manajer,staff')->group(function () {
+    Route::post('penawaran/{id}/convert', [PenjualanPenawaranController::class, 'convertToInvoice'])->name('penawaran.convert');
+    Route::resource('penawaran', PenjualanPenawaranController::class);
     Route::resource('penjualan', PenjualanController::class);
+    
+    Route::post('rfq/{id}/convert', [PembelianRfqController::class, 'convertToPurchase'])->name('rfq.convert');
+    Route::resource('rfq', PembelianRfqController::class);
     Route::resource('pembelian', PembelianController::class);
     Route::get('jurnal/kas/create', [JurnalController::class, 'createKas'])->name('jurnal.createKas');
     Route::post('jurnal/kas', [JurnalController::class, 'storeKas'])->name('jurnal.storeKas');

@@ -51,6 +51,7 @@ class JurnalController extends Controller
             'id_cabang' => 'required|exists:cabang,id',
             'id_unit_usaha' => 'required|exists:unit_usaha,id',
             'deskripsi' => 'required|string',
+            'foto_bukti' => 'nullable|image|mimes:jpeg,png,jpg,webp|max:5120',
             'details' => 'required|array|min:2',
             'details.*.kode_akun' => 'required|exists:akun,kode_akun',
             'details.*.debit' => 'required|numeric|min:0',
@@ -90,6 +91,14 @@ class JurnalController extends Controller
                 }
             }
 
+            $fotoBukti = null;
+            if ($request->hasFile('foto_bukti')) {
+                $foto = $request->file('foto_bukti');
+                $filename = 'bukti_jurnal_' . time() . '_' . uniqid() . '.' . $foto->getClientOriginalExtension();
+                $foto->storeAs('public/bukti_transaksi', $filename);
+                $fotoBukti = $filename;
+            }
+
             $jurnal = Jurnal::create([
                 'no_transaksi' => $noTransaksi,
                 'tanggal' => $request->tanggal,
@@ -99,6 +108,7 @@ class JurnalController extends Controller
                 'id_pemasok' => $request->id_pemasok,
                 'deskripsi' => $request->deskripsi,
                 'sumber_jurnal' => $request->input('sumber_jurnal', 'Manual'),
+                'foto_bukti' => $fotoBukti,
                 'is_locked' => 0
             ]);
 
@@ -157,6 +167,7 @@ class JurnalController extends Controller
             'id_cabang' => 'required|exists:cabang,id',
             'id_unit_usaha' => 'required|exists:unit_usaha,id',
             'deskripsi' => 'required|string',
+            'foto_bukti' => 'nullable|image|mimes:jpeg,png,jpg,webp|max:5120',
             'details' => 'required|array|min:1',
             'details.*.kode_akun' => 'required|exists:akun,kode_akun',
             'details.*.nominal' => 'required|numeric|min:0',
@@ -185,6 +196,14 @@ class JurnalController extends Controller
                 }
             }
 
+            $fotoBukti = null;
+            if ($request->hasFile('foto_bukti')) {
+                $foto = $request->file('foto_bukti');
+                $filename = 'bukti_jurnal_' . time() . '_' . uniqid() . '.' . $foto->getClientOriginalExtension();
+                $foto->storeAs('public/bukti_transaksi', $filename);
+                $fotoBukti = $filename;
+            }
+
             $jurnal = Jurnal::create([
                 'no_transaksi' => $noTransaksi,
                 'tanggal' => $request->tanggal,
@@ -192,6 +211,7 @@ class JurnalController extends Controller
                 'id_unit_usaha' => $request->id_unit_usaha,
                 'deskripsi' => $request->deskripsi,
                 'sumber_jurnal' => $request->tipe_transaksi === 'masuk' ? 'Kas Masuk' : 'Kas Keluar',
+                'foto_bukti' => $fotoBukti,
                 'is_locked' => 0
             ]);
 
@@ -352,6 +372,11 @@ class JurnalController extends Controller
             DB::table('pinjaman_angsuran')->where('id_jurnal', $jurnal->id_jurnal)->update(['id_jurnal' => null]);
             DB::table('produksi')->where('id_jurnal', $jurnal->id_jurnal)->update(['id_jurnal' => null]);
             DB::table('fixed_assets')->where('id_jurnal', $jurnal->id_jurnal)->update(['id_jurnal' => null]);
+
+            // Hapus berkas fisik foto jika ada
+            if ($jurnal->foto_bukti) {
+                \Illuminate\Support\Facades\Storage::delete('public/bukti_transaksi/' . $jurnal->foto_bukti);
+            }
 
             // Hapus Detail
             $jurnal->details()->delete();

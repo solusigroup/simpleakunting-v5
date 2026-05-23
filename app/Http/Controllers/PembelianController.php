@@ -30,7 +30,7 @@ class PembelianController extends Controller
         return view('pembelian.index', compact('pembelian'));
     }
 
-    public function create()
+    public function create(Request $request)
     {
         $pemasok = Pemasok::all();
         $barang = Persediaan::all();
@@ -45,7 +45,13 @@ class PembelianController extends Controller
         $cabang = Cabang::orderBy('nama_cabang')->get();
         $unitUsaha = UnitUsaha::active()->orderBy('nama_unit')->get();
 
-        return view('pembelian.create', compact('pemasok', 'barang', 'akunKas', 'noFaktur', 'cabang', 'unitUsaha'));
+        // Check if prefilling from an RFQ
+        $rfq = null;
+        if ($request->has('from_rfq')) {
+            $rfq = \App\Models\PembelianRfq::with('details.barang')->find($request->from_rfq);
+        }
+
+        return view('pembelian.create', compact('pemasok', 'barang', 'akunKas', 'noFaktur', 'cabang', 'unitUsaha', 'rfq'));
     }
 
     public function store(Request $request)
@@ -54,6 +60,7 @@ class PembelianController extends Controller
             'id_pemasok' => 'required|exists:pemasok,id_pemasok',
             'id_cabang' => 'required|exists:cabang,id',
             'id_unit_usaha' => 'required|exists:unit_usaha,id',
+            'id_rfq' => 'nullable|integer',
             'no_faktur' => 'required|unique:pembelian,no_faktur_pembelian',
             'tanggal_faktur' => 'required|date|before_or_equal:today',
             'metode_pembayaran' => 'required|in:Tunai,Kredit',
@@ -91,6 +98,7 @@ class PembelianController extends Controller
                 'id_jurnal' => $jurnal->id_jurnal,
                 'id_cabang' => $request->id_cabang,
                 'id_unit_usaha' => $request->id_unit_usaha,
+                'id_rfq' => $request->id_rfq,
                 'no_faktur_pembelian' => $noFaktur,
                 'tanggal_faktur' => $request->tanggal_faktur,
                 'total' => 0,
@@ -100,6 +108,10 @@ class PembelianController extends Controller
             ]);
 
             $this->applyPembelianImpact($pembelian, $request);
+
+            if ($request->filled('id_rfq')) {
+                \App\Models\PembelianRfq::where('id_rfq', $request->id_rfq)->update(['status' => 'Dikonversi']);
+            }
 
             DB::commit();
             return redirect()->route('pembelian.index')->with('success', 'Transaksi pembelian berhasil disimpan.');

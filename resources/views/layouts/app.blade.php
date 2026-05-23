@@ -624,7 +624,7 @@
 
             <!-- Transaksi -->
             @php
-                $isTransaksiActive = request()->routeIs('penjualan.*') || request()->routeIs('pembelian.*') || request()->routeIs('jurnal.*');
+                $isTransaksiActive = request()->routeIs('penjualan.*') || request()->routeIs('penawaran.*') || request()->routeIs('pembelian.*') || request()->routeIs('rfq.*') || request()->routeIs('jurnal.*');
             @endphp
             <div class="sidebar-section" @if(!$showMenu('transaksi')) style="display:none;" @endif>
                 <div class="sidebar-section-header" data-bs-toggle="collapse" data-bs-target="#transaksiMenu" aria-expanded="{{ $isTransaksiActive ? 'true' : 'false' }}">
@@ -640,9 +640,21 @@
                             </a>
                         </li>
                         <li class="sidebar-nav-item">
+                            <a class="sidebar-nav-link {{ request()->routeIs('penawaran.*') ? 'active' : '' }}" href="{{ route('penawaran.index') }}">
+                                <span data-feather="file-text"></span>
+                                Penawaran Penjualan
+                            </a>
+                        </li>
+                        <li class="sidebar-nav-item">
                             <a class="sidebar-nav-link {{ request()->routeIs('pembelian.*') ? 'active' : '' }}" href="{{ route('pembelian.index') }}">
                                 <span data-feather="shopping-bag"></span>
                                 Pembelian
+                            </a>
+                        </li>
+                        <li class="sidebar-nav-item">
+                            <a class="sidebar-nav-link {{ request()->routeIs('rfq.*') ? 'active' : '' }}" href="{{ route('rfq.index') }}">
+                                <span data-feather="send"></span>
+                                RFQ Pembelian
                             </a>
                         </li>
                         <li class="sidebar-nav-item">

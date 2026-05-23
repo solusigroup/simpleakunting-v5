@@ -17,7 +17,7 @@
         </div>
     </div>
 
-    <form action="{{ route('jurnal.store') }}" method="POST" id="formJurnal">
+    <form action="{{ route('jurnal.store') }}" method="POST" id="formJurnal" enctype="multipart/form-data">
         @csrf
         
         <!-- Header Form -->
@@ -84,6 +84,16 @@
                             <option value="Manual" {{ old('sumber_jurnal') == 'Manual' ? 'selected' : '' }}>Umum / Manual</option>
                             <option value="Penyesuaian" {{ old('sumber_jurnal') == 'Penyesuaian' ? 'selected' : '' }}>Jurnal Penyesuaian</option>
                         </select>
+                    </div>
+                </div>
+                <div class="form-row mt-3">
+                    <div class="form-group" style="flex: 1;">
+                        <label for="foto_bukti" class="form-label">Foto Bukti Transaksi (Opsional)</label>
+                        <input type="file" class="form-control @error('foto_bukti') is-invalid @enderror" id="foto_bukti" name="foto_bukti" accept="image/*">
+                        <small class="text-muted">Format: JPG, JPEG, PNG, WEBP. Maksimal 5MB. Dapat dipilih dari galeri atau kamera smartphone.</small>
+                        @error('foto_bukti')
+                            <div class="invalid-feedback d-block">{{ $message }}</div>
+                        @enderror
                     </div>
                 </div>
             </div>

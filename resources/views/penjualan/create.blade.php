@@ -16,6 +16,7 @@
 
     <form action="{{ route('penjualan.store') }}" method="POST">
         @csrf
+        <input type="hidden" name="id_penawaran" value="{{ $penawaran->id_penawaran ?? '' }}">
         <div class="row">
             <!-- Info Faktur -->
             <div class="col-md-4">
@@ -35,7 +36,7 @@
                             <select class="form-select" name="id_pelanggan" required>
                                 <option value="">-- Pilih Pelanggan --</option>
                                 @foreach($pelanggan as $p)
-                                    <option value="{{ $p->id_pelanggan }}">{{ $p->nama_pelanggan }}</option>
+                                    <option value="{{ $p->id_pelanggan }}" {{ isset($penawaran) && $penawaran->id_pelanggan == $p->id_pelanggan ? 'selected' : '' }}>{{ $p->nama_pelanggan }}</option>
                                 @endforeach
                             </select>
                         </div>
@@ -44,7 +45,7 @@
                             <select class="form-select" id="id_cabang" name="id_cabang" required>
                                 <option value="">-- Pilih Cabang --</option>
                                 @foreach($cabang as $c)
-                                    <option value="{{ $c->id }}" {{ old('id_cabang', auth()->user()->id_cabang) == $c->id ? 'selected' : '' }}>{{ $c->kode_cabang }} - {{ $c->nama_cabang }}</option>
+                                    <option value="{{ $c->id }}" {{ (isset($penawaran) && $penawaran->id_cabang == $c->id) || (!isset($penawaran) && old('id_cabang', auth()->user()->id_cabang) == $c->id) ? 'selected' : '' }}>{{ $c->kode_cabang }} - {{ $c->nama_cabang }}</option>
                                 @endforeach
                             </select>
                         </div>
@@ -53,7 +54,7 @@
                             <select class="form-select" id="id_unit_usaha" name="id_unit_usaha" required>
                                 <option value="">-- Pilih Unit --</option>
                                 @foreach($unitUsaha as $u)
-                                    <option value="{{ $u->id }}" data-cabang="{{ $u->id_cabang }}">{{ $u->kode_unit }} - {{ $u->nama_unit }}</option>
+                                    <option value="{{ $u->id }}" data-cabang="{{ $u->id_cabang }}" {{ isset($penawaran) && $penawaran->id_unit_usaha == $u->id ? 'selected' : '' }}>{{ $u->kode_unit }} - {{ $u->nama_unit }}</option>
                                 @endforeach
                             </select>
                         </div>
@@ -84,7 +85,7 @@
                         </div>
                         <div class="mb-3">
                             <label class="form-label">Keterangan</label>
-                            <textarea class="form-control" name="keterangan" rows="2"></textarea>
+                            <textarea class="form-control" name="keterangan" rows="2">{{ isset($penawaran) ? 'Dikonversi dari Penawaran #' . $penawaran->no_penawaran : '' }}</textarea>
                         </div>
                     </div>
                 </div>
@@ -304,7 +305,26 @@
     });
 
     // Init
-    tambahBaris();
+    const existingPenawaranDetails = @json(isset($penawaran) ? $penawaran->details->load('barang') : null);
+    if (existingPenawaranDetails && existingPenawaranDetails.length > 0) {
+        existingPenawaranDetails.forEach(d => {
+            tambahBaris();
+            const currentIdx = rowCount - 1;
+            
+            const input = document.getElementById(`ss_input_${currentIdx}`);
+            input.value = d.id_barang;
+            
+            const triggerText = document.querySelector(`#ss_trigger_${currentIdx} .trigger-text`);
+            triggerText.textContent = `${d.barang.kode_barang} - ${d.barang.nama_barang}`;
+            triggerText.classList.remove('placeholder');
+            
+            document.getElementById(`harga_${currentIdx}`).value = d.harga;
+            document.getElementById(`qty_${currentIdx}`).value = d.kuantitas;
+            hitungSubtotal(currentIdx);
+        });
+    } else {
+        tambahBaris();
+    }
     toggleAkunKas();
 </script>
 @endpush

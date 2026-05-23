@@ -17,7 +17,7 @@
         </div>
     </div>
 
-    <form action="{{ route('jurnal.storeKas') }}" method="POST" id="formJurnal">
+    <form action="{{ route('jurnal.storeKas') }}" method="POST" id="formJurnal" enctype="multipart/form-data">
         @csrf
         
         <!-- Header Form -->
@@ -80,10 +80,18 @@
                     </div>
                 </div>
 
-                <div class="form-row mt-3">
-                    <div class="form-group" style="flex: 1;">
+                <div class="form-row mt-3 flex-wrap">
+                    <div class="form-group" style="flex: 1; min-width: 250px;">
                         <label for="deskripsi" class="form-label">Keterangan/Deskripsi <span class="text-danger">*</span></label>
                         <input type="text" class="form-control" id="deskripsi" name="deskripsi" placeholder="Masukkan keterangan transaksi" required>
+                    </div>
+                    <div class="form-group" style="flex: 1; min-width: 250px;">
+                        <label for="foto_bukti" class="form-label">Foto Bukti Transaksi (Opsional)</label>
+                        <input type="file" class="form-control @error('foto_bukti') is-invalid @enderror" id="foto_bukti" name="foto_bukti" accept="image/*">
+                        <small class="text-muted">Format: JPG, JPEG, PNG, WEBP. Maksimal 5MB. Dapat dipilih dari galeri atau kamera smartphone.</small>
+                        @error('foto_bukti')
+                            <div class="invalid-feedback d-block">{{ $message }}</div>
+                        @enderror
                     </div>
                 </div>
             </div>
