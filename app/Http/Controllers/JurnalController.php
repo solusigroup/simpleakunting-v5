@@ -388,8 +388,6 @@ class JurnalController extends Controller
             // Pinjaman Angsuran
             DB::table('pinjaman_angsuran')->where('id_jurnal', $jurnal->id_jurnal)->update([
                 'tanggal_bayar' => $request->tanggal,
-                'id_cabang' => $request->id_cabang,
-                'id_unit_usaha' => $request->id_unit_usaha,
                 'keterangan' => $request->deskripsi
             ]);
 
@@ -397,7 +395,6 @@ class JurnalController extends Controller
             DB::table('produksi')->where('id_jurnal', $jurnal->id_jurnal)->update([
                 'tanggal' => $request->tanggal,
                 'id_cabang' => $request->id_cabang,
-                'id_unit_usaha' => $request->id_unit_usaha,
                 'keterangan' => $request->deskripsi
             ]);
 
