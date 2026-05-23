@@ -978,6 +978,12 @@
                             </a>
                         </li>
                         <li class="sidebar-nav-item">
+                            <a class="sidebar-nav-link {{ request()->routeIs('projects.*') ? 'active' : '' }}" href="{{ route('projects.index') }}">
+                                <span data-feather="folder"></span>
+                                Proyek & Program
+                            </a>
+                        </li>
+                        <li class="sidebar-nav-item">
                             <a class="sidebar-nav-link {{ request()->routeIs('jenis-pinjaman.*') ? 'active' : '' }}" href="{{ route('jenis-pinjaman.index') }}">
                                 <span data-feather="layers"></span>
                                 Jenis Pinjaman

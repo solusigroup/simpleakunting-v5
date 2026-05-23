@@ -39,6 +39,12 @@
                                     <td><strong>Metode</strong></td>
                                     <td>: {{ $penjualan->metode_pembayaran }}</td>
                                 </tr>
+                                @if($penjualan->id_project)
+                                <tr>
+                                    <td><strong>Proyek / Program</strong></td>
+                                    <td>: <strong>{{ $penjualan->project->kode_project }}</strong> - {{ $penjualan->project->nama_project }}</td>
+                                </tr>
+                                @endif
                             </table>
                         </div>
                         <div class="col-md-6 text-end">

@@ -8,6 +8,7 @@ use App\Models\Pemasok;
 use App\Models\Persediaan;
 use App\Models\Cabang;
 use App\Models\UnitUsaha;
+use App\Models\Project;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
@@ -30,13 +31,14 @@ class PembelianRfqController extends Controller
         $barang = Persediaan::all();
         $cabang = Cabang::orderBy('nama_cabang')->get();
         $unitUsaha = UnitUsaha::active()->orderBy('nama_unit')->get();
+        $projects = Project::active()->orderBy('nama_project')->get();
 
         // Generate RFQ number
         $lastRfq = PembelianRfq::orderBy('id_rfq', 'desc')->first();
         $nextNo = $lastRfq ? (int)substr($lastRfq->no_rfq, 4) + 1 : 1;
         $noRfq = 'RFQ-' . str_pad($nextNo, 5, '0', STR_PAD_LEFT);
 
-        return view('pembelian.rfq.create', compact('pemasok', 'barang', 'cabang', 'unitUsaha', 'noRfq'));
+        return view('pembelian.rfq.create', compact('pemasok', 'barang', 'cabang', 'unitUsaha', 'noRfq', 'projects'));
     }
 
     public function store(Request $request)
@@ -45,6 +47,7 @@ class PembelianRfqController extends Controller
             'id_pemasok' => 'required|exists:pemasok,id_pemasok',
             'id_cabang' => 'required|exists:cabang,id',
             'id_unit_usaha' => 'required|exists:unit_usaha,id',
+            'id_project' => 'nullable|exists:projects,id_project',
             'tanggal_rfq' => 'required|date',
             'keterangan' => 'nullable|string',
             'details' => 'required|array|min:1',
@@ -79,6 +82,7 @@ class PembelianRfqController extends Controller
                 'id_pemasok' => $request->id_pemasok,
                 'id_cabang' => $request->id_cabang,
                 'id_unit_usaha' => $request->id_unit_usaha,
+                'id_project' => $request->id_project,
                 'no_rfq' => $noRfq,
                 'tanggal_rfq' => $request->tanggal_rfq,
                 'total' => $total,
@@ -120,8 +124,9 @@ class PembelianRfqController extends Controller
         $barang = Persediaan::all();
         $cabang = Cabang::orderBy('nama_cabang')->get();
         $unitUsaha = UnitUsaha::active()->orderBy('nama_unit')->get();
+        $projects = Project::active()->orderBy('nama_project')->get();
 
-        return view('pembelian.rfq.edit', compact('rfq', 'pemasok', 'barang', 'cabang', 'unitUsaha'));
+        return view('pembelian.rfq.edit', compact('rfq', 'pemasok', 'barang', 'cabang', 'unitUsaha', 'projects'));
     }
 
     public function update(Request $request, $id)
@@ -135,6 +140,7 @@ class PembelianRfqController extends Controller
             'id_pemasok' => 'required|exists:pemasok,id_pemasok',
             'id_cabang' => 'required|exists:cabang,id',
             'id_unit_usaha' => 'required|exists:unit_usaha,id',
+            'id_project' => 'nullable|exists:projects,id_project',
             'tanggal_rfq' => 'required|date',
             'keterangan' => 'nullable|string',
             'status' => 'required|in:Draft,Dikirim,Disetujui',
@@ -165,6 +171,7 @@ class PembelianRfqController extends Controller
                 'id_pemasok' => $request->id_pemasok,
                 'id_cabang' => $request->id_cabang,
                 'id_unit_usaha' => $request->id_unit_usaha,
+                'id_project' => $request->id_project,
                 'tanggal_rfq' => $request->tanggal_rfq,
                 'total' => $total,
                 'keterangan' => $request->keterangan,

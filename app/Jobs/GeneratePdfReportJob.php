@@ -82,18 +82,20 @@ class GeneratePdfReportJob implements ShouldQueue
         $perusahaan = \Illuminate\Support\Facades\DB::table('perusahaan')->find(1);
         $cabangId = $request->input('id_cabang');
         $unitId = $request->input('id_unit_usaha');
+        $projectId = $request->input('id_project');
 
         $akunNeraca = \App\Models\Akun::whereIn('tipe_akun', [
             'Kas & Bank', 'Piutang', 'Persediaan', 'Aset Lancar Lainnya', 'Aset Tetap',
             'Utang Usaha', 'Kewajiban Lancar Lainnya', 'Kewajiban Jangka Panjang', 'Ekuitas'
         ])->orderBy('kode_akun')->get();
 
-        $laporan = $akunNeraca->map(function ($akun) use ($perTanggal, $cabangId, $unitId) {
+        $laporan = $akunNeraca->map(function ($akun) use ($perTanggal, $cabangId, $unitId, $projectId) {
             $query = \App\Models\JurnalDetail::where('kode_akun', $akun->kode_akun)
-                ->whereHas('jurnal', function ($q) use ($perTanggal, $cabangId, $unitId) {
+                ->whereHas('jurnal', function ($q) use ($perTanggal, $cabangId, $unitId, $projectId) {
                     $q->where('tanggal', '<=', $perTanggal);
                     if ($cabangId) $q->where('id_cabang', $cabangId);
                     if ($unitId) $q->where('id_unit_usaha', $unitId);
+                    if ($projectId) $q->where('id_project', $projectId);
                 });
             
             $saldo = $query->select(\Illuminate\Support\Facades\DB::raw('SUM(debit) as total_debit'), \Illuminate\Support\Facades\DB::raw('SUM(kredit) as total_kredit'))->first();
@@ -119,11 +121,19 @@ class GeneratePdfReportJob implements ShouldQueue
         $reflection = new \ReflectionClass($controller);
         $method = $reflection->getMethod('hitungLabaRugi');
         $method->setAccessible(true);
-        $labaBersih = $method->invokeArgs($controller, [$perTanggal, $cabangId, $unitId]);
+        $labaBersih = $method->invokeArgs($controller, [$perTanggal, $cabangId, $unitId, $projectId]);
+
+        $subtitle = 'Per Tanggal ' . date('d F Y', strtotime($perTanggal));
+        if ($projectId) {
+            $project = \App\Models\Project::find($projectId);
+            if ($project) {
+                $subtitle .= ' | Proyek: ' . $project->nama_project;
+            }
+        }
 
         return [
             'title' => 'LAPORAN NERACA',
-            'subtitle' => 'Per Tanggal ' . date('d F Y', strtotime($perTanggal)),
+            'subtitle' => $subtitle,
             'perusahaan' => $perusahaan,
             'aktivaLancar' => $aktivaLancar,
             'aktivaTetap' => $aktivaTetap,
@@ -148,17 +158,19 @@ class GeneratePdfReportJob implements ShouldQueue
         $perusahaan = \Illuminate\Support\Facades\DB::table('perusahaan')->find(1);
         $cabangId = $request->input('id_cabang');
         $unitId = $request->input('id_unit_usaha');
+        $projectId = $request->input('id_project');
 
         $akunLabaRugi = \App\Models\Akun::whereIn('tipe_akun', [
             'Pendapatan', 'Pendapatan Lainnya', 'HPP', 'Beban', 'Beban Lainnya'
         ])->orderBy('kode_akun')->get();
 
-        $laporan = $akunLabaRugi->map(function ($akun) use ($startDate, $endDate, $cabangId, $unitId) {
+        $laporan = $akunLabaRugi->map(function ($akun) use ($startDate, $endDate, $cabangId, $unitId, $projectId) {
             $query = \App\Models\JurnalDetail::where('kode_akun', $akun->kode_akun)
-                ->whereHas('jurnal', function ($q) use ($startDate, $endDate, $cabangId, $unitId) {
+                ->whereHas('jurnal', function ($q) use ($startDate, $endDate, $cabangId, $unitId, $projectId) {
                     $q->whereBetween('tanggal', [$startDate, $endDate]);
                     if ($cabangId) $q->where('id_cabang', $cabangId);
                     if ($unitId) $q->where('id_unit_usaha', $unitId);
+                    if ($projectId) $q->where('id_project', $projectId);
                 });
 
             $saldo = $query->select(\Illuminate\Support\Facades\DB::raw('SUM(debit) as total_debit'), \Illuminate\Support\Facades\DB::raw('SUM(kredit) as total_kredit'))->first();
@@ -182,9 +194,17 @@ class GeneratePdfReportJob implements ShouldQueue
         $labaKotor = $pendapatan->sum('saldo') - $hpp->sum('saldo');
         $labaOperasional = $labaKotor - $beban->sum('saldo');
 
+        $subtitle = 'Periode ' . date('d F Y', strtotime($startDate)) . ' s/d ' . date('d F Y', strtotime($endDate));
+        if ($projectId) {
+            $project = \App\Models\Project::find($projectId);
+            if ($project) {
+                $subtitle .= ' | Proyek: ' . $project->nama_project;
+            }
+        }
+
         return [
             'title' => 'LAPORAN LABA RUGI',
-            'subtitle' => 'Periode ' . date('d F Y', strtotime($startDate)) . ' s/d ' . date('d F Y', strtotime($endDate)),
+            'subtitle' => $subtitle,
             'perusahaan' => $perusahaan,
             'pendapatan' => $pendapatan,
             'hpp' => $hpp,

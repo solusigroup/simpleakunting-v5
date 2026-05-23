@@ -62,6 +62,17 @@
                                 </select>
                             </div>
                         </div>
+                        <div class="row">
+                            <div class="col-md-12 mb-3">
+                                <label class="form-label">Proyek / Program (Opsional)</label>
+                                <select class="form-select" id="id_project" name="id_project">
+                                    <option value="">-- Tanpa Proyek --</option>
+                                    @foreach($projects as $proj)
+                                        <option value="{{ $proj->id_project }}" data-unit="{{ $proj->id_unit_usaha }}" {{ $rfq->id_project == $proj->id_project ? 'selected' : '' }}>{{ $proj->kode_project }} - {{ $proj->nama_project }}</option>
+                                    @endforeach
+                                </select>
+                            </div>
+                        </div>
                         <div class="mb-3">
                             <label class="form-label">Status RFQ</label>
                             <select class="form-select" name="status" required>
@@ -242,16 +253,37 @@
         hitungTotal();
     }
 
-    // Cabang & Unit cascade
-    document.getElementById('id_cabang').addEventListener('change', function() {
+    // Cabang & Unit & Project cascade
+    document.getElementById('id_cabang').addEventListener('change', function(e) {
         let cabangId = this.value;
         let unitSelect = document.getElementById('id_unit_usaha');
         let units = unitSelect.querySelectorAll('option');
         
-        unitSelect.value = "";
+        if (e.isTrusted || !unitSelect.value) {
+            unitSelect.value = "";
+        }
         units.forEach(opt => {
             if (opt.value === "") return;
             if (opt.getAttribute('data-cabang') == cabangId || !cabangId) {
+                opt.style.display = "";
+            } else {
+                opt.style.display = "none";
+            }
+        });
+        unitSelect.dispatchEvent(new Event('change'));
+    });
+
+    document.getElementById('id_unit_usaha').addEventListener('change', function(e) {
+        let unitId = this.value;
+        let projectSelect = document.getElementById('id_project');
+        if (!projectSelect) return;
+        let projects = projectSelect.querySelectorAll('option');
+        if (e.isTrusted || !projectSelect.value) {
+            projectSelect.value = "";
+        }
+        projects.forEach(opt => {
+            if (opt.value === "") return;
+            if (opt.getAttribute('data-unit') == unitId || !unitId) {
                 opt.style.display = "";
             } else {
                 opt.style.display = "none";

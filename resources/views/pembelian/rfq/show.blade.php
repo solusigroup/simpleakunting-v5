@@ -72,6 +72,12 @@
                             <td><strong>Unit Usaha</strong></td>
                             <td>: {{ $rfq->unitUsaha->nama_unit ?? '-' }}</td>
                         </tr>
+                        @if($rfq->id_project)
+                        <tr>
+                            <td><strong>Proyek / Program</strong></td>
+                            <td>: <strong>{{ $rfq->project->kode_project }}</strong> - {{ $rfq->project->nama_project }}</td>
+                        </tr>
+                        @endif
                     </table>
                 </div>
             </div>

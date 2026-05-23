@@ -74,6 +74,12 @@
                             <td><strong>Unit Usaha</strong></td>
                             <td>: {{ $penawaran->unitUsaha->nama_unit ?? '-' }}</td>
                         </tr>
+                        @if($penawaran->id_project)
+                        <tr>
+                            <td><strong>Proyek / Program</strong></td>
+                            <td>: <strong>{{ $penawaran->project->kode_project }}</strong> - {{ $penawaran->project->nama_project }}</td>
+                        </tr>
+                        @endif
                     </table>
                 </div>
             </div>

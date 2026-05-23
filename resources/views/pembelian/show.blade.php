@@ -39,6 +39,12 @@
                                     <td><strong>Metode</strong></td>
                                     <td>: {{ $pembelian->metode_pembayaran }}</td>
                                 </tr>
+                                @if($pembelian->id_project)
+                                <tr>
+                                    <td><strong>Proyek / Program</strong></td>
+                                    <td>: <strong>{{ $pembelian->project->kode_project }}</strong> - {{ $pembelian->project->nama_project }}</td>
+                                </tr>
+                                @endif
                             </table>
                         </div>
                         <div class="col-md-6 text-end">

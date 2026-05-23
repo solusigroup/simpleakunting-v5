@@ -38,4 +38,9 @@ class Pembelian extends Model
     {
         return $this->belongsTo(PosSession::class, 'id_pos_session');
     }
+
+    public function project()
+    {
+        return $this->belongsTo(Project::class, 'id_project');
+    }
 }

@@ -33,4 +33,9 @@ class PembelianRfq extends Model
     {
         return $this->belongsTo(UnitUsaha::class, 'id_unit_usaha');
     }
+
+    public function project()
+    {
+        return $this->belongsTo(Project::class, 'id_project');
+    }
 }

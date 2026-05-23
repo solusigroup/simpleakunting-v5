@@ -9,6 +9,7 @@ use App\Models\Cabang;
 use App\Models\UnitUsaha;
 use App\Models\Pelanggan;
 use App\Models\Pemasok;
+use App\Models\Project;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 
@@ -39,8 +40,9 @@ class JurnalController extends Controller
         $unitUsaha = UnitUsaha::active()->orderBy('nama_unit')->get();
         $pelanggan = Pelanggan::orderBy('nama_pelanggan')->get();
         $pemasok = Pemasok::orderBy('nama_pemasok')->get();
+        $projects = Project::active()->orderBy('nama_project')->get();
 
-        return view('jurnal.create', compact('akun', 'noTransaksi', 'cabang', 'unitUsaha', 'pelanggan', 'pemasok'));
+        return view('jurnal.create', compact('akun', 'noTransaksi', 'cabang', 'unitUsaha', 'pelanggan', 'pemasok', 'projects'));
     }
 
     public function store(Request $request)
@@ -50,6 +52,7 @@ class JurnalController extends Controller
             'tanggal' => 'required|date|before_or_equal:today',
             'id_cabang' => 'required|exists:cabang,id',
             'id_unit_usaha' => 'required|exists:unit_usaha,id',
+            'id_project' => 'nullable|exists:projects,id_project',
             'deskripsi' => 'required|string',
             'foto_bukti' => 'nullable|image|mimes:jpeg,png,jpg,webp|max:5120',
             'details' => 'required|array|min:2',
@@ -104,6 +107,7 @@ class JurnalController extends Controller
                 'tanggal' => $request->tanggal,
                 'id_cabang' => $request->id_cabang,
                 'id_unit_usaha' => $request->id_unit_usaha,
+                'id_project' => $request->id_project,
                 'id_pelanggan' => $request->id_pelanggan,
                 'id_pemasok' => $request->id_pemasok,
                 'deskripsi' => $request->deskripsi,
@@ -154,8 +158,9 @@ class JurnalController extends Controller
         $akunLawan = Akun::orderBy('kode_akun')->get();
         $cabang = Cabang::orderBy('nama_cabang')->get();
         $unitUsaha = UnitUsaha::active()->orderBy('nama_unit')->get();
+        $projects = Project::active()->orderBy('nama_project')->get();
 
-        return view('jurnal.create-kas', compact('akunKas', 'akunLawan', 'cabang', 'unitUsaha'));
+        return view('jurnal.create-kas', compact('akunKas', 'akunLawan', 'cabang', 'unitUsaha', 'projects'));
     }
 
     public function storeKas(Request $request)
@@ -166,6 +171,7 @@ class JurnalController extends Controller
             'tanggal' => 'required|date|before_or_equal:today',
             'id_cabang' => 'required|exists:cabang,id',
             'id_unit_usaha' => 'required|exists:unit_usaha,id',
+            'id_project' => 'nullable|exists:projects,id_project',
             'deskripsi' => 'required|string',
             'foto_bukti' => 'nullable|image|mimes:jpeg,png,jpg,webp|max:5120',
             'details' => 'required|array|min:1',
@@ -209,6 +215,7 @@ class JurnalController extends Controller
                 'tanggal' => $request->tanggal,
                 'id_cabang' => $request->id_cabang,
                 'id_unit_usaha' => $request->id_unit_usaha,
+                'id_project' => $request->id_project,
                 'deskripsi' => $request->deskripsi,
                 'sumber_jurnal' => $request->tipe_transaksi === 'masuk' ? 'Kas Masuk' : 'Kas Keluar',
                 'foto_bukti' => $fotoBukti,
@@ -261,8 +268,9 @@ class JurnalController extends Controller
         $unitUsaha = UnitUsaha::active()->orderBy('nama_unit')->get();
         $pelanggan = Pelanggan::orderBy('nama_pelanggan')->get();
         $pemasok = Pemasok::orderBy('nama_pemasok')->get();
+        $projects = Project::active()->orderBy('nama_project')->get();
         
-        return view('jurnal.edit', compact('jurnal', 'akun', 'cabang', 'unitUsaha', 'pelanggan', 'pemasok'));
+        return view('jurnal.edit', compact('jurnal', 'akun', 'cabang', 'unitUsaha', 'pelanggan', 'pemasok', 'projects'));
     }
 
     public function update(Request $request, Jurnal $jurnal)

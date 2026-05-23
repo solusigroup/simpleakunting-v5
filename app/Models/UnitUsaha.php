@@ -36,6 +36,11 @@ class UnitUsaha extends Model
         return $query->where('id_cabang', $cabangId);
     }
 
+    public function projects()
+    {
+        return $this->hasMany(Project::class, 'id_unit_usaha');
+    }
+
     /**
      * Scope untuk unit yang aktif saja.
      */

@@ -11,15 +11,15 @@
     <div class="card mb-4">
         <div class="card-body">
             <form action="{{ route('laporan.aruskas_tidak_langsung') }}" method="GET" class="row g-3 align-items-end">
-                <div class="col-md-3">
+                <div class="col-md-2">
                     <label for="start_date" class="form-label">Dari Tanggal</label>
                     <input type="date" class="form-control" id="start_date" name="start_date" value="{{ $startDate }}">
                 </div>
-                <div class="col-md-3">
+                <div class="col-md-2">
                     <label for="end_date" class="form-label">Sampai Tanggal</label>
                     <input type="date" class="form-control" id="end_date" name="end_date" value="{{ $endDate }}">
                 </div>
-                <div class="col-md-3">
+                <div class="col-md-2">
                     <label for="id_cabang" class="form-label">Cabang</label>
                     <select name="id_cabang" id="id_cabang" class="form-select">
                         <option value="">Semua Cabang</option>
@@ -42,6 +42,18 @@
                         @endforeach
                     </select>
                 </div>
+                <div class="col-md-3">
+                    <label for="id_project" class="form-label">Proyek / Program</label>
+                    <select name="id_project" id="id_project" class="form-select">
+                        <option value="">Semua Proyek</option>
+                        @foreach($projects as $p)
+                            <option value="{{ $p->id_project }}" data-unit="{{ $p->id_unit_usaha }}"
+                                {{ request('id_project') == $p->id_project ? 'selected' : '' }}>
+                                {{ $p->nama_project }}
+                            </option>
+                        @endforeach
+                    </select>
+                </div>
                 <div class="col-md-12 d-flex gap-2 justify-content-end mt-2">
                     <button type="submit" class="btn btn-primary">Tampilkan</button>
                     <a href="{{ route('laporan.aruskas_tidak_langsung') }}" class="btn btn-secondary">Reset</a>
@@ -54,6 +66,12 @@
     <div class="text-center mb-4">
         <h3>{{ $perusahaan->nama_perusahaan ?? 'Nama Perusahaan Belum Diset' }}</h3>
         <h4>Laporan Arus Kas (Metode Tidak Langsung)</h4>
+        @if(request('id_project'))
+            @php $selectedProj = $projects->firstWhere('id_project', request('id_project')); @endphp
+            @if($selectedProj)
+                <h5 class="text-primary mb-2">Proyek: {{ $selectedProj->nama_project }} ({{ $selectedProj->kode_project }})</h5>
+            @endif
+        @endif
         <p class="text-muted">
             Periode {{ \Carbon\Carbon::parse($startDate)->format('d F Y') }} s/d {{ \Carbon\Carbon::parse($endDate)->format('d F Y') }}
         </p>
@@ -153,35 +171,78 @@
 
 @push('scripts')
 <script>
-    document.getElementById('id_cabang').addEventListener('change', function() {
-        let cabangId = this.value;
+    function filterUnits() {
+        let cabangId = document.getElementById('id_cabang').value;
         let unitSelect = document.getElementById('id_unit_usaha');
         let units = unitSelect.querySelectorAll('option');
         
-        unitSelect.value = "";
+        let activeUnits = [];
         units.forEach(opt => {
             if (opt.value === "") return;
-            if (opt.getAttribute('data-cabang') == cabangId || !cabangId) {
+            if (!cabangId || opt.getAttribute('data-cabang') == cabangId) {
                 opt.style.display = "";
+                activeUnits.push(opt.value);
             } else {
                 opt.style.display = "none";
             }
         });
-    });
+        
+        if (unitSelect.value && !activeUnits.includes(unitSelect.value)) {
+            unitSelect.value = "";
+        }
+        
+        filterProjects();
+    }
+
+    function filterProjects() {
+        let cabangId = document.getElementById('id_cabang').value;
+        let unitId = document.getElementById('id_unit_usaha').value;
+        let projectSelect = document.getElementById('id_project');
+        let projects = projectSelect.querySelectorAll('option');
+        
+        let visibleUnitIds = [];
+        let unitSelect = document.getElementById('id_unit_usaha');
+        unitSelect.querySelectorAll('option').forEach(opt => {
+            if (opt.value !== "" && opt.style.display !== "none") {
+                visibleUnitIds.push(opt.value);
+            }
+        });
+
+        let activeProjects = [];
+        projects.forEach(opt => {
+            if (opt.value === "") return;
+            let projectUnitId = opt.getAttribute('data-unit');
+            
+            let show = false;
+            if (unitId) {
+                show = (projectUnitId == unitId);
+            } else {
+                show = visibleUnitIds.includes(projectUnitId);
+            }
+
+            if (show) {
+                opt.style.display = "";
+                activeProjects.push(opt.value);
+            } else {
+                opt.style.display = "none";
+            }
+        });
+
+        if (projectSelect.value && !activeProjects.includes(projectSelect.value)) {
+            projectSelect.value = "";
+        }
+    }
+
+    document.getElementById('id_cabang').addEventListener('change', filterUnits);
+    document.getElementById('id_unit_usaha').addEventListener('change', filterProjects);
 
     // Trigger on load
-    if (document.getElementById('id_cabang').value) {
-        let cabangId = document.getElementById('id_cabang').value;
-        let unitSelect = document.getElementById('id_unit_usaha');
-        
-        unitSelect.querySelectorAll('option').forEach(opt => {
-            if (opt.value === "") return;
-            if (opt.getAttribute('data-cabang') == cabangId) {
-                opt.style.display = "";
-            } else {
-                opt.style.display = "none";
-            }
-        });
+    filterUnits();
+    
+    // Set initial project selection if request exists
+    let initialProject = "{{ request('id_project') }}";
+    if (initialProject) {
+        document.getElementById('id_project').value = initialProject;
     }
 </script>
 @endpush

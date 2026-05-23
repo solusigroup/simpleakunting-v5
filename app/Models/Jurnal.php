@@ -18,4 +18,9 @@ class Jurnal extends Model
     {
         return $this->hasMany(JurnalDetail::class, 'id_jurnal');
     }
+
+    public function project()
+    {
+        return $this->belongsTo(Project::class, 'id_project');
+    }
 }

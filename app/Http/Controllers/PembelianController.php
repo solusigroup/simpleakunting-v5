@@ -11,6 +11,7 @@ use App\Models\JurnalDetail;
 use App\Models\Akun;
 use App\Models\Cabang;
 use App\Models\UnitUsaha;
+use App\Models\Project;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
@@ -44,6 +45,7 @@ class PembelianController extends Controller
 
         $cabang = Cabang::orderBy('nama_cabang')->get();
         $unitUsaha = UnitUsaha::active()->orderBy('nama_unit')->get();
+        $projects = Project::active()->orderBy('nama_project')->get();
 
         // Check if prefilling from an RFQ
         $rfq = null;
@@ -51,7 +53,7 @@ class PembelianController extends Controller
             $rfq = \App\Models\PembelianRfq::with('details.barang')->find($request->from_rfq);
         }
 
-        return view('pembelian.create', compact('pemasok', 'barang', 'akunKas', 'noFaktur', 'cabang', 'unitUsaha', 'rfq'));
+        return view('pembelian.create', compact('pemasok', 'barang', 'akunKas', 'noFaktur', 'cabang', 'unitUsaha', 'rfq', 'projects'));
     }
 
     public function store(Request $request)
@@ -60,6 +62,7 @@ class PembelianController extends Controller
             'id_pemasok' => 'required|exists:pemasok,id_pemasok',
             'id_cabang' => 'required|exists:cabang,id',
             'id_unit_usaha' => 'required|exists:unit_usaha,id',
+            'id_project' => 'nullable|exists:projects,id_project',
             'id_rfq' => 'nullable|integer',
             'no_faktur' => 'required|unique:pembelian,no_faktur_pembelian',
             'tanggal_faktur' => 'required|date|before_or_equal:today',
@@ -87,6 +90,7 @@ class PembelianController extends Controller
                 'tanggal' => $request->tanggal_faktur,
                 'id_cabang' => $request->id_cabang,
                 'id_unit_usaha' => $request->id_unit_usaha,
+                'id_project' => $request->id_project,
                 'id_pemasok' => $request->id_pemasok,
                 'deskripsi' => "Pembelian Faktur #{$noFaktur}",
                 'sumber_jurnal' => 'Pembelian',
@@ -98,6 +102,7 @@ class PembelianController extends Controller
                 'id_jurnal' => $jurnal->id_jurnal,
                 'id_cabang' => $request->id_cabang,
                 'id_unit_usaha' => $request->id_unit_usaha,
+                'id_project' => $request->id_project,
                 'id_rfq' => $request->id_rfq,
                 'no_faktur_pembelian' => $noFaktur,
                 'tanggal_faktur' => $request->tanggal_faktur,
@@ -140,8 +145,9 @@ class PembelianController extends Controller
         $akunKas = Akun::where('tipe_akun', 'Kas & Bank')->get();
         $cabang = Cabang::orderBy('nama_cabang')->get();
         $unitUsaha = UnitUsaha::active()->orderBy('nama_unit')->get();
+        $projects = Project::active()->orderBy('nama_project')->get();
 
-        return view('pembelian.edit', compact('pembelian', 'pemasok', 'barang', 'akunKas', 'cabang', 'unitUsaha'));
+        return view('pembelian.edit', compact('pembelian', 'pemasok', 'barang', 'akunKas', 'cabang', 'unitUsaha', 'projects'));
     }
 
     public function update(Request $request, Pembelian $pembelian)
@@ -150,6 +156,7 @@ class PembelianController extends Controller
             'id_pemasok' => 'required|exists:pemasok,id_pemasok',
             'id_cabang' => 'required|exists:cabang,id',
             'id_unit_usaha' => 'required|exists:unit_usaha,id',
+            'id_project' => 'nullable|exists:projects,id_project',
             'tanggal_faktur' => 'required|date|before_or_equal:today',
             'metode_pembayaran' => 'required|in:Tunai,Kredit',
             'akun_kas_bank' => 'required_if:metode_pembayaran,Tunai',
@@ -275,6 +282,7 @@ class PembelianController extends Controller
             'tanggal' => $request->tanggal_faktur,
             'id_cabang' => $request->id_cabang,
             'id_unit_usaha' => $request->id_unit_usaha,
+            'id_project' => $request->id_project,
             'id_pemasok' => $request->id_pemasok,
             'deskripsi' => "Pembelian Faktur #{$pembelian->no_faktur_pembelian}",
         ]);
@@ -309,6 +317,7 @@ class PembelianController extends Controller
             'id_pemasok' => $request->id_pemasok,
             'id_cabang' => $request->id_cabang,
             'id_unit_usaha' => $request->id_unit_usaha,
+            'id_project' => $request->id_project,
             'tanggal_faktur' => $request->tanggal_faktur,
             'total' => $totalPembelian,
             'keterangan' => $request->keterangan,

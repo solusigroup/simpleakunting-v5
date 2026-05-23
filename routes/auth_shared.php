@@ -24,6 +24,7 @@ use App\Http\Controllers\AgricultureController;
 use App\Http\Controllers\AccountingPeriodeController;
 use App\Http\Controllers\CabangController;
 use App\Http\Controllers\UnitUsahaController;
+use App\Http\Controllers\ProjectController;
 use App\Http\Controllers\KasController;
 use App\Http\Controllers\CabangSessionController;
 use App\Http\Controllers\PosController;
@@ -186,6 +187,7 @@ Route::middleware('role:superuser,admin')->group(function () {
     Route::resource('roles', RoleController::class);
     Route::resource('cabang', CabangController::class);
     Route::resource('unit-usaha', UnitUsahaController::class);
+    Route::resource('projects', ProjectController::class);
     Route::post('cabang/switch', [CabangSessionController::class, 'switch'])->name('cabang.switch');
     Route::get('audit-trail', [AuditTrailController::class, 'index'])->name('audit-trail.index');
 });

@@ -29,6 +29,12 @@
                             <td><strong>Sumber</strong></td>
                             <td>: {{ $jurnal->sumber_jurnal }}</td>
                         </tr>
+                        @if($jurnal->id_project)
+                        <tr>
+                            <td><strong>Proyek / Program</strong></td>
+                            <td>: <strong>{{ $jurnal->project->kode_project }}</strong> - {{ $jurnal->project->nama_project }}</td>
+                        </tr>
+                        @endif
                     </table>
                 </div>
             </div>

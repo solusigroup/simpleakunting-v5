@@ -11,6 +11,7 @@ use App\Models\JurnalDetail;
 use App\Models\Akun;
 use App\Models\Cabang;
 use App\Models\UnitUsaha;
+use App\Models\Project;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
@@ -49,6 +50,7 @@ class PenjualanController extends Controller
 
         $cabang = Cabang::orderBy('nama_cabang')->get();
         $unitUsaha = UnitUsaha::active()->orderBy('nama_unit')->get();
+        $projects = Project::active()->orderBy('nama_project')->get();
 
         // Check if prefilling from a quotation
         $penawaran = null;
@@ -56,7 +58,7 @@ class PenjualanController extends Controller
             $penawaran = \App\Models\PenjualanPenawaran::with('details.barang')->find($request->from_penawaran);
         }
 
-        return view('penjualan.create', compact('pelanggan', 'barang', 'akunKas', 'noFaktur', 'cabang', 'unitUsaha', 'penawaran'));
+        return view('penjualan.create', compact('pelanggan', 'barang', 'akunKas', 'noFaktur', 'cabang', 'unitUsaha', 'penawaran', 'projects'));
     }
 
     public function store(Request $request)
@@ -65,6 +67,7 @@ class PenjualanController extends Controller
             'id_pelanggan' => 'required|exists:pelanggan,id_pelanggan',
             'id_cabang' => 'required|exists:cabang,id',
             'id_unit_usaha' => 'required|exists:unit_usaha,id',
+            'id_project' => 'nullable|exists:projects,id_project',
             'id_penawaran' => 'nullable|integer',
             'no_faktur' => 'required|unique:penjualan,no_faktur',
             'tanggal_faktur' => 'required|date|before_or_equal:today',
@@ -92,6 +95,7 @@ class PenjualanController extends Controller
                 'tanggal' => $request->tanggal_faktur,
                 'id_cabang' => $request->id_cabang,
                 'id_unit_usaha' => $request->id_unit_usaha,
+                'id_project' => $request->id_project,
                 'id_pelanggan' => $request->id_pelanggan,
                 'deskripsi' => "Penjualan Faktur #{$noFaktur}",
                 'sumber_jurnal' => 'Penjualan',
@@ -103,6 +107,7 @@ class PenjualanController extends Controller
                 'id_jurnal' => $jurnal->id_jurnal,
                 'id_cabang' => $request->id_cabang,
                 'id_unit_usaha' => $request->id_unit_usaha,
+                'id_project' => $request->id_project,
                 'id_penawaran' => $request->id_penawaran,
                 'no_faktur' => $noFaktur,
                 'tanggal_faktur' => $request->tanggal_faktur,
@@ -139,8 +144,9 @@ class PenjualanController extends Controller
         $akunKas = Akun::where('tipe_akun', 'Kas & Bank')->get();
         $cabang = Cabang::orderBy('nama_cabang')->get();
         $unitUsaha = UnitUsaha::active()->orderBy('nama_unit')->get();
+        $projects = Project::active()->orderBy('nama_project')->get();
 
-        return view('penjualan.edit', compact('penjualan', 'pelanggan', 'barang', 'akunKas', 'cabang', 'unitUsaha'));
+        return view('penjualan.edit', compact('penjualan', 'pelanggan', 'barang', 'akunKas', 'cabang', 'unitUsaha', 'projects'));
     }
 
     public function update(Request $request, Penjualan $penjualan)
@@ -149,6 +155,7 @@ class PenjualanController extends Controller
             'id_pelanggan' => 'required|exists:pelanggan,id_pelanggan',
             'id_cabang' => 'required|exists:cabang,id',
             'id_unit_usaha' => 'required|exists:unit_usaha,id',
+            'id_project' => 'nullable|exists:projects,id_project',
             'tanggal_faktur' => 'required|date|before_or_equal:today',
             'metode_pembayaran' => 'required|in:Tunai,Kredit',
             'akun_kas_bank' => 'required_if:metode_pembayaran,Tunai',
@@ -279,6 +286,7 @@ class PenjualanController extends Controller
             'tanggal' => $request->tanggal_faktur,
             'id_cabang' => $request->id_cabang,
             'id_unit_usaha' => $request->id_unit_usaha,
+            'id_project' => $request->id_project,
             'id_pelanggan' => $request->id_pelanggan,
             'deskripsi' => "Penjualan Faktur #{$penjualan->no_faktur}",
         ]);
@@ -335,6 +343,7 @@ class PenjualanController extends Controller
             'id_pelanggan' => $request->id_pelanggan,
             'id_cabang' => $request->id_cabang,
             'id_unit_usaha' => $request->id_unit_usaha,
+            'id_project' => $request->id_project,
             'tanggal_faktur' => $request->tanggal_faktur,
             'total' => $totalPenjualan,
             'keterangan' => $request->keterangan,

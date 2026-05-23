@@ -78,6 +78,15 @@
                             @endforeach
                         </select>
                     </div>
+                    <div class="form-group" style="flex: 1;">
+                        <label for="id_project" class="form-label">Proyek / Program (Opsional)</label>
+                        <select class="form-select @error('id_project') is-invalid @enderror" id="id_project" name="id_project">
+                            <option value="">-- Tanpa Proyek --</option>
+                            @foreach($projects as $proj)
+                                <option value="{{ $proj->id_project }}" data-unit="{{ $proj->id_unit_usaha }}" {{ old('id_project') == $proj->id_project ? 'selected' : '' }}>{{ $proj->kode_project }} - {{ $proj->nama_project }}</option>
+                            @endforeach
+                        </select>
+                    </div>
                 </div>
 
                 <div class="form-row mt-3 flex-wrap">
@@ -220,14 +229,35 @@
 
     document.getElementById('id_akun_kas').addEventListener('change', hitungTotal);
 
-    document.getElementById('id_cabang').addEventListener('change', function() {
+    document.getElementById('id_cabang').addEventListener('change', function(e) {
         let cabangId = this.value;
         let unitSelect = document.getElementById('id_unit_usaha');
         let units = unitSelect.querySelectorAll('option');
-        unitSelect.value = "";
+        if (e.isTrusted || !unitSelect.value) {
+            unitSelect.value = "";
+        }
         units.forEach(opt => {
             if (opt.value === "") return;
             if (opt.getAttribute('data-cabang') == cabangId || !cabangId) {
+                opt.style.display = "";
+            } else {
+                opt.style.display = "none";
+            }
+        });
+        unitSelect.dispatchEvent(new Event('change'));
+    });
+
+    document.getElementById('id_unit_usaha').addEventListener('change', function(e) {
+        let unitId = this.value;
+        let projectSelect = document.getElementById('id_project');
+        if (!projectSelect) return;
+        let projects = projectSelect.querySelectorAll('option');
+        if (e.isTrusted || !projectSelect.value) {
+            projectSelect.value = "";
+        }
+        projects.forEach(opt => {
+            if (opt.value === "") return;
+            if (opt.getAttribute('data-unit') == unitId || !unitId) {
                 opt.style.display = "";
             } else {
                 opt.style.display = "none";

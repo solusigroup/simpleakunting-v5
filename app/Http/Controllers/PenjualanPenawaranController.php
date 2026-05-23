@@ -8,6 +8,7 @@ use App\Models\Pelanggan;
 use App\Models\Persediaan;
 use App\Models\Cabang;
 use App\Models\UnitUsaha;
+use App\Models\Project;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
@@ -30,13 +31,14 @@ class PenjualanPenawaranController extends Controller
         $barang = Persediaan::all();
         $cabang = Cabang::orderBy('nama_cabang')->get();
         $unitUsaha = UnitUsaha::active()->orderBy('nama_unit')->get();
+        $projects = Project::active()->orderBy('nama_project')->get();
 
         // Generate QTN number
         $lastQtn = PenjualanPenawaran::orderBy('id_penawaran', 'desc')->first();
         $nextNo = $lastQtn ? (int)substr($lastQtn->no_penawaran, 4) + 1 : 1;
         $noPenawaran = 'QTN-' . str_pad($nextNo, 5, '0', STR_PAD_LEFT);
 
-        return view('penjualan.penawaran.create', compact('pelanggan', 'barang', 'cabang', 'unitUsaha', 'noPenawaran'));
+        return view('penjualan.penawaran.create', compact('pelanggan', 'barang', 'cabang', 'unitUsaha', 'noPenawaran', 'projects'));
     }
 
     public function store(Request $request)
@@ -45,6 +47,7 @@ class PenjualanPenawaranController extends Controller
             'id_pelanggan' => 'required|exists:pelanggan,id_pelanggan',
             'id_cabang' => 'required|exists:cabang,id',
             'id_unit_usaha' => 'required|exists:unit_usaha,id',
+            'id_project' => 'nullable|exists:projects,id_project',
             'tanggal_penawaran' => 'required|date',
             'keterangan' => 'nullable|string',
             'details' => 'required|array|min:1',
@@ -79,6 +82,7 @@ class PenjualanPenawaranController extends Controller
                 'id_pelanggan' => $request->id_pelanggan,
                 'id_cabang' => $request->id_cabang,
                 'id_unit_usaha' => $request->id_unit_usaha,
+                'id_project' => $request->id_project,
                 'no_penawaran' => $noPenawaran,
                 'tanggal_penawaran' => $request->tanggal_penawaran,
                 'total' => $total,
@@ -120,8 +124,9 @@ class PenjualanPenawaranController extends Controller
         $barang = Persediaan::all();
         $cabang = Cabang::orderBy('nama_cabang')->get();
         $unitUsaha = UnitUsaha::active()->orderBy('nama_unit')->get();
+        $projects = Project::active()->orderBy('nama_project')->get();
 
-        return view('penjualan.penawaran.edit', compact('penawaran', 'pelanggan', 'barang', 'cabang', 'unitUsaha'));
+        return view('penjualan.penawaran.edit', compact('penawaran', 'pelanggan', 'barang', 'cabang', 'unitUsaha', 'projects'));
     }
 
     public function update(Request $request, $id)
@@ -135,6 +140,7 @@ class PenjualanPenawaranController extends Controller
             'id_pelanggan' => 'required|exists:pelanggan,id_pelanggan',
             'id_cabang' => 'required|exists:cabang,id',
             'id_unit_usaha' => 'required|exists:unit_usaha,id',
+            'id_project' => 'nullable|exists:projects,id_project',
             'tanggal_penawaran' => 'required|date',
             'keterangan' => 'nullable|string',
             'status' => 'required|in:Draft,Dikirim,Diterima,Ditolak',
@@ -165,6 +171,7 @@ class PenjualanPenawaranController extends Controller
                 'id_pelanggan' => $request->id_pelanggan,
                 'id_cabang' => $request->id_cabang,
                 'id_unit_usaha' => $request->id_unit_usaha,
+                'id_project' => $request->id_project,
                 'tanggal_penawaran' => $request->tanggal_penawaran,
                 'total' => $total,
                 'keterangan' => $request->keterangan,
