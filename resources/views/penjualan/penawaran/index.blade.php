@@ -65,14 +65,14 @@
                                         <a href="{{ route('penawaran.edit', $p->id_penawaran) }}" class="btn btn-sm btn-icon btn-light" title="Edit">
                                             <span data-feather="edit-2" style="width: 14px; height: 14px;"></span>
                                         </a>
-                                        <form action="{{ route('penawaran.destroy', $p->id_penawaran) }}" method="POST" class="d-inline" onsubmit="return confirm('Apakah Anda yakin ingin menghapus penawaran ini?')">
-                                            @csrf
-                                            @method('DELETE')
-                                            <button type="submit" class="btn btn-sm btn-icon btn-light text-danger" title="Hapus">
-                                                <span data-feather="trash-2" style="width: 14px; height: 14px;"></span>
-                                            </button>
-                                        </form>
                                     @endif
+                                    <form action="{{ route('penawaran.destroy', $p->id_penawaran) }}" method="POST" class="d-inline" onsubmit="return confirm('Apakah Anda yakin ingin menghapus penawaran ini?')">
+                                        @csrf
+                                        @method('DELETE')
+                                        <button type="submit" class="btn btn-sm btn-icon btn-light text-danger" title="Hapus">
+                                            <span data-feather="trash-2" style="width: 14px; height: 14px;"></span>
+                                        </button>
+                                    </form>
                                 </div>
                             </td>
                         </tr>

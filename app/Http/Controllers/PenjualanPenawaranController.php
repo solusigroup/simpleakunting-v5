@@ -199,9 +199,6 @@ class PenjualanPenawaranController extends Controller
     public function destroy($id)
     {
         $penawaran = PenjualanPenawaran::findOrFail($id);
-        if ($penawaran->status === 'Dikonversi') {
-            return redirect()->route('penawaran.index')->with('error', 'Penawaran yang telah dikonversi tidak dapat dihapus.');
-        }
 
         try {
             DB::beginTransaction();
