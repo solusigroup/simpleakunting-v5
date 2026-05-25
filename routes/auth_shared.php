@@ -309,6 +309,7 @@ Route::middleware('role:superuser,admin,manajer')->group(function () {
     Route::get('import-export/template/{module}', [ImportExportController::class, 'template'])->name('import-export.template');
     Route::post('import-export/import/{module}', [ImportExportController::class, 'import'])->name('import-export.import');
     Route::get('import-export/export-all', [ImportExportController::class, 'exportAll'])->name('import-export.export-all');
+    Route::post('import-export/sync-jurnal', [ImportExportController::class, 'syncJurnal'])->name('import-export.sync-jurnal');
 });
 
 // =====================================================

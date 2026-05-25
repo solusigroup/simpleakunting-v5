@@ -11,6 +11,12 @@
         <a href="{{ route('import-export.export-all') }}" class="btn btn-info">
             <span data-feather="download-cloud"></span> Export Semua Data
         </a>
+        <form action="{{ route('import-export.sync-jurnal') }}" method="POST" class="d-inline">
+            @csrf
+            <button type="submit" class="btn btn-secondary ms-2">
+                <span data-feather="refresh-cw"></span> Sync Jurnal Impor
+            </button>
+        </form>
     </div>
 </div>
 
