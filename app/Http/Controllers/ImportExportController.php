@@ -63,6 +63,11 @@ class ImportExportController extends Controller
     {
         $modules = $this->modules;
         
+        // Hide no_anggota from display columns as it's auto-generated
+        if (isset($modules['anggota'])) {
+            $modules['anggota']['columns'] = array_values(array_filter($modules['anggota']['columns'], fn($col) => $col !== 'no_anggota'));
+        }
+        
         // Get count for each module
         $counts = [];
         foreach ($modules as $key => $module) {
@@ -132,18 +137,23 @@ class ImportExportController extends Controller
             'Content-Disposition' => 'attachment; filename="' . $filename . '"',
         ];
 
-        $callback = function() use ($config) {
+        $callback = function() use ($config, $module) {
             $file = fopen('php://output', 'w');
             
             // Add BOM for Excel UTF-8 compatibility
             fprintf($file, chr(0xEF).chr(0xBB).chr(0xBF));
             
+            $columns = $config['columns'];
+            if ($module === 'anggota') {
+                $columns = array_values(array_filter($columns, fn($col) => $col !== 'no_anggota'));
+            }
+
             // Write header only
-            fputcsv($file, $config['columns']);
+            fputcsv($file, $columns);
             
             // Add sample row for reference
             $sample = [];
-            foreach ($config['columns'] as $col) {
+            foreach ($columns as $col) {
                 $sample[] = 'contoh_' . $col;
             }
             fputcsv($file, $sample);
@@ -173,7 +183,7 @@ class ImportExportController extends Controller
         
         // Define truly required columns to prevent total failure on optional ones
         $requiredColumns = [
-            'anggota' => ['no_anggota', 'nik', 'nama_lengkap'],
+            'anggota' => ['nik', 'nama_lengkap'],
             'pelanggan' => ['nama_pelanggan'],
             'pemasok' => ['nama_pemasok'],
             'persediaan' => ['kode_barang', 'nama_barang'],
@@ -347,6 +357,8 @@ class ImportExportController extends Controller
                     if (DB::table($table)->where('no_anggota', $data['no_anggota'])->exists()) {
                         throw new \Exception("No Anggota {$data['no_anggota']} sudah terdaftar");
                     }
+                } else {
+                    $data['no_anggota'] = \App\Models\Anggota::generateNoAnggota();
                 }
                 break;
 
