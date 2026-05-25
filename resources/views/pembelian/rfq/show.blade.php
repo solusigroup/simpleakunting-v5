@@ -17,6 +17,9 @@
                     <span data-feather="edit"></span> Edit
                 </a>
             @endif
+            <a href="{{ route('rfq.cetak', $rfq->id_rfq) }}" class="btn btn-sm btn-info text-white" target="_blank">
+                <span data-feather="printer"></span> Cetak
+            </a>
             <a href="{{ route('rfq.index') }}" class="btn btn-sm btn-secondary">
                 Kembali
             </a>

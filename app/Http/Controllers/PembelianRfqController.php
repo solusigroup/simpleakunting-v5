@@ -199,9 +199,6 @@ class PembelianRfqController extends Controller
     public function destroy($id)
     {
         $rfq = PembelianRfq::findOrFail($id);
-        if ($rfq->status === 'Dikonversi') {
-            return redirect()->route('rfq.index')->with('error', 'RFQ yang telah dikonversi tidak dapat dihapus.');
-        }
 
         try {
             DB::beginTransaction();
@@ -225,5 +222,12 @@ class PembelianRfqController extends Controller
         }
         
         return redirect()->route('pembelian.create', ['from_rfq' => $rfq->id_rfq]);
+    }
+
+    public function cetak($id)
+    {
+        $rfq = PembelianRfq::with(['details.barang', 'pemasok', 'cabang', 'unitUsaha'])->findOrFail($id);
+        $perusahaan = \App\Models\Tenant::find(tenant('id'));
+        return view('pembelian.rfq.cetak', compact('rfq', 'perusahaan'));
     }
 }

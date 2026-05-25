@@ -62,14 +62,14 @@
                                         <a href="{{ route('rfq.edit', $r->id_rfq) }}" class="btn btn-sm btn-icon btn-light" title="Edit">
                                             <span data-feather="edit-2" style="width: 14px; height: 14px;"></span>
                                         </a>
-                                        <form action="{{ route('rfq.destroy', $r->id_rfq) }}" method="POST" class="d-inline" onsubmit="return confirm('Apakah Anda yakin ingin menghapus RFQ ini?')">
-                                            @csrf
-                                            @method('DELETE')
-                                            <button type="submit" class="btn btn-sm btn-icon btn-light text-danger" title="Hapus">
-                                                <span data-feather="trash-2" style="width: 14px; height: 14px;"></span>
-                                            </button>
-                                        </form>
                                     @endif
+                                    <form action="{{ route('rfq.destroy', $r->id_rfq) }}" method="POST" class="d-inline" onsubmit="return confirm('Apakah Anda yakin ingin menghapus RFQ ini?')">
+                                        @csrf
+                                        @method('DELETE')
+                                        <button type="submit" class="btn btn-sm btn-icon btn-light text-danger" title="Hapus">
+                                            <span data-feather="trash-2" style="width: 14px; height: 14px;"></span>
+                                        </button>
+                                    </form>
                                 </div>
                             </td>
                         </tr>

@@ -219,7 +219,12 @@ class PembelianController extends Controller
             }
 
             $posSessionId = $pembelian->id_pos_session;
+            $idRfq = $pembelian->id_rfq;
             $pembelian->delete();
+
+            if ($idRfq) {
+                \App\Models\PembelianRfq::where('id_rfq', $idRfq)->update(['status' => 'Draft']);
+            }
 
             $this->syncPosSessionTotalPembelian($posSessionId);
 

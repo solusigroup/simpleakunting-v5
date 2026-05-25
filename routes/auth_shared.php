@@ -134,6 +134,7 @@ Route::middleware('role:superuser,admin,manajer,staff')->group(function () {
     Route::resource('penjualan', PenjualanController::class);
     
     Route::post('rfq/{id}/convert', [PembelianRfqController::class, 'convertToPurchase'])->name('rfq.convert');
+    Route::get('rfq/{id}/cetak', [PembelianRfqController::class, 'cetak'])->name('rfq.cetak');
     Route::resource('rfq', PembelianRfqController::class);
     Route::resource('pembelian', PembelianController::class);
     Route::get('jurnal/kas/create', [JurnalController::class, 'createKas'])->name('jurnal.createKas');
