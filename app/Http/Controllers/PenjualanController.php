@@ -225,7 +225,12 @@ class PenjualanController extends Controller
             }
 
             $posSessionId = $penjualan->id_pos_session;
+            $idPenawaran = $penjualan->id_penawaran;
             $penjualan->delete();
+
+            if ($idPenawaran) {
+                \App\Models\PenjualanPenawaran::where('id_penawaran', $idPenawaran)->update(['status' => 'Draft']);
+            }
 
             $this->syncPosSessionTotal($posSessionId);
 
