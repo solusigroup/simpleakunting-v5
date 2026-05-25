@@ -17,6 +17,9 @@
                     <span data-feather="edit"></span> Edit
                 </a>
             @endif
+            <a href="{{ route('penawaran.cetak', $penawaran->id_penawaran) }}" class="btn btn-sm btn-info text-white" target="_blank">
+                <span data-feather="printer"></span> Cetak
+            </a>
             <a href="{{ route('penawaran.index') }}" class="btn btn-sm btn-secondary">
                 Kembali
             </a>

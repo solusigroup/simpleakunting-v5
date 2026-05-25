@@ -226,4 +226,11 @@ class PenjualanPenawaranController extends Controller
         
         return redirect()->route('penjualan.create', ['from_penawaran' => $penawaran->id_penawaran]);
     }
+
+    public function cetak($id)
+    {
+        $penawaran = PenjualanPenawaran::with(['details.barang', 'pelanggan'])->findOrFail($id);
+        $perusahaan = \App\Models\Tenant::find(tenant('id'));
+        return view('penjualan.penawaran.cetak', compact('penawaran', 'perusahaan'));
+    }
 }
