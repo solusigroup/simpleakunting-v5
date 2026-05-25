@@ -37,9 +37,9 @@ class BukuBesarController extends Controller
             $kreditAwal = $prevTrans->sum('kredit');
 
             if ($selectedAkun->saldo_normal == 'Debit') {
-                $saldoAwal = $debitAwal - $kreditAwal;
+                $saldoAwal = $selectedAkun->saldo_awal + $debitAwal - $kreditAwal;
             } else {
-                $saldoAwal = $kreditAwal - $debitAwal;
+                $saldoAwal = $selectedAkun->saldo_awal + $kreditAwal - $debitAwal;
             }
 
             // Ambil Transaksi Periode Ini

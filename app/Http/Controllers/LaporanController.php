@@ -65,9 +65,9 @@ class LaporanController extends Controller
                 $totalKredit = $saldo->total_kredit ?? 0;
 
                 if ($akun->saldo_normal == 'Debit') {
-                    $akunClone->saldo_akhir = $totalDebit - $totalKredit;
+                    $akunClone->saldo_akhir = $akun->saldo_awal + $totalDebit - $totalKredit;
                 } else {
-                    $akunClone->saldo_akhir = $totalKredit - $totalDebit;
+                    $akunClone->saldo_akhir = $akun->saldo_awal + $totalKredit - $totalDebit;
                 }
                 return $akunClone;
             });
@@ -143,9 +143,9 @@ class LaporanController extends Controller
                 $totalKredit = $saldo->total_kredit ?? 0;
 
                 if ($akun->saldo_normal == 'Kredit') {
-                    $akunClone->saldo_periode = $totalKredit - $totalDebit;
+                    $akunClone->saldo_periode = $akun->saldo_awal + $totalKredit - $totalDebit;
                 } else {
-                    $akunClone->saldo_periode = $totalDebit - $totalKredit;
+                    $akunClone->saldo_periode = $akun->saldo_awal + $totalDebit - $totalKredit;
                 }
                 return $akunClone;
             });
@@ -244,6 +244,9 @@ class LaporanController extends Controller
                 if ($projectId) $q->where('id_project', $projectId);
             })
             ->sum(DB::raw('debit - kredit'));
+
+        $saldoAwalAkunKas = Akun::where('tipe_akun', 'Kas & Bank')->sum('saldo_awal');
+        $saldoAwal += $saldoAwalAkunKas;
 
         $saldoAkhir = $saldoAwal + $kenaikanKas;
 
@@ -379,6 +382,9 @@ class LaporanController extends Controller
             })
             ->sum(DB::raw('debit - kredit'));
 
+        $saldoAwalAkunKas = Akun::where('tipe_akun', 'Kas & Bank')->sum('saldo_awal');
+        $saldoAwal += $saldoAwalAkunKas;
+
         $saldoAkhir = $saldoAwal + $kenaikanKas;
 
         $cabang = Cabang::orderBy('nama_cabang')->get();
@@ -415,6 +421,9 @@ class LaporanController extends Controller
                 if ($projectId) $q->where('id_project', $projectId);
             })
             ->sum(DB::raw('kredit - debit'));
+
+        $saldoAwalAkunMaster = Akun::where('tipe_akun', 'Ekuitas')->sum('saldo_awal');
+        $saldoAwalAkunEkuitas += $saldoAwalAkunMaster;
 
         $labaDitahanAwal = $this->hitungLabaRugi($startDate, $cabangId, $unitId, $projectId);
 
