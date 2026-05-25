@@ -181,7 +181,16 @@
                             @if($s->selisih == 0) ✅ @endif
                         </td>
                         <td>
-                            <a href="{{ route('pos.shift.report', $s->id) }}" class="btn btn-sm btn-outline-primary">📊 Laporan</a>
+                            <div class="d-flex gap-1 align-items-center">
+                                <a href="{{ route('pos.shift.report', $s->id) }}" class="btn btn-sm btn-outline-primary">📊 Laporan</a>
+                                @if(auth()->user()->hasRole(['superuser', 'admin']))
+                                    <form action="{{ route('pos.session.destroy', $s->id) }}" method="POST" onsubmit="return confirm('Apakah Anda yakin ingin menghapus riwayat shift ini? Transaksi di dalamnya tidak akan ikut terhapus.')">
+                                        @csrf
+                                        @method('DELETE')
+                                        <button type="submit" class="btn btn-sm btn-outline-danger">🗑️</button>
+                                    </form>
+                                @endif
+                            </div>
                         </td>
                     </tr>
                     @empty

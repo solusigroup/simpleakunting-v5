@@ -117,6 +117,7 @@ Route::middleware('role:superuser,admin,manajer,staff,kasir')->group(function ()
     Route::get('pos/session', [PosController::class, 'sessionCreate'])->name('pos.session.create');
     Route::post('pos/session/open', [PosController::class, 'sessionOpen'])->name('pos.session.open');
     Route::post('pos/session/close', [PosController::class, 'sessionClose'])->name('pos.session.close');
+    Route::delete('pos/session/{id}', [PosController::class, 'sessionDestroy'])->name('pos.session.destroy');
     Route::get('pos/receipt/{id}', [PosController::class, 'receipt'])->name('pos.receipt');
     Route::get('pos/purchase-receipt/{id}', [PosController::class, 'purchaseReceipt'])->name('pos.purchase.receipt');
     Route::get('pos/shift-report/{id}', [PosController::class, 'shiftReport'])->name('pos.shift.report');

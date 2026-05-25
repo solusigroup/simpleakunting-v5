@@ -117,10 +117,23 @@ class PosController extends Controller
             'closed_at' => now(),
         ]);
 
-        return redirect()->route('pos.session.create')->with('success', 
-            "Sesi kasir ditutup. Penjualan: Rp " . number_format($totalPenjualan, 0, ',', '.') . 
-            " | Pembelian Tunai: Rp " . number_format($pembelianTunai, 0, ',', '.') . 
-            " | Selisih: Rp " . number_format($selisih, 0, ',', '.'));
+        return redirect()->route('pos.session.create')->with('success', 'Shift kasir berhasil ditutup. Saldo akhir laci: Rp ' . number_format($request->saldo_akhir, 0, ',', '.'));
+    }
+
+    /**
+     * Delete a POS session.
+     */
+    public function sessionDestroy($id)
+    {
+        $session = PosSession::findOrFail($id);
+        
+        // Detach related transactions (set id_pos_session to null) to prevent dangling references
+        \App\Models\Penjualan::where('id_pos_session', $id)->update(['id_pos_session' => null]);
+        \App\Models\Pembelian::where('id_pos_session', $id)->update(['id_pos_session' => null]);
+        
+        $session->delete();
+
+        return redirect()->route('pos.session.create')->with('success', 'Riwayat shift berhasil dihapus.');
     }
 
     /**
