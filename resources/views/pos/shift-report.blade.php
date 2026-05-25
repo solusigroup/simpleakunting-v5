@@ -49,9 +49,10 @@
 
     @media print {
         .no-print { display: none !important; }
-        .shift-report { max-width: 100%; }
-        body, .main-content, .content-wrapper { background: #fff !important; color: #000 !important; }
-        .report-card { box-shadow: none; border: 1px solid #ccc; }
+        .app-sidebar, .app-header { display: none !important; }
+        .shift-report { max-width: 100%; margin: 0; }
+        body, .main-content, .content-wrapper { background: #fff !important; color: #000 !important; margin: 0 !important; padding: 0 !important; }
+        .report-card { box-shadow: none; border: 1px solid #ccc; margin: 0; padding: 0; }
     }
 </style>
 
