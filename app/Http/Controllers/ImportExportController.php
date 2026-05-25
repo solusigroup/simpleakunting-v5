@@ -312,7 +312,12 @@ class ImportExportController extends Controller
                         }
                         
                         // Parse local formatted numbers to raw
-                        if (is_string($value) && preg_match('/stok|harga|jumlah|saldo|total|bunga|tenor|provisi|biaya/i', $col)) {
+                        if (is_string($value) && preg_match('/bunga|tenor|provisi/i', $col)) {
+                            // Untuk persentase atau angka kecil, cukup ganti koma jadi titik & buang %
+                            $value = str_replace(',', '.', $value);
+                            $value = str_replace('%', '', $value);
+                        } elseif (is_string($value) && preg_match('/stok|harga|jumlah|saldo|total|biaya/i', $col)) {
+                            // Untuk Rupiah/Nominal besar, buang titik ribuan
                             $value = str_replace(['Rp', ' ', '.'], '', $value);
                             $value = str_replace(',', '.', $value);
                         }
