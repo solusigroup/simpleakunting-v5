@@ -29,6 +29,7 @@
                     <li><hr class="dropdown-divider my-2 border-secondary-subtle"></li>
                     <a class="nav-link p-0 fw-medium" href="#schema">🔗 Skema & Koneksi Modul</a>
                     <a class="nav-link p-0 fw-medium" href="#sitemap">🗺️ Site Map</a>
+                    <a class="nav-link p-0 fw-medium" href="#team">👥 Team Penyusun</a>
                 </nav>
             </div>
         </div>
@@ -686,7 +687,7 @@
         </section>
 
         <!-- Admin -->
-        <section id="admin" class="mb-5 pt-2 pb-5">
+        <section id="admin" class="mb-5 pt-2">
             <div class="card border-0 shadow-sm rounded-4">
                 <div class="card-body p-4 p-md-5">
                     <h2 class="fw-bold mb-4">⚙️ Administrasi</h2>
@@ -710,6 +711,69 @@
                         <div class="col-md-6">
                             <h6 class="fw-bold text-primary">🔍 Diagnosa Neraca</h6>
                             <p class="small text-secondary">Melakukan validasi kesehatan database dan memastikan laporan keuangan 100% akurat tanpa error 500.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Team Penyusun -->
+        <section id="team" class="mb-5 pt-2 pb-5">
+            <div class="card border-0 shadow-sm rounded-4 border-top border-4 border-primary">
+                <div class="card-body p-4 p-md-5">
+                    <h2 class="fw-bold mb-4">👥 Team Penyusun</h2>
+                    <p class="text-secondary mb-4">Panduan pengoperasian dan pengembangan Simple Akunting v5 ini disusun oleh tim berikut:</p>
+                    
+                    <div class="row g-3">
+                        <div class="col-12">
+                            <div class="d-flex align-items-center gap-3 p-3 rounded-4 bg-theme-subtle border border-secondary-subtle">
+                                <div class="bg-primary text-white rounded-circle d-flex align-items-center justify-content-center flex-shrink-0" style="width: 45px; height: 45px; font-weight: bold; font-size: 1.2rem;">
+                                    1
+                                </div>
+                                <div>
+                                    <h6 class="fw-bold mb-0">Kurniawan, SE., Ak., CA., M.Ak. CMA., CIBA., CIAP</h6>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="d-flex align-items-center gap-3 p-3 rounded-4 bg-theme-subtle border border-secondary-subtle">
+                                <div class="bg-primary bg-opacity-10 text-primary rounded-circle d-flex align-items-center justify-content-center flex-shrink-0" style="width: 40px; height: 40px; font-weight: bold;">
+                                    2
+                                </div>
+                                <div>
+                                    <h6 class="fw-bold mb-0">Risa Lailatur R.</h6>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="d-flex align-items-center gap-3 p-3 rounded-4 bg-theme-subtle border border-secondary-subtle">
+                                <div class="bg-primary bg-opacity-10 text-primary rounded-circle d-flex align-items-center justify-content-center flex-shrink-0" style="width: 40px; height: 40px; font-weight: bold;">
+                                    3
+                                </div>
+                                <div>
+                                    <h6 class="fw-bold mb-0">Adinda Nadya F.P.</h6>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="d-flex align-items-center gap-3 p-3 rounded-4 bg-theme-subtle border border-secondary-subtle">
+                                <div class="bg-primary bg-opacity-10 text-primary rounded-circle d-flex align-items-center justify-content-center flex-shrink-0" style="width: 40px; height: 40px; font-weight: bold;">
+                                    4
+                                </div>
+                                <div>
+                                    <h6 class="fw-bold mb-0">Nia Rifvany A.W.</h6>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="d-flex align-items-center gap-3 p-3 rounded-4 bg-theme-subtle border border-secondary-subtle">
+                                <div class="bg-primary bg-opacity-10 text-primary rounded-circle d-flex align-items-center justify-content-center flex-shrink-0" style="width: 40px; height: 40px; font-weight: bold;">
+                                    5
+                                </div>
+                                <div>
+                                    <h6 class="fw-bold mb-0">Nadya Fitriyah N.A.</h6>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>
