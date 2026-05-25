@@ -103,7 +103,7 @@ class ImportExportController extends Controller
             fprintf($file, chr(0xEF).chr(0xBB).chr(0xBF));
             
             // Write header
-            fputcsv($file, $config['columns']);
+            fputcsv($file, $config['columns'], ';');
             
             // Write data
             foreach ($data as $row) {
@@ -111,7 +111,7 @@ class ImportExportController extends Controller
                 foreach ($config['columns'] as $col) {
                     $rowData[] = $row->$col ?? '';
                 }
-                fputcsv($file, $rowData);
+                fputcsv($file, $rowData, ';');
             }
             
             fclose($file);
@@ -149,14 +149,14 @@ class ImportExportController extends Controller
             }
 
             // Write header only
-            fputcsv($file, $columns);
+            fputcsv($file, $columns, ';');
             
             // Add sample row for reference
             $sample = [];
             foreach ($columns as $col) {
                 $sample[] = 'contoh_' . $col;
             }
-            fputcsv($file, $sample);
+            fputcsv($file, $sample, ';');
             
             fclose($file);
         };
@@ -481,8 +481,8 @@ class ImportExportController extends Controller
             
             foreach ($this->modules as $key => $config) {
                 // Write module header
-                fputcsv($file, ['=== ' . strtoupper($config['label']) . ' ===']);
-                fputcsv($file, $config['columns']);
+                fputcsv($file, ['=== ' . strtoupper($config['label']) . ' ==='], ';');
+                fputcsv($file, $config['columns'], ';');
                 
                 $data = DB::table($config['table'])->get();
                 
@@ -491,11 +491,11 @@ class ImportExportController extends Controller
                     foreach ($config['columns'] as $col) {
                         $rowData[] = $row->$col ?? '';
                     }
-                    fputcsv($file, $rowData);
+                    fputcsv($file, $rowData, ';');
                 }
                 
                 // Empty line between modules
-                fputcsv($file, []);
+                fputcsv($file, [], ';');
             }
             
             fclose($file);
