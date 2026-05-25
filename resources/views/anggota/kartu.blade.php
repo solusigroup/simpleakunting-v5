@@ -225,12 +225,15 @@
 
 <style>
 @media print {
-    .navbar, .sidebar, .btn-toolbar, .no-print {
+    .app-header, .app-sidebar, .btn-toolbar, .no-print {
         display: none !important;
     }
-    main {
+    .app-main {
         margin-left: 0 !important;
+        margin-top: 0 !important;
         padding: 0 !important;
     }
+    @page { margin: 0; }
+    body { padding: 1cm; background: white !important; }
 }
 </style>
