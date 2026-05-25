@@ -144,4 +144,148 @@ class PenerimaanController extends Controller
         $jurnal = Jurnal::with(['details.akun', 'cabang', 'unitUsaha'])->findOrFail($id);
         return view('penerimaan.show', compact('jurnal'));
     }
+
+    public function edit($id)
+    {
+        $jurnal = Jurnal::with('details')->findOrFail($id);
+        $akunKas = Akun::where('tipe_akun', 'Kas & Bank')->orderBy('kode_akun')->get();
+        $akunPendapatan = Akun::whereIn('tipe_akun', ['Pendapatan', 'Pendapatan Lainnya', 'Piutang'])->orderBy('kode_akun')->get();
+        $pelanggan = Pelanggan::orderBy('nama_pelanggan')->get();
+        $cabang = Cabang::orderBy('nama_cabang')->get();
+        $unitUsaha = UnitUsaha::orderBy('nama_unit')->get();
+
+        // Get debit account (Kas)
+        $detailKas = $jurnal->details->where('debit', '>', 0)->first();
+        $akunKasId = $detailKas ? $detailKas->kode_akun : '';
+
+        // Get kredit accounts
+        $detailsKredit = $jurnal->details->where('kredit', '>', 0)->values();
+
+        return view('penerimaan.edit', compact('jurnal', 'akunKas', 'akunPendapatan', 'pelanggan', 'cabang', 'unitUsaha', 'akunKasId', 'detailsKredit'));
+    }
+
+    public function update(Request $request, $id)
+    {
+        if ($request->has('details') && is_array($request->details)) {
+            $filteredDetails = array_filter($request->details, function ($detail) {
+                return !empty($detail['kode_akun']) || (!empty($detail['jumlah']) && $detail['jumlah'] > 0);
+            });
+            $request->merge(['details' => array_values($filteredDetails)]);
+        }
+
+        $request->validate([
+            'tanggal' => 'required|date|before_or_equal:today',
+            'akun_kas' => 'required|exists:akun,kode_akun',
+            'id_pelanggan' => 'nullable|exists:pelanggan,id_pelanggan',
+            'id_cabang' => 'required|exists:cabang,id',
+            'id_unit_usaha' => 'nullable|exists:unit_usaha,id',
+            'keterangan' => 'required|string',
+            'details' => 'required|array|min:1',
+            'details.*.kode_akun' => 'required|exists:akun,kode_akun',
+            'details.*.jumlah' => 'required|numeric|min:0',
+        ]);
+
+        try {
+            DB::beginTransaction();
+
+            $jurnal = Jurnal::findOrFail($id);
+            $this->validatePeriodOpen($jurnal->tanggal);
+            $this->validatePeriodOpen($request->tanggal);
+
+            // Reverse old impacts
+            foreach ($jurnal->details as $detail) {
+                if ($detail->kredit > 0) {
+                    $akun = Akun::where('kode_akun', $detail->kode_akun)->first();
+                    if ($akun && $akun->tipe_akun == 'Piutang' && $jurnal->id_pelanggan) {
+                        $pelanggan = Pelanggan::find($jurnal->id_pelanggan);
+                        if ($pelanggan) {
+                            $pelanggan->saldo_terkini_piutang += $detail->kredit;
+                            $pelanggan->save();
+                        }
+                    }
+                }
+            }
+            JurnalDetail::where('id_jurnal', $jurnal->id_jurnal)->delete();
+
+            // Apply new details
+            $totalTerima = collect($request->details)->sum('jumlah');
+
+            $jurnal->update([
+                'tanggal' => $request->tanggal,
+                'deskripsi' => $request->keterangan,
+                'id_pelanggan' => $request->id_pelanggan,
+                'id_cabang' => $request->id_cabang,
+                'id_unit_usaha' => $request->id_unit_usaha,
+            ]);
+
+            JurnalDetail::create([
+                'id_jurnal' => $jurnal->id_jurnal,
+                'kode_akun' => $request->akun_kas,
+                'debit' => $totalTerima,
+                'kredit' => 0
+            ]);
+
+            foreach ($request->details as $detail) {
+                if ($detail['jumlah'] > 0) {
+                    JurnalDetail::create([
+                        'id_jurnal' => $jurnal->id_jurnal,
+                        'kode_akun' => $detail['kode_akun'],
+                        'debit' => 0,
+                        'kredit' => $detail['jumlah']
+                    ]);
+
+                    $akun = Akun::where('kode_akun', $detail['kode_akun'])->first();
+                    if ($akun && $akun->tipe_akun == 'Piutang' && $request->id_pelanggan) {
+                        $pelanggan = Pelanggan::find($request->id_pelanggan);
+                        if ($pelanggan) {
+                            $pelanggan->saldo_terkini_piutang -= $detail['jumlah'];
+                            $pelanggan->save();
+                        }
+                    }
+                }
+            }
+
+            DB::commit();
+            return redirect()->route('penerimaan.index')->with('success', 'Penerimaan kas berhasil diperbarui.');
+
+        } catch (\Exception $e) {
+            DB::rollBack();
+            $msg = str_contains($e->getMessage(), 'Periode') ? $e->getMessage() : 'Gagal memperbarui transaksi. Silakan coba lagi.';
+            return back()->with('error', $msg)->withInput();
+        }
+    }
+
+    public function destroy($id)
+    {
+        try {
+            DB::beginTransaction();
+
+            $jurnal = Jurnal::findOrFail($id);
+            $this->validatePeriodOpen($jurnal->tanggal);
+
+            // Reverse impacts
+            foreach ($jurnal->details as $detail) {
+                if ($detail->kredit > 0) {
+                    $akun = Akun::where('kode_akun', $detail->kode_akun)->first();
+                    if ($akun && $akun->tipe_akun == 'Piutang' && $jurnal->id_pelanggan) {
+                        $pelanggan = Pelanggan::find($jurnal->id_pelanggan);
+                        if ($pelanggan) {
+                            $pelanggan->saldo_terkini_piutang += $detail->kredit;
+                            $pelanggan->save();
+                        }
+                    }
+                }
+            }
+            
+            JurnalDetail::where('id_jurnal', $jurnal->id_jurnal)->delete();
+            $jurnal->delete();
+
+            DB::commit();
+            return redirect()->route('penerimaan.index')->with('success', 'Penerimaan kas berhasil dihapus.');
+        } catch (\Exception $e) {
+            DB::rollBack();
+            $msg = str_contains($e->getMessage(), 'Periode') ? $e->getMessage() : 'Gagal menghapus transaksi. Silakan coba lagi.';
+            return back()->with('error', $msg);
+        }
+    }
 }

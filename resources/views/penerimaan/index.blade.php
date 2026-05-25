@@ -35,7 +35,21 @@
                         <td>{{ Str::limit($p->deskripsi, 50) }}</td>
                         <td>Rp {{ number_format($p->details->where('debit', '>', 0)->sum('debit'), 2, ',', '.') }}</td>
                         <td>
-                            <a href="{{ route('penerimaan.show', $p->id_jurnal) }}" class="btn btn-sm btn-info text-white">Detail</a>
+                            <a href="{{ route('penerimaan.show', $p->id_jurnal) }}" class="btn btn-sm btn-info text-white" title="Detail">
+                                Detail
+                            </a>
+                            @if(auth()->user()->hasRole(['superuser', 'admin']))
+                                <a href="{{ route('penerimaan.edit', $p->id_jurnal) }}" class="btn btn-sm btn-warning text-dark" title="Edit">
+                                    Edit
+                                </a>
+                                <form action="{{ route('penerimaan.destroy', $p->id_jurnal) }}" method="POST" class="d-inline" onsubmit="return confirm('Apakah Anda yakin ingin menghapus transaksi ini? Saldo piutang yang terkait akan dikembalikan seperti semula.');">
+                                    @csrf
+                                    @method('DELETE')
+                                    <button type="submit" class="btn btn-sm btn-danger" title="Hapus">
+                                        Hapus
+                                    </button>
+                                </form>
+                            @endif
                         </td>
                     </tr>
                 @empty
