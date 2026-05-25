@@ -295,6 +295,12 @@ class ImportExportController extends Controller
                         if (!in_array($col, $expectedColumns)) continue;
                         
                         $value = trim($row[$i] ?? '');
+                        
+                        // Hapus awalan kutip tunggal (') yang biasa ditambahkan Excel untuk angka/teks
+                        if (strpos($value, "'") === 0) {
+                            $value = ltrim($value, "'");
+                        }
+                        
                         if ($value === '' || strpos($value, 'contoh_') === 0) {
                             $value = preg_match('/stok|harga|jumlah|saldo|total|bunga|tenor|provisi|biaya/i', $col) ? 0 : null;
                         }
@@ -303,6 +309,12 @@ class ImportExportController extends Controller
                             if (preg_match('/^(\d{2})[\/\-](\d{2})[\/\-](\d{4})$/', $value, $matches)) {
                                 $value = $matches[3] . '-' . $matches[2] . '-' . $matches[1];
                             }
+                        }
+                        
+                        // Parse local formatted numbers to raw
+                        if (is_string($value) && preg_match('/stok|harga|jumlah|saldo|total|bunga|tenor|provisi|biaya/i', $col)) {
+                            $value = str_replace(['Rp', ' ', '.'], '', $value);
+                            $value = str_replace(',', '.', $value);
                         }
                         
                         $data[$col] = $value;
