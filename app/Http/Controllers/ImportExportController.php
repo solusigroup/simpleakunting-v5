@@ -305,9 +305,38 @@ class ImportExportController extends Controller
         // Module-specific handling & Defaults for non-nullable fields
         switch ($module) {
             case 'anggota':
-                $data['jenis_kelamin'] = $data['jenis_kelamin'] ?? 'L';
+                if (!empty($data['jenis_kelamin'])) {
+                    $jk = strtoupper(trim($data['jenis_kelamin']));
+                    if (in_array($jk, ['L', 'P'])) {
+                        $data['jenis_kelamin'] = $jk;
+                    } elseif (in_array($jk, ['LAKI-LAKI', 'LAKI - LAKI', 'LAKI LAKI', 'LAKI', 'PRIA', 'MALE'])) {
+                        $data['jenis_kelamin'] = 'L';
+                    } elseif (in_array($jk, ['PEREMPUAN', 'WANITA', 'FEMALE'])) {
+                        $data['jenis_kelamin'] = 'P';
+                    } else {
+                        $data['jenis_kelamin'] = 'L';
+                    }
+                } else {
+                    $data['jenis_kelamin'] = 'L';
+                }
+
                 $data['tanggal_daftar'] = $data['tanggal_daftar'] ?? date('Y-m-d');
-                $data['status'] = $data['status'] ?? 'aktif';
+
+                if (!empty($data['status'])) {
+                    $status = strtolower(trim($data['status']));
+                    $status = str_replace([' ', '-'], '_', $status);
+                    if (in_array($status, ['aktif', 'active'])) {
+                        $data['status'] = 'aktif';
+                    } elseif (in_array($status, ['non_aktif', 'nonaktif', 'inactive', 'non_active'])) {
+                        $data['status'] = 'non_aktif';
+                    } elseif (in_array($status, ['keluar', 'exit'])) {
+                        $data['status'] = 'keluar';
+                    } else {
+                        $data['status'] = 'aktif';
+                    }
+                } else {
+                    $data['status'] = 'aktif';
+                }
 
                 if (!empty($data['nik'])) {
                     if (DB::table($table)->where('nik', $data['nik'])->exists()) {
@@ -317,6 +346,64 @@ class ImportExportController extends Controller
                 if (!empty($data['no_anggota'])) {
                     if (DB::table($table)->where('no_anggota', $data['no_anggota'])->exists()) {
                         throw new \Exception("No Anggota {$data['no_anggota']} sudah terdaftar");
+                    }
+                }
+                break;
+
+            case 'simpanan':
+                $data['jenis_transaksi'] = strtolower(trim($data['jenis_transaksi'] ?? 'setor'));
+                if (!in_array($data['jenis_transaksi'], ['setor', 'tarik'])) {
+                    $data['jenis_transaksi'] = 'setor';
+                }
+                
+                // Set default akun_kas_bank if not set or invalid
+                if (empty($data['akun_kas_bank']) || !DB::table('akun')->where('kode_akun', $data['akun_kas_bank'])->exists()) {
+                    $defaultKas = DB::table('akun')
+                        ->where('tipe_akun', 'like', '%Kas%')
+                        ->orWhere('tipe_akun', 'like', '%Bank%')
+                        ->orWhere('nama_akun', 'like', '%Kas%')
+                        ->orWhere('nama_akun', 'like', '%Bank%')
+                        ->value('kode_akun');
+                    $data['akun_kas_bank'] = $defaultKas ?? '11101'; // Fallback to common cash account code
+                }
+                
+                $data['created_by'] = auth()->id() ?? 1;
+                
+                if (!empty($data['no_transaksi'])) {
+                    if (DB::table($table)->where('no_transaksi', $data['no_transaksi'])->exists()) {
+                        throw new \Exception("No Transaksi {$data['no_transaksi']} sudah ada");
+                    }
+                }
+                break;
+
+            case 'pinjaman':
+                $data['metode_bunga'] = strtolower(trim($data['metode_bunga'] ?? 'flat'));
+                if (!in_array($data['metode_bunga'], ['flat', 'anuitas', 'efektif'])) {
+                    $data['metode_bunga'] = 'flat';
+                }
+                
+                $data['status'] = strtolower(trim($data['status'] ?? 'draft'));
+                $validStatuses = ['draft', 'pending_approval', 'approved', 'rejected', 'disbursed', 'active', 'lunas', 'macet'];
+                if (!in_array($data['status'], $validStatuses)) {
+                    $data['status'] = 'draft';
+                }
+                
+                // Set default akun_kas_bank if not set or invalid
+                if (empty($data['akun_kas_bank']) || !DB::table('akun')->where('kode_akun', $data['akun_kas_bank'])->exists()) {
+                    $defaultKas = DB::table('akun')
+                        ->where('tipe_akun', 'like', '%Kas%')
+                        ->orWhere('tipe_akun', 'like', '%Bank%')
+                        ->orWhere('nama_akun', 'like', '%Kas%')
+                        ->orWhere('nama_akun', 'like', '%Bank%')
+                        ->value('kode_akun');
+                    $data['akun_kas_bank'] = $defaultKas ?? '11101'; // Fallback to common cash account code
+                }
+                
+                $data['created_by'] = auth()->id() ?? 1;
+                
+                if (!empty($data['no_pinjaman'])) {
+                    if (DB::table($table)->where('no_pinjaman', $data['no_pinjaman'])->exists()) {
+                        throw new \Exception("No Pinjaman {$data['no_pinjaman']} sudah ada");
                     }
                 }
                 break;
