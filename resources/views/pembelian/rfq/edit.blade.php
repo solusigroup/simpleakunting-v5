@@ -188,7 +188,7 @@
                     <div class="searchable-select" id="ss_${idx}">
                         <input type="hidden" name="details[${idx}][id_barang]" id="ss_input_${idx}" required value="${data ? data.id_barang : ''}">
                         <div class="searchable-select-trigger" id="ss_trigger_${idx}">
-                            <span class="trigger-text ${data ? '' : 'placeholder'}">${data ? (data.barang ? `${data.barang.kode_barang} - ${data.barang.nama_barang}` : '🔍 Cari atau pilih barang...') : '🔍 Cari atau pilih barang...'}</span>
+                            <span class="trigger-text ">${data ? (data.barang ? `${data.barang.kode_barang} - ${data.barang.nama_barang}` : '🔍 Cari atau pilih barang...') : '🔍 Cari atau pilih barang...'}</span>
                             <svg class="trigger-chevron" xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg>
                         </div>
                         <div class="searchable-select-dropdown" id="ss_dropdown_${idx}">

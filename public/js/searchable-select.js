@@ -65,7 +65,7 @@ function initSearchableSelect(rowId) {
         hiddenInput.value = option.dataset.value;
         const triggerText = trigger.querySelector('.trigger-text');
         triggerText.textContent = option.dataset.label;
-        triggerText.classList.remove('placeholder');
+        triggerText.classList.remove('ss-placeholder');
 
         dropdown.classList.remove('show');
         trigger.classList.remove('open');
