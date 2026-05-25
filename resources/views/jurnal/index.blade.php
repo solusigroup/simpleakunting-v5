@@ -66,6 +66,7 @@
                                     <a href="{{ route('jurnal.show', $j->id_jurnal) }}" class="btn btn-sm btn-info" title="Detail">
                                         <span data-feather="eye" style="width: 14px; height: 14px;"></span>
                                     </a>
+                                    @if(!$j->is_locked)
                                     <a href="{{ route('jurnal.edit', $j->id_jurnal) }}" class="btn btn-sm btn-primary" title="Edit">
                                         <span data-feather="edit" style="width: 14px; height: 14px;"></span>
                                     </a>
@@ -76,6 +77,7 @@
                                             <span data-feather="trash-2" style="width: 14px; height: 14px;"></span>
                                         </button>
                                     </form>
+                                    @endif
                                 </div>
                             </td>
                         </tr>
