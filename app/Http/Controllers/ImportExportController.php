@@ -218,7 +218,7 @@ class ImportExportController extends Controller
             DB::beginTransaction();
 
             if ($request->mode === 'replace') {
-                DB::table($config['table'])->truncate();
+                DB::table($config['table'])->delete();
             }
 
             $imported = 0;
