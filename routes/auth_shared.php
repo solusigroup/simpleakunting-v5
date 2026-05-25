@@ -128,6 +128,7 @@ Route::middleware('role:superuser,admin,manajer,staff,kasir')->group(function ()
 Route::middleware('role:superuser,admin,manajer,staff')->group(function () {
     Route::post('penawaran/{id}/convert', [PenjualanPenawaranController::class, 'convertToInvoice'])->name('penawaran.convert');
     Route::resource('penawaran', PenjualanPenawaranController::class);
+    Route::get('penjualan/{id}/invoice', [PenjualanController::class, 'printInvoice'])->name('penjualan.invoice');
     Route::resource('penjualan', PenjualanController::class);
     
     Route::post('rfq/{id}/convert', [PembelianRfqController::class, 'convertToPurchase'])->name('rfq.convert');

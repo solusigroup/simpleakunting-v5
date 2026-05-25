@@ -29,6 +29,9 @@ class PerusahaanController extends Controller
             'jenis_usaha' => 'required|in:dagang,simpan_pinjam,serba_usaha,jasa,manufaktur,pertanian,multi',
             'nama_direktur' => 'nullable|string|max:255',
             'nama_akuntan' => 'nullable|string|max:255',
+            'nama_bank' => 'nullable|string|max:255',
+            'rekening_bank' => 'nullable|string|max:255',
+            'nama_pemilik_rekening' => 'nullable|string|max:255',
             // Account mapping
             'akun_piutang' => 'nullable|string|max:20',
             'akun_utang' => 'nullable|string|max:20',
@@ -64,6 +67,9 @@ class PerusahaanController extends Controller
                 'jenis_usaha' => $request->jenis_usaha,
                 'nama_direktur' => $request->nama_direktur,
                 'nama_akuntan' => $request->nama_akuntan,
+                'nama_bank' => $request->nama_bank,
+                'rekening_bank' => $request->rekening_bank,
+                'nama_pemilik_rekening' => $request->nama_pemilik_rekening,
                 // Account mapping
                 'akun_piutang' => $request->akun_piutang,
                 'akun_utang' => $request->akun_utang,

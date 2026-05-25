@@ -85,6 +85,32 @@
                             </small>
                         </div>
 
+                        <h5 class="mt-4 mb-3">Informasi Rekening Bank</h5>
+                        <p class="text-muted small mb-3">Informasi ini akan ditampilkan pada cetakan invoice / faktur tagihan pelanggan.</p>
+                        <div class="row">
+                            <div class="col-md-4 mb-3">
+                                <label for="nama_bank" class="form-label">Nama Bank</label>
+                                <input type="text" class="form-control @error('nama_bank') is-invalid @enderror" id="nama_bank" name="nama_bank" value="{{ old('nama_bank', $perusahaan->nama_bank ?? '') }}" placeholder="Contoh: BCA / Mandiri / BRI">
+                                @error('nama_bank')
+                                    <div class="invalid-feedback">{{ $message }}</div>
+                                @enderror
+                            </div>
+                            <div class="col-md-4 mb-3">
+                                <label for="rekening_bank" class="form-label">No. Rekening</label>
+                                <input type="text" class="form-control @error('rekening_bank') is-invalid @enderror" id="rekening_bank" name="rekening_bank" value="{{ old('rekening_bank', $perusahaan->rekening_bank ?? '') }}" placeholder="Contoh: 1234567890">
+                                @error('rekening_bank')
+                                    <div class="invalid-feedback">{{ $message }}</div>
+                                @enderror
+                            </div>
+                            <div class="col-md-4 mb-3">
+                                <label for="nama_pemilik_rekening" class="form-label">Atas Nama</label>
+                                <input type="text" class="form-control @error('nama_pemilik_rekening') is-invalid @enderror" id="nama_pemilik_rekening" name="nama_pemilik_rekening" value="{{ old('nama_pemilik_rekening', $perusahaan->nama_pemilik_rekening ?? '') }}" placeholder="Contoh: PT. Simple Akunting">
+                                @error('nama_pemilik_rekening')
+                                    <div class="invalid-feedback">{{ $message }}</div>
+                                @enderror
+                            </div>
+                        </div>
+
                         <h5 class="mt-4 mb-3">Pengaturan Akun <small class="text-muted">(Mapping COA)</small></h5>
                         <p class="text-muted small mb-3">Pilih akun default yang digunakan untuk setiap jenis transaksi. Biarkan kosong untuk menggunakan nilai default.</p>
 

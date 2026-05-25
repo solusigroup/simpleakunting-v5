@@ -37,6 +37,13 @@ class PenjualanController extends Controller
         return view('penjualan.show', compact('penjualan'));
     }
 
+    public function printInvoice($id)
+    {
+        $penjualan = Penjualan::with(['details.barang', 'pelanggan'])->findOrFail($id);
+        $perusahaan = DB::table('perusahaan')->first();
+        return view('penjualan.invoice', compact('penjualan', 'perusahaan'));
+    }
+
     public function create(Request $request)
     {
         $pelanggan = Pelanggan::all();
