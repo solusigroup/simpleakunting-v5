@@ -129,7 +129,12 @@
     </form>
 @endsection
 
+@push('styles')
+<link rel="stylesheet" href="{{ asset('css/searchable-select.css') }}">
+@endpush
+
 @push('scripts')
+<script src="{{ asset('js/searchable-select.js') }}"></script>
 <script>
     let rowCount = 0;
     const rawBarangData = @json($barang);
