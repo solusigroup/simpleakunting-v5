@@ -207,17 +207,21 @@ class ImportExportController extends Controller
             $nonEmptyHeader = array_filter($header, function($v) { return trim($v) !== ''; });
             if (count($nonEmptyHeader) === 1) {
                 $firstVal = trim(reset($nonEmptyHeader));
+                $wasWrapped = false;
                 if (preg_match('/^"(.*)"$/', $firstVal, $m)) {
                     $firstVal = $m[1];
+                    $wasWrapped = true;
                 }
                 
                 $fallbackDelimiter = ($delimiter === ';') ? ',' : ';';
-                if (strpos($firstVal, $fallbackDelimiter) !== false) {
-                    $fallbackHeader = str_getcsv($firstVal, $fallbackDelimiter);
-                    if (count($fallbackHeader) > 1) {
-                        $delimiter = $fallbackDelimiter;
-                        $header = $fallbackHeader;
-                    }
+                $parsedWithFallback = str_getcsv($firstVal, $fallbackDelimiter);
+                $parsedWithOriginal = str_getcsv($firstVal, $delimiter);
+                
+                if (count($parsedWithFallback) > 1 && count($parsedWithFallback) > count($parsedWithOriginal)) {
+                    $delimiter = $fallbackDelimiter;
+                    $header = $parsedWithFallback;
+                } elseif ($wasWrapped && count($parsedWithOriginal) > 1) {
+                    $header = $parsedWithOriginal;
                 }
             }
 
@@ -266,16 +270,20 @@ class ImportExportController extends Controller
                 $nonEmptyRow = array_filter($row, function($v) { return trim($v) !== ''; });
                 if (count($nonEmptyRow) === 1 && count($expectedColumns) > 1) {
                     $firstVal = trim(reset($nonEmptyRow));
+                    $wasWrapped = false;
                     if (preg_match('/^"(.*)"$/', $firstVal, $m)) {
                         $firstVal = $m[1];
+                        $wasWrapped = true;
                     }
                     
                     $fallbackDelimiter = ($delimiter === ';') ? ',' : ';';
-                    if (strpos($firstVal, $fallbackDelimiter) !== false) {
-                        $fallbackRow = str_getcsv($firstVal, $fallbackDelimiter);
-                        if (count($fallbackRow) > 1) {
-                            $row = $fallbackRow;
-                        }
+                    $parsedWithFallback = str_getcsv($firstVal, $fallbackDelimiter);
+                    $parsedWithOriginal = str_getcsv($firstVal, $delimiter);
+                    
+                    if (count($parsedWithFallback) > 1 && count($parsedWithFallback) > count($parsedWithOriginal)) {
+                        $row = $parsedWithFallback;
+                    } elseif ($wasWrapped && count($parsedWithOriginal) > 1) {
+                        $row = $parsedWithOriginal;
                     }
                 }
                 
