@@ -425,6 +425,26 @@ class ImportExportController extends Controller
                 break;
 
             case 'simpanan':
+                // Mapping id_anggota dari no_anggota atau email jika bukan integer
+                if (!empty($data['id_anggota']) && !is_numeric($data['id_anggota'])) {
+                    $anggota = DB::table('anggota')->where('no_anggota', $data['id_anggota'])->orWhere('email', $data['id_anggota'])->first();
+                    if ($anggota) {
+                        $data['id_anggota'] = $anggota->id;
+                    } else {
+                        throw new \Exception("Anggota dengan identitas {$data['id_anggota']} tidak ditemukan.");
+                    }
+                }
+                
+                // Mapping id_jenis_simpanan dari kode_simpanan atau nama_simpanan jika bukan integer
+                if (!empty($data['id_jenis_simpanan']) && !is_numeric($data['id_jenis_simpanan'])) {
+                    $jenis = DB::table('jenis_simpanan')->where('kode_simpanan', $data['id_jenis_simpanan'])->orWhere('nama_simpanan', $data['id_jenis_simpanan'])->first();
+                    if ($jenis) {
+                        $data['id_jenis_simpanan'] = $jenis->id_jenis_simpanan;
+                    } else {
+                        throw new \Exception("Jenis Simpanan dengan identitas {$data['id_jenis_simpanan']} tidak ditemukan.");
+                    }
+                }
+
                 $data['jenis_transaksi'] = strtolower(trim($data['jenis_transaksi'] ?? 'setor'));
                 if (!in_array($data['jenis_transaksi'], ['setor', 'tarik'])) {
                     $data['jenis_transaksi'] = 'setor';
@@ -451,6 +471,26 @@ class ImportExportController extends Controller
                 break;
 
             case 'pinjaman':
+                // Mapping id_anggota dari no_anggota atau email jika bukan integer
+                if (!empty($data['id_anggota']) && !is_numeric($data['id_anggota'])) {
+                    $anggota = DB::table('anggota')->where('no_anggota', $data['id_anggota'])->orWhere('email', $data['id_anggota'])->first();
+                    if ($anggota) {
+                        $data['id_anggota'] = $anggota->id;
+                    } else {
+                        throw new \Exception("Anggota dengan identitas {$data['id_anggota']} tidak ditemukan.");
+                    }
+                }
+                
+                // Mapping id_jenis_pinjaman dari kode_pinjaman atau nama_pinjaman jika bukan integer
+                if (!empty($data['id_jenis_pinjaman']) && !is_numeric($data['id_jenis_pinjaman'])) {
+                    $jenis = DB::table('jenis_pinjaman')->where('kode_pinjaman', $data['id_jenis_pinjaman'])->orWhere('nama_pinjaman', $data['id_jenis_pinjaman'])->first();
+                    if ($jenis) {
+                        $data['id_jenis_pinjaman'] = $jenis->id_jenis_pinjaman;
+                    } else {
+                        throw new \Exception("Jenis Pinjaman dengan identitas {$data['id_jenis_pinjaman']} tidak ditemukan.");
+                    }
+                }
+
                 $data['metode_bunga'] = strtolower(trim($data['metode_bunga'] ?? 'flat'));
                 if (!in_array($data['metode_bunga'], ['flat', 'anuitas', 'efektif'])) {
                     $data['metode_bunga'] = 'flat';
