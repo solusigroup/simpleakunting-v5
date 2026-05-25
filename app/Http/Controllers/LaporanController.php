@@ -920,6 +920,12 @@ class LaporanController extends Controller
             $ns_d_raw = $nsRes->d ?? 0;
             $ns_k_raw = $nsRes->k ?? 0;
 
+            if ($a->saldo_normal == 'Debit') {
+                $ns_d_raw += $a->saldo_awal;
+            } else {
+                $ns_k_raw += $a->saldo_awal;
+            }
+
             $ns_d = 0; $ns_k = 0;
             if ($a->saldo_normal == 'Debit') {
                 $val = $ns_d_raw - $ns_k_raw;
@@ -1157,9 +1163,9 @@ class LaporanController extends Controller
                 ->first();
             
             if ($akun->saldo_normal == 'Debit') {
-                $total += (($saldo->d ?? 0) - ($saldo->k ?? 0));
+                $total += $akun->saldo_awal + (($saldo->d ?? 0) - ($saldo->k ?? 0));
             } else {
-                $total += (($saldo->k ?? 0) - ($saldo->d ?? 0));
+                $total += $akun->saldo_awal + (($saldo->k ?? 0) - ($saldo->d ?? 0));
             }
         }
         return $total;
