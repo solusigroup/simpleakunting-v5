@@ -157,7 +157,7 @@ class PembayaranController extends Controller
     {
         $jurnal = Jurnal::with('details')->findOrFail($id);
         $akunKas = Akun::where('tipe_akun', 'Kas & Bank')->orderBy('kode_akun')->get();
-        $akunBiaya = Akun::whereIn('tipe_akun', ['Beban', 'Beban Pokok Penjualan', 'Utang Usaha'])->orderBy('kode_akun')->get();
+        $akunBeban = Akun::whereIn('tipe_akun', ['Beban', 'Beban Lainnya', 'Utang Usaha', 'Kewajiban Lancar Lainnya'])->orderBy('kode_akun')->get();
         $pemasok = Pemasok::orderBy('nama_pemasok')->get();
         $cabang = Cabang::orderBy('nama_cabang')->get();
         $unitUsaha = UnitUsaha::orderBy('nama_unit')->get();
@@ -169,7 +169,7 @@ class PembayaranController extends Controller
         // Get debit accounts
         $detailsDebit = $jurnal->details->where('debit', '>', 0)->values();
 
-        return view('pembayaran.edit', compact('jurnal', 'akunKas', 'akunBiaya', 'pemasok', 'cabang', 'unitUsaha', 'akunKasId', 'detailsDebit'));
+        return view('pembayaran.edit', compact('jurnal', 'akunKas', 'akunBeban', 'pemasok', 'cabang', 'unitUsaha', 'akunKasId', 'detailsDebit'));
     }
 
     public function update(Request $request, $id)
