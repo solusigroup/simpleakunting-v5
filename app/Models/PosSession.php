@@ -7,7 +7,7 @@ use Illuminate\Database\Eloquent\Model;
 
 class PosSession extends Model
 {
-    use HasFactory;
+    use HasFactory, \App\Traits\ClearsDashboardCache;
 
     protected $table = 'pos_sessions';
     protected $guarded = ['id'];

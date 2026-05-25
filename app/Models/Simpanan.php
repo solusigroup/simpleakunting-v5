@@ -7,7 +7,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class Simpanan extends Model
 {
-    use \App\Traits\HasCabang;
+    use \App\Traits\HasCabang, \App\Traits\ClearsDashboardCache;
 
     protected $table = 'simpanan';
     protected $primaryKey = 'id_simpanan';

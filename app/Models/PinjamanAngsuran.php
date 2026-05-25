@@ -7,6 +7,8 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class PinjamanAngsuran extends Model
 {
+    use \App\Traits\ClearsDashboardCache;
+
     protected $table = 'pinjaman_angsuran';
     protected $primaryKey = 'id_angsuran';
 
