@@ -47,6 +47,14 @@ class PembayaranController extends Controller
 
     public function store(Request $request)
     {
+        // Hapus baris detail yang kosong (tidak dipilih akunnya dan nominal 0)
+        if ($request->has('details') && is_array($request->details)) {
+            $filteredDetails = array_filter($request->details, function ($detail) {
+                return !empty($detail['kode_akun']) || (!empty($detail['jumlah']) && $detail['jumlah'] > 0);
+            });
+            $request->merge(['details' => array_values($filteredDetails)]);
+        }
+
         $request->validate([
             'no_transaksi' => 'required|unique:jurnal_umum,no_transaksi',
             'tanggal' => 'required|date|before_or_equal:today',
