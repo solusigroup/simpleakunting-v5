@@ -84,10 +84,10 @@
 
 <style>
     @media print {
-        .navbar, .sidebar, .no-print, .btn-toolbar { display: none !important; }
+        .app-header, .app-sidebar, .no-print, .btn-toolbar { display: none !important; }
         .invoice-box { border: none !important; box-shadow: none !important; padding: 0 !important; }
         body { background: white !important; }
-        .main { margin-left: 0 !important; width: 100% !important; padding: 0 !important; }
+        .app-main { margin-left: 0 !important; margin-top: 0 !important; width: 100% !important; padding: 0 !important; }
     }
 </style>
 @endsection
