@@ -203,25 +203,20 @@ class ImportExportController extends Controller
             
             $header = str_getcsv($firstLine, $delimiter);
             
-            // Fallback for header parsing if Excel wrapped everything
-            if (count($header) === 1) {
-                $fallbackDelimiter = ($delimiter === ';') ? ',' : ';';
-                $fallbackHeader = str_getcsv($firstLine, $fallbackDelimiter);
-                if (count($fallbackHeader) > count($header)) {
-                    $delimiter = $fallbackDelimiter;
-                    $header = $fallbackHeader;
+            // Fallback for header parsing if Excel wrapped everything in first column and padded the rest
+            $nonEmptyHeader = array_filter($header, function($v) { return trim($v) !== ''; });
+            if (count($nonEmptyHeader) === 1) {
+                $firstVal = trim(reset($nonEmptyHeader));
+                if (preg_match('/^"(.*)"$/', $firstVal, $m)) {
+                    $firstVal = $m[1];
                 }
                 
-                if (count($header) === 1 && preg_match('/^"(.*)"$/', $firstLine, $m)) {
-                    $unwrapped = $m[1];
-                    $hComma = str_getcsv($unwrapped, ',');
-                    $hSemi = str_getcsv($unwrapped, ';');
-                    if (count($hComma) > count($hSemi) && count($hComma) > 1) {
-                        $delimiter = ',';
-                        $header = $hComma;
-                    } elseif (count($hSemi) > 1) {
-                        $delimiter = ';';
-                        $header = $hSemi;
+                $fallbackDelimiter = ($delimiter === ';') ? ',' : ';';
+                if (strpos($firstVal, $fallbackDelimiter) !== false) {
+                    $fallbackHeader = str_getcsv($firstVal, $fallbackDelimiter);
+                    if (count($fallbackHeader) > 1) {
+                        $delimiter = $fallbackDelimiter;
+                        $header = $fallbackHeader;
                     }
                 }
             }
@@ -267,24 +262,19 @@ class ImportExportController extends Controller
                 
                 $row = str_getcsv($line, $delimiter);
                 
-                // Fallback delimiter parsing
-                if (count($row) === 1 && count($expectedColumns) > 1) {
-                    $fallbackDelimiter = ($delimiter === ';') ? ',' : ';';
-                    if (strpos($line, $fallbackDelimiter) !== false) {
-                        $fallbackRow = str_getcsv($line, $fallbackDelimiter);
-                        if (count($fallbackRow) > count($row)) {
-                            $row = $fallbackRow;
-                        }
+                // Fallback delimiter parsing (handles trailing empty columns added by Excel)
+                $nonEmptyRow = array_filter($row, function($v) { return trim($v) !== ''; });
+                if (count($nonEmptyRow) === 1 && count($expectedColumns) > 1) {
+                    $firstVal = trim(reset($nonEmptyRow));
+                    if (preg_match('/^"(.*)"$/', $firstVal, $m)) {
+                        $firstVal = $m[1];
                     }
                     
-                    if (count($row) === 1 && preg_match('/^"(.*)"$/', $line, $m)) {
-                        $unwrapped = $m[1];
-                        $rComma = str_getcsv($unwrapped, ',');
-                        $rSemi = str_getcsv($unwrapped, ';');
-                        if (count($rComma) > count($rSemi) && count($rComma) > 1) {
-                            $row = $rComma;
-                        } elseif (count($rSemi) > 1) {
-                            $row = $rSemi;
+                    $fallbackDelimiter = ($delimiter === ';') ? ',' : ';';
+                    if (strpos($firstVal, $fallbackDelimiter) !== false) {
+                        $fallbackRow = str_getcsv($firstVal, $fallbackDelimiter);
+                        if (count($fallbackRow) > 1) {
+                            $row = $fallbackRow;
                         }
                     }
                 }
