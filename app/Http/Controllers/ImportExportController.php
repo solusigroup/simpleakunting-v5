@@ -429,7 +429,7 @@ class ImportExportController extends Controller
                 if (!empty($data['id_anggota']) && !is_numeric($data['id_anggota'])) {
                     $anggota = DB::table('anggota')->where('no_anggota', $data['id_anggota'])->orWhere('email', $data['id_anggota'])->first();
                     if ($anggota) {
-                        $data['id_anggota'] = $anggota->id;
+                        $data['id_anggota'] = $anggota->id_anggota;
                     } else {
                         throw new \Exception("Anggota dengan identitas {$data['id_anggota']} tidak ditemukan.");
                     }
@@ -475,7 +475,7 @@ class ImportExportController extends Controller
                 if (!empty($data['id_anggota']) && !is_numeric($data['id_anggota'])) {
                     $anggota = DB::table('anggota')->where('no_anggota', $data['id_anggota'])->orWhere('email', $data['id_anggota'])->first();
                     if ($anggota) {
-                        $data['id_anggota'] = $anggota->id;
+                        $data['id_anggota'] = $anggota->id_anggota;
                     } else {
                         throw new \Exception("Anggota dengan identitas {$data['id_anggota']} tidak ditemukan.");
                     }
