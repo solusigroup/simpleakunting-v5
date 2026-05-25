@@ -330,7 +330,14 @@ class ImportExportController extends Controller
 
             case 'persediaan':
                 $data['satuan'] = $data['satuan'] ?? 'Pcs';
-                $data['jenis_barang'] = $data['jenis_barang'] ?? 'barang_dagang';
+                
+                $validJenis = ['barang_dagang', 'bahan_baku', 'barang_jadi', 'barang_dalam_proses', 'aset_biologis', 'jasa'];
+                $jenisInput = strtolower(str_replace(' ', '_', $data['jenis_barang'] ?? ''));
+                if (in_array($jenisInput, $validJenis)) {
+                    $data['jenis_barang'] = $jenisInput;
+                } else {
+                    $data['jenis_barang'] = 'barang_dagang';
+                }
 
                 if (!empty($data['kode_barang'])) {
                     if (DB::table($table)->where('kode_barang', $data['kode_barang'])->exists()) {
