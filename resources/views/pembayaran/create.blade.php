@@ -18,6 +18,16 @@
 
     <form action="{{ route('pembayaran.store') }}" method="POST">
         @csrf
+
+        @if ($errors->any())
+            <div class="app-alert app-alert-danger">
+                <ul class="mb-0" style="padding-left: 20px;">
+                    @foreach ($errors->all() as $error)
+                        <li>{{ $error }}</li>
+                    @endforeach
+                </ul>
+            </div>
+        @endif
         <!-- Header Form -->
         <div class="form-card mb-4">
             <div class="form-card-body">
@@ -133,7 +143,7 @@
             <tr id="row_${currentRow}">
                 <td>
                     <div class="searchable-select" id="ss_${currentRow}">
-                        <input type="hidden" name="details[${currentRow}][kode_akun]" id="ss_input_${currentRow}" required>
+                        <input type="hidden" name="details[${currentRow}][kode_akun]" id="ss_input_${currentRow}">
                         <div class="searchable-select-trigger" id="ss_trigger_${currentRow}">
                             <div class="trigger-text placeholder">
                                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#8b5cf6" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="opacity: 0.8;"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
