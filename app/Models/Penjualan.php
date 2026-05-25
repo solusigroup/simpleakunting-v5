@@ -8,7 +8,7 @@ use App\Traits\LogsActivity;
 
 class Penjualan extends Model
 {
-    use HasFactory, LogsActivity, \App\Traits\HasCabang;
+    use HasFactory, LogsActivity, \App\Traits\HasCabang, \App\Traits\ClearsDashboardCache;
 
     protected $table = 'penjualan';
     protected $primaryKey = 'id_penjualan';

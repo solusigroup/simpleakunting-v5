@@ -8,7 +8,7 @@ use App\Traits\LogsActivity;
 
 class Jurnal extends Model
 {
-    use HasFactory, LogsActivity, \App\Traits\HasCabang;
+    use HasFactory, LogsActivity, \App\Traits\HasCabang, \App\Traits\ClearsDashboardCache;
 
     public static $applyApprovalFilter = false;
 

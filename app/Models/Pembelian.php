@@ -8,7 +8,7 @@ use App\Traits\LogsActivity;
 
 class Pembelian extends Model
 {
-    use HasFactory, LogsActivity, \App\Traits\HasCabang;
+    use HasFactory, LogsActivity, \App\Traits\HasCabang, \App\Traits\ClearsDashboardCache;
 
     protected $table = 'pembelian';
     protected $primaryKey = 'id_pembelian';

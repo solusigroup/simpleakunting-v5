@@ -7,7 +7,7 @@ use Illuminate\Database\Eloquent\Model;
 
 class JurnalDetail extends Model
 {
-    use HasFactory;
+    use HasFactory, \App\Traits\ClearsDashboardCache;
 
     protected $table = 'jurnal_detail';
     protected $primaryKey = 'id_detail';
