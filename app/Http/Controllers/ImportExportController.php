@@ -195,12 +195,37 @@ class ImportExportController extends Controller
             $handle = fopen($pathname, 'r');
             $firstLine = fgets($handle);
             $firstLine = preg_replace('/^\xEF\xBB\xBF/', '', $firstLine);
+            $firstLine = trim($firstLine);
             
             $commaCount = substr_count($firstLine, ',');
             $semicolonCount = substr_count($firstLine, ';');
             $delimiter = ($semicolonCount > $commaCount) ? ';' : ',';
             
             $header = str_getcsv($firstLine, $delimiter);
+            
+            // Fallback for header parsing if Excel wrapped everything
+            if (count($header) === 1) {
+                $fallbackDelimiter = ($delimiter === ';') ? ',' : ';';
+                $fallbackHeader = str_getcsv($firstLine, $fallbackDelimiter);
+                if (count($fallbackHeader) > count($header)) {
+                    $delimiter = $fallbackDelimiter;
+                    $header = $fallbackHeader;
+                }
+                
+                if (count($header) === 1 && preg_match('/^"(.*)"$/', $firstLine, $m)) {
+                    $unwrapped = $m[1];
+                    $hComma = str_getcsv($unwrapped, ',');
+                    $hSemi = str_getcsv($unwrapped, ';');
+                    if (count($hComma) > count($hSemi) && count($hComma) > 1) {
+                        $delimiter = ',';
+                        $header = $hComma;
+                    } elseif (count($hSemi) > 1) {
+                        $delimiter = ';';
+                        $header = $hSemi;
+                    }
+                }
+            }
+
             $header = array_map(function($h) {
                 return trim(preg_replace('/[[:^print:]]/', '', $h));
             }, $header);
@@ -235,8 +260,35 @@ class ImportExportController extends Controller
             $errors = [];
             $lineNumber = 1;
 
-            while (($row = fgetcsv($handle, 0, $delimiter)) !== false) {
+            while (($line = fgets($handle)) !== false) {
                 $lineNumber++;
+                $line = trim($line);
+                if ($line === '') continue;
+                
+                $row = str_getcsv($line, $delimiter);
+                
+                // Fallback delimiter parsing
+                if (count($row) === 1 && count($expectedColumns) > 1) {
+                    $fallbackDelimiter = ($delimiter === ';') ? ',' : ';';
+                    if (strpos($line, $fallbackDelimiter) !== false) {
+                        $fallbackRow = str_getcsv($line, $fallbackDelimiter);
+                        if (count($fallbackRow) > count($row)) {
+                            $row = $fallbackRow;
+                        }
+                    }
+                    
+                    if (count($row) === 1 && preg_match('/^"(.*)"$/', $line, $m)) {
+                        $unwrapped = $m[1];
+                        $rComma = str_getcsv($unwrapped, ',');
+                        $rSemi = str_getcsv($unwrapped, ';');
+                        if (count($rComma) > count($rSemi) && count($rComma) > 1) {
+                            $row = $rComma;
+                        } elseif (count($rSemi) > 1) {
+                            $row = $rSemi;
+                        }
+                    }
+                }
+                
                 if (empty(array_filter($row))) continue;
 
                 try {
