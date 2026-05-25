@@ -3,9 +3,11 @@
 namespace App\Http\Controllers;
 
 use App\Models\Akun;
+use App\Models\Cabang;
 use App\Models\Jurnal;
 use App\Models\JurnalDetail;
 use App\Models\Pemasok;
+use App\Models\UnitUsaha;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 
@@ -42,7 +44,10 @@ class PembayaranController extends Controller
         }
         $noTransaksi = 'CD-' . str_pad($nextNo, 5, '0', STR_PAD_LEFT);
 
-        return view('pembayaran.create', compact('akunKas', 'akunBeban', 'pemasok', 'noTransaksi'));
+        $cabang = Cabang::orderBy('nama_cabang')->get();
+        $unitUsaha = UnitUsaha::orderBy('nama_unit')->get();
+
+        return view('pembayaran.create', compact('akunKas', 'akunBeban', 'pemasok', 'noTransaksi', 'cabang', 'unitUsaha'));
     }
 
     public function store(Request $request)
@@ -60,6 +65,8 @@ class PembayaranController extends Controller
             'tanggal' => 'required|date|before_or_equal:today',
             'akun_kas' => 'required|exists:akun,kode_akun', // Kredit
             'id_pemasok' => 'nullable|exists:pemasok,id_pemasok',
+            'id_cabang' => 'required|exists:cabang,id',
+            'id_unit_usaha' => 'nullable|exists:unit_usaha,id',
             'keterangan' => 'required|string',
             'details' => 'required|array|min:1',
             'details.*.kode_akun' => 'required|exists:akun,kode_akun', // Debit
@@ -95,6 +102,8 @@ class PembayaranController extends Controller
                 'deskripsi' => $request->keterangan,
                 'id_pemasok' => $request->id_pemasok,
                 'sumber_jurnal' => 'Pengeluaran Kas',
+                'id_cabang' => $request->id_cabang,
+                'id_unit_usaha' => $request->id_unit_usaha,
                 'is_locked' => 0
             ]);
 

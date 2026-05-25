@@ -26,6 +26,16 @@
 
     <form action="{{ route('penerimaan.store') }}" method="POST">
         @csrf
+
+        @if ($errors->any())
+            <div class="app-alert app-alert-danger">
+                <ul class="mb-0" style="padding-left: 20px;">
+                    @foreach ($errors->all() as $error)
+                        <li>{{ $error }}</li>
+                    @endforeach
+                </ul>
+            </div>
+        @endif
         <!-- Header Form -->
         <div class="form-card mb-4">
             <div class="form-card-body">
@@ -44,6 +54,27 @@
                             <option value="">-- Pilih Kas/Bank --</option>
                             @foreach($akunKas as $a)
                                 <option value="{{ $a->kode_akun }}">{{ $a->kode_akun }} - {{ $a->nama_akun }}</option>
+                            @endforeach
+                        </select>
+                    </div>
+                </div>
+
+                <div class="form-row mt-3">
+                    <div class="form-group" style="flex: 1;">
+                        <label for="id_cabang" class="form-label">Cabang <span class="text-danger">*</span></label>
+                        <select class="form-select @error('id_cabang') is-invalid @enderror" id="id_cabang" name="id_cabang" required>
+                            <option value="">-- Pilih Cabang --</option>
+                            @foreach($cabang as $c)
+                                <option value="{{ $c->id }}" {{ old('id_cabang', session('active_cabang') ?: auth()->user()->id_cabang) == $c->id ? 'selected' : '' }}>{{ $c->kode_cabang }} - {{ $c->nama_cabang }}</option>
+                            @endforeach
+                        </select>
+                    </div>
+                    <div class="form-group" style="flex: 1;">
+                        <label for="id_unit_usaha" class="form-label">Unit Usaha</label>
+                        <select class="form-select @error('id_unit_usaha') is-invalid @enderror" id="id_unit_usaha" name="id_unit_usaha">
+                            <option value="">-- Pilih Unit Usaha --</option>
+                            @foreach($unitUsaha as $u)
+                                <option value="{{ $u->id }}" data-cabang="{{ $u->id_cabang }}" {{ old('id_unit_usaha', session('active_unit')) == $u->id ? 'selected' : '' }}>{{ $u->kode_unit }} - {{ $u->nama_unit }}</option>
                             @endforeach
                         </select>
                     </div>
@@ -141,7 +172,7 @@
             <tr id="row_${currentRow}">
                 <td>
                     <div class="searchable-select" id="ss_${currentRow}">
-                        <input type="hidden" name="details[${currentRow}][kode_akun]" id="ss_input_${currentRow}" required>
+                        <input type="hidden" name="details[${currentRow}][kode_akun]" id="ss_input_${currentRow}">
                         <div class="searchable-select-trigger" id="ss_trigger_${currentRow}">
                             <div class="trigger-text placeholder">
                                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#8b5cf6" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="opacity: 0.8;"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
@@ -193,6 +224,32 @@
         const saldo = parseFloat(selectedOption.getAttribute('data-saldo')) || 0;
         
         display.value = new Intl.NumberFormat('id-ID').format(saldo);
+    }
+
+    // Handle Unit Usaha filter based on Cabang
+    document.getElementById('id_cabang').addEventListener('change', function(e) {
+        let cabangId = this.value;
+        let unitSelect = document.getElementById('id_unit_usaha');
+        let options = unitSelect.querySelectorAll('option[data-cabang]');
+        
+        let found = false;
+        options.forEach(opt => {
+            if (opt.getAttribute('data-cabang') === cabangId) {
+                opt.style.display = '';
+                if(opt.value == unitSelect.getAttribute('data-old-value')) found = true;
+            } else {
+                opt.style.display = 'none';
+            }
+        });
+        
+        if(!found && unitSelect.value !== "") {
+           // unitSelect.value = '';
+        }
+    });
+
+    // Trigger initial filter
+    if (document.getElementById('id_cabang').value) {
+        document.getElementById('id_cabang').dispatchEvent(new Event('change'));
     }
 
     // Init rows

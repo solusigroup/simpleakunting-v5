@@ -3,9 +3,11 @@
 namespace App\Http\Controllers;
 
 use App\Models\Akun;
+use App\Models\Cabang;
 use App\Models\Jurnal;
 use App\Models\JurnalDetail;
 use App\Models\Pelanggan;
+use App\Models\UnitUsaha;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 
@@ -40,16 +42,29 @@ class PenerimaanController extends Controller
         }
         $noTransaksi = 'CR-' . str_pad($nextNo, 5, '0', STR_PAD_LEFT);
 
-        return view('penerimaan.create', compact('akunKas', 'akunPendapatan', 'pelanggan', 'noTransaksi'));
+        $cabang = Cabang::orderBy('nama_cabang')->get();
+        $unitUsaha = UnitUsaha::orderBy('nama_unit')->get();
+
+        return view('penerimaan.create', compact('akunKas', 'akunPendapatan', 'pelanggan', 'noTransaksi', 'cabang', 'unitUsaha'));
     }
 
     public function store(Request $request)
     {
+        // Hapus baris detail yang kosong (tidak dipilih akunnya dan nominal 0)
+        if ($request->has('details') && is_array($request->details)) {
+            $filteredDetails = array_filter($request->details, function ($detail) {
+                return !empty($detail['kode_akun']) || (!empty($detail['jumlah']) && $detail['jumlah'] > 0);
+            });
+            $request->merge(['details' => array_values($filteredDetails)]);
+        }
+
         $request->validate([
             'no_transaksi' => 'required|unique:jurnal_umum,no_transaksi',
             'tanggal' => 'required|date|before_or_equal:today',
             'akun_kas' => 'required|exists:akun,kode_akun', // Debit
             'id_pelanggan' => 'nullable|exists:pelanggan,id_pelanggan',
+            'id_cabang' => 'required|exists:cabang,id',
+            'id_unit_usaha' => 'nullable|exists:unit_usaha,id',
             'keterangan' => 'required|string',
             'details' => 'required|array|min:1',
             'details.*.kode_akun' => 'required|exists:akun,kode_akun', // Kredit
@@ -79,6 +94,8 @@ class PenerimaanController extends Controller
                 'deskripsi' => $request->keterangan,
                 'id_pelanggan' => $request->id_pelanggan,
                 'sumber_jurnal' => 'Penerimaan Kas',
+                'id_cabang' => $request->id_cabang,
+                'id_unit_usaha' => $request->id_unit_usaha,
                 'is_locked' => 0
             ]);
 
