@@ -565,7 +565,56 @@ class ImportExportController extends Controller
                 break;
         }
 
-        DB::table($table)->insert($data);
+        $insertedId = DB::table($table)->insertGetId($data);
+
+        // Auto-generate journal for Simpanan import
+        if ($module === 'simpanan') {
+            $simpanan = \App\Models\Simpanan::find($insertedId);
+            $jenisSimpanan = \App\Models\JenisSimpanan::find($simpanan->id_jenis_simpanan);
+            $anggota = \App\Models\Anggota::find($simpanan->id_anggota);
+            
+            $jurnal = \App\Models\Jurnal::create([
+                'no_transaksi' => $simpanan->no_transaksi,
+                'tanggal' => $simpanan->tanggal,
+                'id_cabang' => $simpanan->id_cabang ?? session('active_cabang') ?? 1,
+                'id_unit_usaha' => $simpanan->id_unit_usaha ?? session('active_unit') ?? 1,
+                'deskripsi' => ($simpanan->jenis_transaksi === 'setor' ? 'Setoran ' : 'Penarikan ') . 
+                               ($jenisSimpanan->nama_simpanan ?? 'Simpanan') . ' - ' . ($anggota->nama_lengkap ?? 'Anggota'),
+                'sumber_jurnal' => 'Simpanan',
+                'is_locked' => false,
+            ]);
+
+            if ($simpanan->jenis_transaksi === 'setor') {
+                \App\Models\JurnalDetail::create([
+                    'id_jurnal' => $jurnal->id_jurnal,
+                    'kode_akun' => $simpanan->akun_kas_bank,
+                    'debit' => $simpanan->jumlah,
+                    'kredit' => 0,
+                ]);
+                \App\Models\JurnalDetail::create([
+                    'id_jurnal' => $jurnal->id_jurnal,
+                    'kode_akun' => $jenisSimpanan->akun_simpanan ?? '2-2000',
+                    'debit' => 0,
+                    'kredit' => $simpanan->jumlah,
+                ]);
+            } else {
+                \App\Models\JurnalDetail::create([
+                    'id_jurnal' => $jurnal->id_jurnal,
+                    'kode_akun' => $jenisSimpanan->akun_simpanan ?? '2-2000',
+                    'debit' => $simpanan->jumlah,
+                    'kredit' => 0,
+                ]);
+                \App\Models\JurnalDetail::create([
+                    'id_jurnal' => $jurnal->id_jurnal,
+                    'kode_akun' => $simpanan->akun_kas_bank,
+                    'debit' => 0,
+                    'kredit' => $simpanan->jumlah,
+                ]);
+            }
+
+            $simpanan->id_jurnal = $jurnal->id_jurnal;
+            $simpanan->save();
+        }
     }
 
     /**
