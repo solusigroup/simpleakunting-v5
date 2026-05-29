@@ -19,12 +19,13 @@
                     <a class="nav-link p-0 fw-medium" href="#master">📦 Master Data</a>
                     <a class="nav-link p-0 fw-medium" href="#transaksi">💸 Transaksi Keuangan</a>
                     <a class="nav-link p-0 fw-medium" href="#kasbank">🏦 Kas & Bank</a>
-                    <a class="nav-link p-0 fw-medium" href="#aset">🏢 Aset Tetap</a>
+                    <a class="nav-link p-0 fw-medium" href="#akuntansi">📊 Akuntansi & Tutup Buku</a>
                     <a class="nav-link p-0 fw-medium" href="#pos">🛒 Point of Sales</a>
                     <a class="nav-link p-0 fw-medium" href="#koperasi">🏦 Simpan Pinjam</a>
                     <a class="nav-link p-0 fw-medium" href="#mfg">🏭 Manufaktur</a>
                     <a class="nav-link p-0 fw-medium" href="#agri">🌱 Pertanian</a>
                     <a class="nav-link p-0 fw-medium" href="#report">📊 Laporan & Analisis</a>
+                    <a class="nav-link p-0 fw-medium" href="#importexport">☁️ Import/Export</a>
                     <a class="nav-link p-0 fw-medium" href="#admin">⚙️ Administrasi</a>
                     <li><hr class="dropdown-divider my-2 border-secondary-subtle"></li>
                     <a class="nav-link p-0 fw-medium" href="#schema">🔗 Skema & Koneksi Modul</a>
@@ -151,21 +152,22 @@
                 <div class="card-body p-4 p-md-5">
                     <h2 class="fw-bold mb-4">💸 Transaksi Keuangan</h2>
                     
-                    <div class="mb-4">
-                        <h5 class="fw-bold text-primary">🛒 Penjualan & Pembelian</h5>
-                        <p>Digunakan untuk mencatat transaksi barang/jasa. Sistem akan otomatis membentuk jurnal akuntansi dan memutasi stok barang.</p>
-                        <div class="bg-theme-subtle p-3 rounded-3 mt-2 border-start border-4 border-primary">
-                            <p class="mb-0 small fw-medium">Alur: Pilih Barang (Searchable) → Input Data → Simpan → (Otomatis) Jurnal Baru → Update Stok.</p>
+                    <div class="row g-4">
+                        <div class="col-md-6">
+                            <h5 class="fw-bold text-primary">🛒 Penjualan & Pembelian</h5>
+                            <p class="small text-secondary mb-2">Mencatat transaksi utama bisnis, mencakup proses <strong>Penawaran Penjualan</strong>, <strong>RFQ Pembelian</strong>, hingga <strong>Faktur</strong>.</p>
+                            <div class="bg-theme-subtle p-2 rounded-3 border-start border-4 border-primary">
+                                <p class="mb-0 extra-small fw-medium">Alur: Pilih Barang (Searchable) → Input Data → Simpan → Jurnal & Stok Otomatis.</p>
+                            </div>
                         </div>
-                        <div class="mt-3 alert alert-light border border-secondary-subtle rounded-3 small py-2">
-                            <span class="badge bg-primary me-1">New</span> Kini menggunakan <strong>Searchable Dropdown</strong> untuk pemilihan barang yang lebih cepat dan akurat.
+                        <div class="col-md-6">
+                            <h5 class="fw-bold text-primary">📝 Jurnal Umum & Kas</h5>
+                            <p class="small text-secondary mb-2"><strong>Jurnal Umum:</strong> Untuk mencatat transaksi penyesuaian (memorial). <br><strong>Jurnal Kas (KM/KK):</strong> Fitur baru untuk mencatat kas masuk dan keluar secara cepat layaknya bukti kasir.</p>
                         </div>
-                    </div>
-
-                    <div>
-                        <h5 class="fw-bold text-primary">📝 Jurnal Umum</h5>
-                        <p>Digunakan untuk mencatat transaksi yang tidak tersedia di modul khusus, seperti biaya penyusutan, koreksi, atau setoran modal.</p>
-                        <p class="text-danger small fw-bold mt-2">Penting: Total Debit harus selalu sama dengan Total Kredit.</p>
+                        <div class="col-md-6">
+                            <h5 class="fw-bold text-primary">🔄 Retur Barang</h5>
+                            <p class="small text-secondary mb-0">Mencatat pengembalian barang dari pelanggan (Retur Penjualan) atau kepada pemasok (Retur Pembelian). Sistem akan menyesuaikan kembali stok dan tagihan piutang/hutang secara otomatis.</p>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -218,32 +220,32 @@
             </div>
         </section>
 
-        <!-- Aset Tetap -->
-        <section id="aset" class="mb-5 pt-2">
+        <!-- Akuntansi & Tutup Buku -->
+        <section id="akuntansi" class="mb-5 pt-2">
             <div class="card border-0 shadow-sm rounded-4 border-top border-4 border-danger">
                 <div class="card-body p-4 p-md-5">
-                    <h2 class="fw-bold mb-4">🏢 Aset Tetap</h2>
-                    <p>Modul untuk mencatat inventaris perusahaan berjangka panjang dan menghitung biaya penyusutannya secara otomatis.</p>
+                    <h2 class="fw-bold mb-4">📊 Akuntansi & Tutup Buku</h2>
+                    <p>Modul pusat pengelolaan akuntansi bulanan dan manajemen aset tetap perusahaan.</p>
                     <div class="row g-4 mt-2">
                         <div class="col-md-4">
                             <div class="text-center p-3 border border-secondary-subtle rounded-3 bg-theme-subtle h-100">
-                                <div class="h3 mb-2">1️⃣</div>
-                                <h6 class="fw-bold">Input Data Aset</h6>
-                                <p class="extra-small text-secondary">Catat aset baru beserta harga perolehan dan tanggal belinya.</p>
+                                <div class="h3 mb-2">🏢</div>
+                                <h6 class="fw-bold">Manajemen Aset Tetap</h6>
+                                <p class="extra-small text-secondary">Input data aset, pemotongan depresiasi otomatis, hingga jurnal pelepasan (disposal) aset.</p>
                             </div>
                         </div>
                         <div class="col-md-4">
                             <div class="text-center p-3 border border-secondary-subtle rounded-3 bg-theme-subtle h-100">
-                                <div class="h3 mb-2">2️⃣</div>
-                                <h6 class="fw-bold">Jalankan Depresiasi</h6>
-                                <p class="extra-small text-secondary">Klik satu tombol untuk otomatis memotong nilai buku aset & membuat jurnal beban penyusutan per bulan.</p>
+                                <div class="h3 mb-2">🔒</div>
+                                <h6 class="fw-bold">Tutup Buku (Closing)</h6>
+                                <p class="extra-small text-secondary">Proses akhir bulan untuk mengunci transaksi agar tidak bisa diedit dan memindahkan saldo laba/rugi ke modal.</p>
                             </div>
                         </div>
                         <div class="col-md-4">
                             <div class="text-center p-3 border border-secondary-subtle rounded-3 bg-theme-subtle h-100">
-                                <div class="h3 mb-2">3️⃣</div>
-                                <h6 class="fw-bold">Pelepasan (Disposal)</h6>
-                                <p class="extra-small text-secondary">Aset rusak, dibuang, atau dijual? Sistem akan otomatis mencatat Laba/Rugi pelepasannya.</p>
+                                <div class="h3 mb-2">🔍</div>
+                                <h6 class="fw-bold">Diagnosa Neraca</h6>
+                                <p class="extra-small text-secondary">Audit otomatis mendeteksi ketidakseimbangan jurnal atau integritas data secara real-time.</p>
                             </div>
                         </div>
                     </div>
@@ -292,16 +294,13 @@
                     <p>Modul khusus pengoperasian koperasi atau lembaga keuangan mikro.</p>
                     <ul class="list-group list-group-flush small">
                         <li class="list-group-item bg-transparent py-3 border-secondary-subtle">
-                            <strong class="text-theme">Manajemen Anggota:</strong> Pendaftaran anggota baru dan pencetakan kartu anggota.
+                            <strong class="text-theme">Anggota & Simpanan:</strong> Pendaftaran anggota baru, pencetakan kartu anggota, dan histori setoran/penarikan tabungan.
                         </li>
                         <li class="list-group-item bg-transparent py-3 border-secondary-subtle">
-                            <strong class="text-theme">Tabungan/Simpanan:</strong> Pencatatan setoran, penarikan, dan perhitungan bunga otomatis.
-                        </li>
-                        <li class="list-group-item bg-transparent py-3 border-secondary-subtle">
-                            <strong class="text-theme">Kredit/Pinjaman:</strong> Simulasi angsuran, persetujuan (approval) berjenjang, dan pencairan dana.
+                            <strong class="text-theme">Pinjaman & Approval:</strong> Pengajuan kredit yang dilengkapi dengan <strong>Sistem Approval Berjenjang</strong> sebelum dana dicairkan.
                         </li>
                         <li class="list-group-item bg-transparent py-3 border-secondary-subtle border-bottom-0">
-                            <strong class="text-theme">Kolektibilitas:</strong> Monitoring pinjaman macet dan penuaan hutang (aging).
+                            <strong class="text-theme">Laporan Terintegrasi:</strong> Monitoring Outstanding Pinjaman, Klasifikasi Kolektibilitas (Lancar/Macet), dan simulasi Perhitungan SHU akhir tahun.
                         </li>
                     </ul>
                 </div>
@@ -346,11 +345,8 @@
         <section id="agri" class="mb-5 pt-2">
             <div class="card border-0 shadow-sm rounded-4 border-top border-4 border-success">
                 <div class="card-body p-4 p-md-5">
-                    <h2 class="fw-bold mb-4">🌱 Pertanian (PSAK 69) & Ritase</h2>
-                    <p>Pencatatan aset biologis sesuai standar akuntansi internasional (Fair Value) serta manajemen operasional pengangkutan (Ritase).</p>
-                    <div class="alert alert-warning border-0 rounded-4 p-3 mb-4 bg-warning bg-opacity-10 text-theme small">
-                        <strong>Info Penting:</strong> Hanya data <strong>Ritase yang telah disetujui (Approved)</strong> yang akan dikalkulasi dalam laporan pendapatan dan penagihan/invoice.
-                    </div>
+                    <h2 class="fw-bold mb-4">🌱 Pertanian (PSAK 69)</h2>
+                    <p>Pencatatan aset biologis sesuai standar akuntansi internasional (Fair Value).</p>
                     <div class="row g-3">
                         <div class="col-sm-6">
                             <div class="p-3 border rounded-3 bg-success bg-opacity-10 border-success border-opacity-25 h-100 text-theme">
@@ -412,23 +408,27 @@
                                 </tr>
                                 <tr>
                                     <td class="fw-bold">Arus Kas</td>
-                                    <td>Menganalisis sumber dan penggunaan uang tunai.</td>
+                                    <td>Menganalisis sumber dan penggunaan uang tunai. Mendukung metode Langsung & Tidak Langsung.</td>
                                 </tr>
                                 <tr>
                                     <td class="fw-bold">Buku Besar</td>
                                     <td>Rincian pergerakan angka pada setiap akun akuntansi.</td>
                                 </tr>
                                 <tr>
-                                    <td class="fw-bold">Daftar Aset Tetap</td>
-                                    <td>Rincian nilai buku dan akumulasi penyusutan per aset inventaris.</td>
-                                </tr>
-                                <tr class="table-primary bg-opacity-10">
-                                    <td class="fw-bold">✨ Diagnosa Neraca</td>
-                                    <td>Audit otomatis untuk mendeteksi ketidakseimbangan jurnal & integritas data.</td>
+                                    <td class="fw-bold">Buku Pembantu</td>
+                                    <td>Buku pembantu rincian mutasi untuk Piutang Pelanggan dan Utang Pemasok.</td>
                                 </tr>
                                 <tr>
-                                    <td class="fw-bold">Hasil Pilahan</td>
-                                    <td>Laporan khusus pengelolaan sampah dengan filter borongan per karyawan.</td>
+                                    <td class="fw-bold">Perubahan Ekuitas</td>
+                                    <td>Melihat rincian perubahan modal perusahaan dari waktu ke waktu.</td>
+                                </tr>
+                                <tr>
+                                    <td class="fw-bold">Neraca Lajur (10 Kolom)</td>
+                                    <td>Kertas kerja (worksheet) komprehensif untuk memudahkan proses akhir periode.</td>
+                                </tr>
+                                <tr>
+                                    <td class="fw-bold">Persediaan & Mutasi</td>
+                                    <td>Melihat posisi stok barang dan histori pergerakan masuk-keluar persediaan.</td>
                                 </tr>
                             </tbody>
                         </table>
@@ -591,21 +591,28 @@
                             <div class="mb-4">
                                 <h6 class="fw-bold text-theme border-bottom border-secondary-subtle pb-2">💸 TRANSAKSI & ASET</h6>
                                 <ul class="list-unstyled small ps-2 d-flex flex-column gap-1">
-                                    <li>• Penjualan</li>
-                                    <li>• Pembelian</li>
-                                    <li>• Jurnal Umum</li>
+                                    <li>• Transaksi
+                                        <ul class="ps-3 list-unstyled opacity-75">
+                                            <li>- Penjualan & Penawaran</li>
+                                            <li>- Pembelian & RFQ</li>
+                                            <li>- Jurnal Umum</li>
+                                            <li>- Jurnal Kas</li>
+                                            <li>- Retur</li>
+                                        </ul>
+                                    </li>
                                     <li>• Kas & Bank
                                         <ul class="ps-3 list-unstyled opacity-75">
                                             <li>- Penerimaan</li>
                                             <li>- Pembayaran</li>
-                                            <li>- Mutasi Kas</li>
+                                            <li>- Transaksi Kas</li>
                                         </ul>
                                     </li>
-                                    <li>• Aset Tetap
+                                    <li>• Akuntansi & Tutup Buku
                                         <ul class="ps-3 list-unstyled opacity-75">
                                             <li>- Kelompok Aset</li>
-                                            <li>- Data Aset Tetap</li>
-                                            <li>- Proses Depresiasi</li>
+                                            <li>- Aset Tetap</li>
+                                            <li>- Tutup Buku</li>
+                                            <li>- Diagnosa Neraca</li>
                                         </ul>
                                     </li>
                                 </ul>
@@ -635,6 +642,11 @@
                                             <li>- Lap. Pengungkapan</li>
                                         </ul>
                                     </li>
+                                    <li>• Import / Export
+                                        <ul class="ps-3 list-unstyled opacity-75">
+                                            <li>- Data Massal</li>
+                                        </ul>
+                                    </li>
                                 </ul>
                             </div>
                         </div>
@@ -655,6 +667,7 @@
                                             <li>- Anggota</li>
                                             <li>- Simpanan</li>
                                             <li>- Pinjaman</li>
+                                            <li>- Approval</li>
                                         </ul>
                                     </li>
                                 </ul>
@@ -668,17 +681,52 @@
                                             <li>- Laba Rugi</li>
                                             <li>- Arus Kas</li>
                                             <li>- Buku Besar</li>
+                                            <li>- Dll...</li>
                                         </ul>
                                     </li>
                                     <li>• Administrasi
                                         <ul class="ps-3 list-unstyled opacity-75">
-                                            <li>- User Management</li>
-                                            <li>- Profil Perusahaan</li>
+                                            <li>- User & Role</li>
+                                            <li>- Perusahaan & Cabang</li>
+                                            <li>- Unit Usaha & Proyek</li>
                                             <li>- Audit Trail</li>
-                                            <li>- Diagnosa Neraca</li>
                                         </ul>
                                     </li>
                                 </ul>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Import/Export -->
+        <section id="importexport" class="mb-5 pt-2">
+            <div class="card border-0 shadow-sm rounded-4 border-top border-4 border-secondary">
+                <div class="card-body p-4 p-md-5">
+                    <h2 class="fw-bold mb-4">☁️ Import/Export</h2>
+                    <p>Modul untuk memudahkan migrasi data massal, mem-backup data, dan sinkronisasi dengan sistem eksternal secara efisien.</p>
+                    <div class="row g-4 mt-2">
+                        <div class="col-md-6">
+                            <div class="d-flex align-items-start gap-3 p-3 border border-secondary-subtle rounded-3 bg-theme-subtle h-100">
+                                <div class="bg-primary bg-opacity-10 text-primary rounded-circle p-2 flex-shrink-0">
+                                    <span data-feather="download-cloud"></span>
+                                </div>
+                                <div>
+                                    <h6 class="fw-bold mb-1">Import Data</h6>
+                                    <p class="extra-small text-secondary mb-0">Memasukkan data dalam jumlah besar (seperti Master Barang, Pelanggan, atau Jurnal Historis) menggunakan template Excel/CSV yang telah disediakan. Sistem akan memvalidasi data sebelum menyimpannya ke database untuk mencegah duplikasi atau error.</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="d-flex align-items-start gap-3 p-3 border border-secondary-subtle rounded-3 bg-theme-subtle h-100">
+                                <div class="bg-success bg-opacity-10 text-success rounded-circle p-2 flex-shrink-0">
+                                    <span data-feather="upload-cloud"></span>
+                                </div>
+                                <div>
+                                    <h6 class="fw-bold mb-1">Export Data</h6>
+                                    <p class="extra-small text-secondary mb-0">Mengekstrak data transaksi maupun laporan ke dalam format Excel atau PDF. Berguna untuk kebutuhan backup offline, audit eksternal, maupun analisis tingkat lanjut menggunakan tools lain.</p>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -693,24 +741,24 @@
                     <h2 class="fw-bold mb-4">⚙️ Administrasi</h2>
                     <div class="row g-4">
                         <div class="col-md-6">
-                            <h6 class="fw-bold">👥 Manajemen User</h6>
-                            <p class="small text-secondary">Menambah karyawan dan membatasi hak akses (Kasir hanya bisa POS, dst).</p>
+                            <h6 class="fw-bold">👥 Manajemen User & Role</h6>
+                            <p class="small text-secondary">Menambah karyawan dan mengatur <strong>Role</strong> mereka secara dinamis untuk membatasi hak akses modul.</p>
                         </div>
                         <div class="col-md-6">
-                            <h6 class="fw-bold">🏢 Profil Perusahaan</h6>
-                            <p class="small text-secondary">Mengatur Nama, Alamat, Logo, dan pilihan jenis usaha.</p>
+                            <h6 class="fw-bold">🏢 Perusahaan & Multi-Cabang</h6>
+                            <p class="small text-secondary">Mengatur Profil Perusahaan, mendaftarkan <strong>Kantor Cabang</strong>, serta mengelola <strong>Unit Usaha</strong> yang berbeda dalam satu sistem terpusat.</p>
                         </div>
                         <div class="col-md-6">
-                            <h6 class="fw-bold">🛡️ Audit Trail</h6>
-                            <p class="small text-secondary">Melihat log aktivitas (siapa mengubah apa dan kapan) untuk keamanan data.</p>
+                            <h6 class="fw-bold">📁 Proyek & Program</h6>
+                            <p class="small text-secondary">Membuat dan memonitor berbagai Proyek/Program. Transaksi dapat dikaitkan dengan proyek spesifik untuk melacak alokasi dana dan anggaran (Project-based Accounting).</p>
                         </div>
                         <div class="col-md-6">
-                            <h6 class="fw-bold">💾 Database Management</h6>
-                            <p class="small text-secondary">Fitur lanjutan untuk membersihkan data atau seeding data awal (Hanya Superuser).</p>
+                            <h6 class="fw-bold">🏦 Setup Koperasi</h6>
+                            <p class="small text-secondary">Konfigurasi master <strong>Jenis Pinjaman</strong> dan <strong>Jenis Simpanan</strong> beserta persentase bunganya.</p>
                         </div>
                         <div class="col-md-6">
-                            <h6 class="fw-bold text-primary">🔍 Diagnosa Neraca</h6>
-                            <p class="small text-secondary">Melakukan validasi kesehatan database dan memastikan laporan keuangan 100% akurat tanpa error 500.</p>
+                            <h6 class="fw-bold">🛡️ Audit Trail & Database</h6>
+                            <p class="small text-secondary">Melihat log aktivitas user (Audit Trail) dan manajemen database lanjutan (bersihkan data/seeding).</p>
                         </div>
                     </div>
                 </div>
