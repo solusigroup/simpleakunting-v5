@@ -62,6 +62,16 @@ class TenantRegistrationController extends Controller
             ->orderBy('tenants.created_at', 'desc')
             ->get();
             
+        foreach ($tenants as $tenant) {
+            try {
+                $tenant->run(function () use ($tenant) {
+                    $tenant->trx_count = \App\Models\Jurnal::count();
+                });
+            } catch (\Exception $e) {
+                $tenant->trx_count = '-';
+            }
+        }
+            
         return view('central.admin.tenants', compact('tenants'));
     }
 

@@ -21,6 +21,7 @@
                     <th>ID</th>
                     <th>Perusahaan</th>
                     <th>Domain</th>
+                    <th>Transaksi</th>
                     <th>Status</th>
                     <th>Dibuat</th>
                     <th></th>
@@ -42,6 +43,11 @@
                             @endforeach
                             <div style="font-size: 0.8em; color: #999; margin-top: 2px;">(Default)</div>
                         @endif
+                    </td>
+                    <td style="text-align: center;">
+                        <span class="badge" style="background-color: #607d8b; color: white; padding: 4px 8px; font-size: 0.9em;">
+                            {{ isset($tenant->trx_count) && is_numeric($tenant->trx_count) ? number_format($tenant->trx_count, 0, ',', '.') : ($tenant->trx_count ?? '-') }}
+                        </span>
                     </td>
                     <td>
                         @php
