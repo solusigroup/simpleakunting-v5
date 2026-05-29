@@ -69,8 +69,15 @@
         @endif
     </div>
 
+    <div class="mb-3">
+        <div class="input-group input-group-sm" style="max-width: 400px;">
+            <span class="input-group-text bg-white"><span data-feather="search" style="width:14px;height:14px;"></span></span>
+            <input type="text" id="searchAkun" class="form-control" placeholder="Cari kode akun atau nama akun..." autofocus>
+        </div>
+    </div>
+
     <div class="table-responsive">
-        <table class="table table-striped table-sm">
+        <table class="table table-striped table-sm" id="tabelAkun">
             <thead>
                 <tr>
                     <th scope="col">Kode Akun</th>
@@ -116,4 +123,24 @@
             </tbody>
         </table>
     </div>
+@endsection
+
+@section('scripts')
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        const input = document.getElementById('searchAkun');
+        const table = document.getElementById('tabelAkun');
+        const rows = table.querySelectorAll('tbody tr');
+
+        input.addEventListener('keyup', function () {
+            const keyword = this.value.toLowerCase().trim();
+
+            rows.forEach(function (row) {
+                const kode = row.cells[0] ? row.cells[0].textContent.toLowerCase() : '';
+                const nama = row.cells[1] ? row.cells[1].textContent.toLowerCase() : '';
+                row.style.display = (kode.includes(keyword) || nama.includes(keyword)) ? '' : 'none';
+            });
+        });
+    });
+</script>
 @endsection
