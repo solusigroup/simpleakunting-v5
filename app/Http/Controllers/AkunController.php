@@ -30,8 +30,14 @@ class AkunController extends Controller
                 $a->saldo_terkini = $totalKredit - $totalDebit;
             }
         }
+        // Deteksi duplikasi nama akun (case-insensitive)
+        $duplicates = $akun->groupBy(function ($item) {
+            return strtolower(trim($item->nama_akun));
+        })->filter(function ($group) {
+            return $group->count() > 1;
+        });
 
-        return view('akun.index', compact('akun'));
+        return view('akun.index', compact('akun', 'duplicates'));
     }
 
     public function create()
