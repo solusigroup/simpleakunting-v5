@@ -40,33 +40,94 @@
                             <tr>
                                 <th style="width:40px;">#</th>
                                 <th>Nama Akun</th>
-                                <th>Kode Akun Terkait</th>
-                                <th>Jumlah</th>
+                                <th>Kode Akun</th>
+                                <th>Tipe</th>
+                                <th class="text-end">Saldo Awal</th>
+                                <th style="width:200px;">Aksi</th>
                             </tr>
                         </thead>
                         <tbody>
                             @foreach($duplicates as $namaAkun => $group)
-                                <tr>
-                                    <td>{{ $loop->iteration }}</td>
-                                    <td class="fw-bold text-danger">{{ $group->first()->nama_akun }}</td>
-                                    <td>
-                                        @foreach($group as $item)
-                                            <span class="badge bg-secondary me-1">{{ $item->kode_akun }}</span>
-                                        @endforeach
-                                    </td>
-                                    <td class="text-center"><span class="badge bg-danger">{{ $group->count() }}x</span></td>
-                                </tr>
+                                @foreach($group as $item)
+                                    <tr class="{{ $loop->parent->iteration % 2 == 0 ? 'table-light' : '' }}">
+                                        @if($loop->first)
+                                            <td rowspan="{{ $group->count() }}" class="align-middle text-center fw-bold">{{ $loop->parent->iteration }}</td>
+                                        @endif
+                                        <td class="fw-bold text-danger">{{ $item->nama_akun }}</td>
+                                        <td><span class="badge bg-secondary">{{ $item->kode_akun }}</span></td>
+                                        <td>{{ $item->tipe_akun }}</td>
+                                        <td class="text-end">Rp {{ number_format($item->saldo_awal ?? 0, 0, ',', '.') }}</td>
+                                        <td>
+                                            <div class="d-flex gap-1">
+                                                <a href="{{ route('akun.edit', $item->kode_akun) }}" class="btn btn-outline-warning btn-sm py-0 px-1" title="Edit">
+                                                    <span data-feather="edit-2" style="width:12px;height:12px;"></span>
+                                                </a>
+                                                <form action="{{ route('akun.destroy', $item->kode_akun) }}" method="POST" class="d-inline" onsubmit="return confirm('Yakin hapus akun {{ $item->kode_akun }}?')">
+                                                    @csrf @method('DELETE')
+                                                    <button type="submit" class="btn btn-outline-danger btn-sm py-0 px-1" title="Hapus">
+                                                        <span data-feather="trash-2" style="width:12px;height:12px;"></span>
+                                                    </button>
+                                                </form>
+                                                <button type="button" class="btn btn-outline-primary btn-sm py-0 px-1" title="Merge ke akun lain"
+                                                    onclick="openMergeModal('{{ $item->kode_akun }}', '{{ addslashes($item->nama_akun) }}', {{ json_encode($group->where('kode_akun', '!=', $item->kode_akun)->map(fn($g) => ['kode' => $g->kode_akun, 'nama' => $g->nama_akun])->values()) }})">
+                                                    <span data-feather="git-merge" style="width:12px;height:12px;"></span>
+                                                </button>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                @endforeach
                             @endforeach
                         </tbody>
                     </table>
                 </div>
-                <small class="text-muted mt-2 d-block">Periksa dan perbaiki akun-akun di atas agar setiap nama akun bersifat unik untuk menghindari kekeliruan pada laporan keuangan.</small>
+                <small class="text-muted mt-2 d-block">
+                    <strong>Edit:</strong> Ubah nama akun agar unik. 
+                    <strong>Hapus:</strong> Hapus akun (hanya jika belum dipakai). 
+                    <strong>Merge:</strong> Pindahkan semua transaksi ke akun tujuan lalu hapus akun ini.
+                </small>
             </div>
         @else
             <div class="alert alert-success border-success mb-0">
                 <span data-feather="check-circle" style="width:16px;height:16px;"></span> <strong>Tidak ada duplikasi.</strong> Semua nama akun sudah unik.
             </div>
         @endif
+    </div>
+
+    {{-- Merge Modal --}}
+    <div class="modal fade" id="mergeModal" tabindex="-1" aria-labelledby="mergeModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <form method="POST" action="{{ route('akun.merge') }}" id="mergeForm">
+                    @csrf
+                    <div class="modal-header bg-primary text-white">
+                        <h6 class="modal-title fw-bold" id="mergeModalLabel"><span data-feather="git-merge" style="width:16px;height:16px;"></span> Merge Akun</h6>
+                        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                    </div>
+                    <div class="modal-body">
+                        <input type="hidden" name="source_kode_akun" id="mergeSourceKode">
+                        <div class="alert alert-info small py-2 mb-3">
+                            Semua transaksi (jurnal) dan saldo awal dari akun <strong>sumber</strong> akan dipindahkan ke akun <strong>tujuan</strong>, kemudian akun sumber akan dihapus.
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label fw-bold small">Akun Sumber (akan dihapus)</label>
+                            <input type="text" class="form-control form-control-sm bg-light" id="mergeSourceLabel" readonly>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label fw-bold small">Akun Tujuan (akan menerima data)</label>
+                            <select name="target_kode_akun" id="mergeTargetSelect" class="form-select form-select-sm" required>
+                                <option value="">-- Pilih akun tujuan --</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-sm btn-secondary" data-bs-dismiss="modal">Batal</button>
+                        <button type="submit" class="btn btn-sm btn-primary" onclick="return confirm('Yakin? Proses merge tidak bisa dibatalkan.')">
+                            <span data-feather="git-merge" style="width:14px;height:14px;"></span> Merge Sekarang
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
     </div>
 
     <div class="mb-3">
@@ -142,5 +203,26 @@
             });
         });
     });
+
+    function openMergeModal(sourceKode, sourceNama, targets) {
+        document.getElementById('mergeSourceKode').value = sourceKode;
+        document.getElementById('mergeSourceLabel').value = sourceKode + ' - ' + sourceNama;
+
+        var select = document.getElementById('mergeTargetSelect');
+        select.innerHTML = '<option value="">-- Pilih akun tujuan --</option>';
+        targets.forEach(function (t) {
+            var opt = document.createElement('option');
+            opt.value = t.kode;
+            opt.textContent = t.kode + ' - ' + t.nama;
+            select.appendChild(opt);
+        });
+
+        var modal = new bootstrap.Modal(document.getElementById('mergeModal'));
+        modal.show();
+
+        // Re-render feather icons inside the modal
+        if (typeof feather !== 'undefined') feather.replace();
+    }
 </script>
 @endsection
+

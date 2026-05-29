@@ -95,4 +95,39 @@ class AkunController extends Controller
             return back()->with('error', 'Gagal menghapus akun: ' . $e->getMessage());
         }
     }
+
+    /**
+     * Merge akun duplikat: pindahkan semua jurnal_detail dari akun sumber ke akun tujuan, lalu hapus akun sumber.
+     */
+    public function merge(Request $request)
+    {
+        $request->validate([
+            'source_kode_akun' => 'required|string|exists:akun,kode_akun',
+            'target_kode_akun' => 'required|string|exists:akun,kode_akun|different:source_kode_akun',
+        ]);
+
+        $source = Akun::findOrFail($request->source_kode_akun);
+        $target = Akun::findOrFail($request->target_kode_akun);
+
+        try {
+            DB::transaction(function () use ($source, $target) {
+                // Pindahkan semua jurnal_detail dari sumber ke tujuan
+                DB::table('jurnal_detail')
+                    ->where('kode_akun', $source->kode_akun)
+                    ->update(['kode_akun' => $target->kode_akun]);
+
+                // Gabungkan saldo awal
+                $target->saldo_awal = ($target->saldo_awal ?? 0) + ($source->saldo_awal ?? 0);
+                $target->save();
+
+                // Hapus akun sumber
+                $source->delete();
+            });
+
+            return redirect()->route('akun.index')
+                ->with('success', "Akun '{$source->kode_akun} - {$source->nama_akun}' berhasil di-merge ke '{$target->kode_akun} - {$target->nama_akun}'.");
+        } catch (\Exception $e) {
+            return back()->with('error', 'Gagal merge akun: ' . $e->getMessage());
+        }
+    }
 }
