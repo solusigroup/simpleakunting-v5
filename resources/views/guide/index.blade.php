@@ -731,7 +731,7 @@
                                     1
                                 </div>
                                 <div>
-                                    <h6 class="fw-bold mb-0">Kurniawan, SE., Ak., CA., M.Ak. CMA., CIBA., CIAP</h6>
+                                    <h6 class="fw-bold mb-0"><a href="https://instagram.com/kurniawandoank" target="_blank" class="text-decoration-none text-reset">Kurniawan, SE., Ak., CA., M.Ak. CMA., CIBA., CIAP</a></h6>
                                 </div>
                             </div>
                         </div>
@@ -741,7 +741,7 @@
                                     2
                                 </div>
                                 <div>
-                                    <h6 class="fw-bold mb-0">Risa Lailatur R.</h6>
+                                    <h6 class="fw-bold mb-0"><a href="https://www.instagram.com/risa.llr" target="_blank" class="text-decoration-none text-reset">Risa Lailatur R.</a></h6>
                                 </div>
                             </div>
                         </div>
@@ -751,7 +751,7 @@
                                     3
                                 </div>
                                 <div>
-                                    <h6 class="fw-bold mb-0">Adinda Nadya F.P.</h6>
+                                    <h6 class="fw-bold mb-0"><a href="https://www.instagram.com/adindanfp" target="_blank" class="text-decoration-none text-reset">Adinda Nadya F.P.</a></h6>
                                 </div>
                             </div>
                         </div>
@@ -761,7 +761,7 @@
                                     4
                                 </div>
                                 <div>
-                                    <h6 class="fw-bold mb-0">Nia Rifvany A.W.</h6>
+                                    <h6 class="fw-bold mb-0"><a href="https://www.instagram.com/nrifvny" target="_blank" class="text-decoration-none text-reset">Nia Rifvany A.W.</a></h6>
                                 </div>
                             </div>
                         </div>
@@ -771,7 +771,7 @@
                                     5
                                 </div>
                                 <div>
-                                    <h6 class="fw-bold mb-0">Nadya Fitriyah N.A.</h6>
+                                    <h6 class="fw-bold mb-0"><a href="https://www.instagram.com/nadyaa.fty" target="_blank" class="text-decoration-none text-reset">Nadya Fitriyah N.A.</a></h6>
                                 </div>
                             </div>
                         </div>
