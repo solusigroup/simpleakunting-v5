@@ -23,6 +23,7 @@
 
         /* Content */
         .container { max-width: 900px; margin: 0 auto; padding: 32px 24px; }
+        .container-fluid { max-width: 100%; margin: 0; padding: 0; }
         h1 { color: #ff8c00; font-size: 1.6rem; margin-bottom: 8px; }
         .subtitle { color: #8fa8c8; margin-bottom: 24px; }
         .actions { margin-bottom: 24px; display: flex; gap: 12px; flex-wrap: wrap; }
@@ -72,6 +73,7 @@
             <div class="navbar-nav">
                 <a href="{{ route('central.tenants.index') }}" class="{{ request()->routeIs('central.tenants.*') || request()->routeIs('central.register-tenant*') ? 'active' : '' }}">🏢 Tenant</a>
                 <a href="{{ route('central.users.index') }}" class="{{ request()->routeIs('central.users.*') || request()->routeIs('central.password.*') ? 'active' : '' }}">👥 Users</a>
+                <a href="{{ route('central.workflow') }}" class="{{ request()->routeIs('central.workflow') ? 'active' : '' }}">📊 Workflow</a>
             </div>
             <div class="navbar-user">
                 <span>👤 {{ Auth::guard('central')->user()->nama_user }}</span>
@@ -83,7 +85,7 @@
         </div>
     </nav>
 
-    <div class="container">
+    <div class="@yield('container-class', 'container')">
         @if(session('success'))
             <div class="alert alert-success">{{ session('success') }}</div>
         @endif

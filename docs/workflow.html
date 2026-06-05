@@ -1,0 +1,1625 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Workflow SimpleAkunting v5 — Dokumentasi Alur Kerja</title>
+    <meta name="description" content="Dokumen Alur Kerja Sistem Akuntansi Terpadu SimpleAkunting v5 — Dagang, Manufaktur, Pertanian (PSAK 69), Koperasi Simpan Pinjam">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.min.js"></script>
+    <style>
+        :root {
+            --bg-primary: #0a0e1a;
+            --bg-secondary: #111827;
+            --bg-card: rgba(17, 24, 39, 0.7);
+            --bg-glass: rgba(255,255,255,0.04);
+            --border-glass: rgba(255,255,255,0.08);
+            --text-primary: #e2e8f0;
+            --text-secondary: #94a3b8;
+            --text-muted: #64748b;
+            --accent-blue: #3b82f6;
+            --accent-purple: #8b5cf6;
+            --accent-emerald: #10b981;
+            --accent-amber: #f59e0b;
+            --accent-rose: #f43f5e;
+            --accent-cyan: #06b6d4;
+            --accent-indigo: #6366f1;
+            --gradient-primary: linear-gradient(135deg, #3b82f6 0%, #8b5cf6 100%);
+            --gradient-emerald: linear-gradient(135deg, #10b981 0%, #06b6d4 100%);
+            --gradient-amber: linear-gradient(135deg, #f59e0b 0%, #ef4444 100%);
+            --gradient-rose: linear-gradient(135deg, #f43f5e 0%, #a855f7 100%);
+            --shadow-glow: 0 0 40px rgba(59,130,246,0.15);
+            --sidebar-width: 300px;
+            --radius: 16px;
+            --radius-sm: 10px;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        html { scroll-behavior: smooth; scroll-padding-top: 100px; }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            line-height: 1.7;
+            overflow-x: hidden;
+        }
+
+        /* ===== ANIMATED BACKGROUND ===== */
+        .bg-grid {
+            position: fixed; inset: 0; z-index: 0; pointer-events: none;
+            background-image:
+                radial-gradient(ellipse 80% 50% at 50% -20%, rgba(59,130,246,0.12), transparent),
+                radial-gradient(ellipse 60% 40% at 80% 60%, rgba(139,92,246,0.08), transparent),
+                radial-gradient(ellipse 50% 30% at 10% 80%, rgba(16,185,129,0.06), transparent);
+        }
+
+        .bg-grid::after {
+            content: ''; position: absolute; inset: 0;
+            background-size: 60px 60px;
+            background-image:
+                linear-gradient(rgba(255,255,255,0.02) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(255,255,255,0.02) 1px, transparent 1px);
+            mask-image: radial-gradient(ellipse 70% 70% at 50% 50%, black, transparent);
+        }
+
+        /* ===== HEADER ===== */
+        .site-header {
+            position: fixed; top: 0; left: 0; right: 0; z-index: 100;
+            background: rgba(10,14,26,0.85);
+            backdrop-filter: blur(20px) saturate(1.5);
+            border-bottom: 1px solid var(--border-glass);
+            padding: 0 32px; height: 72px;
+            display: flex; align-items: center; justify-content: space-between;
+            transition: all 0.3s ease;
+        }
+        .site-header.scrolled { box-shadow: 0 4px 30px rgba(0,0,0,0.4); }
+        .header-brand { display: flex; align-items: center; gap: 14px; }
+        .header-brand .logo {
+            width: 42px; height: 42px; border-radius: 12px;
+            background: var(--gradient-primary);
+            display: grid; place-items: center; font-size: 20px; font-weight: 800; color: #fff;
+            box-shadow: 0 0 20px rgba(59,130,246,0.3);
+        }
+        .header-brand h1 {
+            font-size: 18px; font-weight: 700;
+            background: var(--gradient-primary); -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+        }
+        .header-brand .version {
+            font-size: 11px; background: rgba(59,130,246,0.15); color: var(--accent-blue);
+            padding: 2px 10px; border-radius: 20px; font-weight: 600; letter-spacing: 0.5px;
+        }
+        .header-actions { display: flex; gap: 10px; align-items: center; }
+        .btn-sidebar-toggle {
+            display: none; background: var(--bg-glass); border: 1px solid var(--border-glass);
+            color: var(--text-primary); padding: 8px 12px; border-radius: 8px; cursor: pointer;
+            font-size: 20px; transition: all 0.2s;
+        }
+        .btn-sidebar-toggle:hover { background: rgba(255,255,255,0.08); }
+        .btn-print {
+            background: var(--bg-glass); border: 1px solid var(--border-glass);
+            color: var(--text-secondary); padding: 8px 16px; border-radius: 8px;
+            cursor: pointer; font-size: 13px; font-weight: 500; transition: all 0.2s;
+            font-family: inherit; display: flex; align-items: center; gap: 6px;
+        }
+        .btn-print:hover { background: rgba(255,255,255,0.08); color: var(--text-primary); }
+
+        /* ===== SIDEBAR ===== */
+        .sidebar {
+            position: fixed; top: 72px; left: 0; bottom: 0; width: var(--sidebar-width);
+            background: rgba(10,14,26,0.92); backdrop-filter: blur(20px);
+            border-right: 1px solid var(--border-glass);
+            overflow-y: auto; z-index: 90; padding: 24px 0;
+            transition: transform 0.3s ease;
+        }
+        .sidebar::-webkit-scrollbar { width: 4px; }
+        .sidebar::-webkit-scrollbar-track { background: transparent; }
+        .sidebar::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 4px; }
+
+        .sidebar-label {
+            font-size: 10px; font-weight: 700; letter-spacing: 1.5px; text-transform: uppercase;
+            color: var(--text-muted); padding: 12px 24px 8px; margin-top: 8px;
+        }
+        .sidebar a {
+            display: flex; align-items: center; gap: 10px;
+            padding: 9px 24px; font-size: 13px; color: var(--text-secondary);
+            text-decoration: none; transition: all 0.2s; border-left: 3px solid transparent;
+            font-weight: 450;
+        }
+        .sidebar a:hover {
+            background: rgba(59,130,246,0.06); color: var(--text-primary);
+            border-left-color: rgba(59,130,246,0.3);
+        }
+        .sidebar a.active {
+            background: rgba(59,130,246,0.1); color: var(--accent-blue);
+            border-left-color: var(--accent-blue); font-weight: 600;
+        }
+        .sidebar a .nav-icon { font-size: 16px; width: 22px; text-align: center; flex-shrink: 0; }
+        .sidebar a .nav-num {
+            font-size: 10px; font-weight: 700; color: var(--text-muted);
+            background: var(--bg-glass); padding: 1px 6px; border-radius: 4px;
+            min-width: 20px; text-align: center; margin-left: auto;
+        }
+
+        /* ===== MAIN ===== */
+        .main-content {
+            margin-left: var(--sidebar-width); padding: 104px 48px 80px;
+            max-width: calc(100% - var(--sidebar-width)); position: relative; z-index: 1;
+        }
+
+        /* ===== HERO ===== */
+        .hero {
+            text-align: center; padding: 40px 0 60px;
+            animation: fadeInUp 0.8s ease;
+        }
+        .hero-badge {
+            display: inline-flex; align-items: center; gap: 8px;
+            background: rgba(59,130,246,0.1); border: 1px solid rgba(59,130,246,0.2);
+            padding: 6px 18px; border-radius: 30px; font-size: 12px;
+            color: var(--accent-blue); font-weight: 600; margin-bottom: 20px;
+            letter-spacing: 0.5px;
+        }
+        .hero h1 {
+            font-size: clamp(32px, 5vw, 52px); font-weight: 900; line-height: 1.15;
+            background: linear-gradient(135deg, #e2e8f0 0%, #94a3b8 50%, #e2e8f0 100%);
+            -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+            margin-bottom: 16px;
+        }
+        .hero p {
+            font-size: 17px; color: var(--text-secondary); max-width: 600px; margin: 0 auto 32px;
+            line-height: 1.8;
+        }
+        .hero-stats {
+            display: flex; gap: 20px; justify-content: center; flex-wrap: wrap;
+        }
+        .hero-stat {
+            background: var(--bg-glass); border: 1px solid var(--border-glass);
+            padding: 16px 28px; border-radius: var(--radius-sm);
+            text-align: center; min-width: 130px;
+        }
+        .hero-stat .num {
+            font-size: 28px; font-weight: 800;
+            background: var(--gradient-primary); -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+        }
+        .hero-stat .label { font-size: 11px; color: var(--text-muted); font-weight: 500; margin-top: 4px; }
+
+        /* ===== SECTIONS ===== */
+        .section {
+            margin-bottom: 56px; animation: fadeInUp 0.6s ease both;
+            scroll-margin-top: 100px;
+        }
+        .section-header {
+            display: flex; align-items: center; gap: 16px; margin-bottom: 28px;
+            padding-bottom: 16px; border-bottom: 1px solid var(--border-glass);
+        }
+        .section-num {
+            width: 44px; height: 44px; border-radius: 12px;
+            display: grid; place-items: center; font-size: 16px; font-weight: 800;
+            color: #fff; flex-shrink: 0;
+        }
+        .section-header h2 { font-size: 24px; font-weight: 800; letter-spacing: -0.3px; }
+        .section-header .subtitle { font-size: 13px; color: var(--text-muted); font-weight: 400; margin-top: 2px; }
+
+        /* ===== CARDS ===== */
+        .card {
+            background: var(--bg-card); border: 1px solid var(--border-glass);
+            border-radius: var(--radius); padding: 32px; margin-bottom: 24px;
+            backdrop-filter: blur(10px);
+            transition: border-color 0.3s, box-shadow 0.3s;
+        }
+        .card:hover {
+            border-color: rgba(59,130,246,0.2);
+            box-shadow: var(--shadow-glow);
+        }
+        .card h3 {
+            font-size: 18px; font-weight: 700; margin-bottom: 16px;
+            display: flex; align-items: center; gap: 10px;
+        }
+        .card h4 {
+            font-size: 15px; font-weight: 600; margin: 20px 0 10px; color: var(--text-primary);
+            display: flex; align-items: center; gap: 8px;
+        }
+        .card p, .card li { color: var(--text-secondary); font-size: 14px; line-height: 1.8; }
+        .card ul, .card ol { padding-left: 20px; margin: 8px 0; }
+        .card li { margin-bottom: 4px; }
+
+        /* ===== TABLES ===== */
+        .table-wrap {
+            overflow-x: auto; margin: 16px 0; border-radius: var(--radius-sm);
+            border: 1px solid var(--border-glass);
+        }
+        table {
+            width: 100%; border-collapse: collapse; font-size: 13px;
+        }
+        thead th {
+            background: rgba(59,130,246,0.08); color: var(--accent-blue);
+            font-weight: 600; text-align: left; padding: 12px 16px;
+            border-bottom: 1px solid var(--border-glass);
+            font-size: 12px; letter-spacing: 0.3px; text-transform: uppercase;
+            white-space: nowrap;
+        }
+        tbody td {
+            padding: 10px 16px; border-bottom: 1px solid rgba(255,255,255,0.03);
+            color: var(--text-secondary); vertical-align: top;
+        }
+        tbody tr:hover td { background: rgba(255,255,255,0.02); }
+        tbody tr:last-child td { border-bottom: none; }
+        td code, th code {
+            background: rgba(139,92,246,0.12); color: var(--accent-purple);
+            padding: 2px 7px; border-radius: 4px; font-family: 'JetBrains Mono', monospace;
+            font-size: 12px;
+        }
+
+        /* ===== MERMAID DIAGRAMS ===== */
+        .diagram-container {
+            background: rgba(0,0,0,0.3); border: 1px solid var(--border-glass);
+            border-radius: var(--radius-sm); padding: 32px 24px; margin: 20px 0;
+            overflow-x: auto; text-align: center;
+        }
+        .diagram-container .mermaid { display: inline-block; text-align: center; }
+        .diagram-container svg { max-width: 100%; height: auto; }
+
+        /* ===== ALERTS ===== */
+        .alert {
+            padding: 16px 20px; border-radius: var(--radius-sm); margin: 16px 0;
+            font-size: 13px; line-height: 1.7; display: flex; gap: 12px;
+            border: 1px solid;
+        }
+        .alert-icon { font-size: 18px; flex-shrink: 0; margin-top: 1px; }
+        .alert-note {
+            background: rgba(59,130,246,0.06); border-color: rgba(59,130,246,0.15);
+            color: #93c5fd;
+        }
+        .alert-tip {
+            background: rgba(16,185,129,0.06); border-color: rgba(16,185,129,0.15);
+            color: #6ee7b7;
+        }
+        .alert-important {
+            background: rgba(139,92,246,0.06); border-color: rgba(139,92,246,0.15);
+            color: #c4b5fd;
+        }
+        .alert-warning {
+            background: rgba(245,158,11,0.06); border-color: rgba(245,158,11,0.15);
+            color: #fcd34d;
+        }
+        .alert-caution {
+            background: rgba(244,63,94,0.06); border-color: rgba(244,63,94,0.15);
+            color: #fda4af;
+        }
+        .alert strong { font-weight: 700; }
+
+        /* ===== NUMBER FORMAT TABLE ===== */
+        .number-format-grid {
+            display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+            gap: 12px; margin: 16px 0;
+        }
+        .nf-item {
+            background: var(--bg-glass); border: 1px solid var(--border-glass);
+            padding: 14px 16px; border-radius: var(--radius-sm);
+        }
+        .nf-item .nf-module { font-size: 11px; color: var(--text-muted); font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; }
+        .nf-item .nf-format {
+            font-family: 'JetBrains Mono', monospace; font-size: 14px; font-weight: 600;
+            color: var(--accent-cyan); margin-top: 4px;
+        }
+        .nf-item .nf-example { font-size: 12px; color: var(--text-muted); margin-top: 2px; }
+
+        /* ===== SUMMARY TABLE SPECIAL ===== */
+        .summary-card {
+            background: linear-gradient(135deg, rgba(59,130,246,0.05), rgba(139,92,246,0.05));
+            border: 1px solid rgba(99,102,241,0.15); border-radius: var(--radius);
+            padding: 24px; margin: 20px 0;
+        }
+
+        /* ===== PATTERN BADGES ===== */
+        .pattern-badge {
+            display: inline-flex; align-items: center; gap: 4px;
+            background: rgba(139,92,246,0.1); border: 1px solid rgba(139,92,246,0.2);
+            color: var(--accent-purple); padding: 3px 10px; border-radius: 6px;
+            font-family: 'JetBrains Mono', monospace; font-size: 11px; font-weight: 600;
+            white-space: nowrap;
+        }
+
+        /* ===== BACK TO TOP ===== */
+        .back-to-top {
+            position: fixed; bottom: 32px; right: 32px; z-index: 100;
+            width: 48px; height: 48px; border-radius: 14px;
+            background: var(--gradient-primary); color: #fff; border: none;
+            cursor: pointer; font-size: 20px; display: grid; place-items: center;
+            box-shadow: 0 4px 20px rgba(59,130,246,0.3);
+            opacity: 0; transform: translateY(20px); transition: all 0.3s;
+        }
+        .back-to-top.visible { opacity: 1; transform: translateY(0); }
+        .back-to-top:hover { transform: translateY(-3px); box-shadow: 0 8px 30px rgba(59,130,246,0.4); }
+
+        /* ===== FOOTER ===== */
+        .site-footer {
+            text-align: center; padding: 40px 0; margin-top: 40px;
+            border-top: 1px solid var(--border-glass);
+            color: var(--text-muted); font-size: 13px;
+        }
+        .site-footer .tech-stack { display: flex; gap: 12px; justify-content: center; margin-top: 12px; flex-wrap: wrap; }
+        .site-footer .tech-pill {
+            background: var(--bg-glass); border: 1px solid var(--border-glass);
+            padding: 4px 14px; border-radius: 20px; font-size: 11px; font-weight: 500;
+        }
+
+        /* ===== ANIMATIONS ===== */
+        @keyframes fadeInUp {
+            from { opacity: 0; transform: translateY(24px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* ===== RESPONSIVE ===== */
+        @media (max-width: 1024px) {
+            .sidebar { transform: translateX(-100%); }
+            .sidebar.open { transform: translateX(0); box-shadow: 4px 0 40px rgba(0,0,0,0.5); }
+            .main-content { margin-left: 0; padding: 96px 24px 60px; max-width: 100%; }
+            .btn-sidebar-toggle { display: block; }
+        }
+        @media (max-width: 600px) {
+            .main-content { padding: 88px 16px 40px; }
+            .card { padding: 20px; }
+            .hero-stats { gap: 12px; }
+            .hero-stat { padding: 12px 16px; min-width: 100px; }
+            .number-format-grid { grid-template-columns: 1fr 1fr; }
+        }
+
+        /* ===== PRINT ===== */
+        @media print {
+            .sidebar, .site-header, .back-to-top, .btn-print, .bg-grid { display: none !important; }
+            .main-content { margin-left: 0 !important; padding: 0 !important; max-width: 100% !important; }
+            .card { break-inside: avoid; border: 1px solid #ddd; box-shadow: none; }
+            .diagram-container { break-inside: avoid; }
+            body { background: #fff; color: #111; }
+            .section-header h2 { color: #111; }
+            table { font-size: 11px; }
+        }
+    </style>
+</head>
+<body>
+
+<div class="bg-grid"></div>
+
+<!-- ===== HEADER ===== -->
+<header class="site-header" id="siteHeader">
+    <div class="header-brand">
+        <div class="logo">SA</div>
+        <div>
+            <h1>SimpleAkunting v5</h1>
+        </div>
+        <span class="version">Workflow Docs</span>
+    </div>
+    <div class="header-actions">
+        <button class="btn-print" onclick="window.print()">🖨️ Cetak</button>
+        <button class="btn-sidebar-toggle" id="sidebarToggle" onclick="toggleSidebar()">☰</button>
+    </div>
+</header>
+
+<!-- ===== SIDEBAR ===== -->
+<nav class="sidebar" id="sidebar">
+    <div class="sidebar-label">Overview</div>
+    <a href="#hero"><span class="nav-icon">🏠</span> Beranda</a>
+
+    <div class="sidebar-label">Arsitektur</div>
+    <a href="#s1"><span class="nav-icon">🏗️</span> Arsitektur Sistem <span class="nav-num">1</span></a>
+    <a href="#s2"><span class="nav-icon">🔑</span> Role & Permission <span class="nav-num">2</span></a>
+
+    <div class="sidebar-label">Setup & Transaksi</div>
+    <a href="#s3"><span class="nav-icon">🚀</span> Setup Awal <span class="nav-num">3</span></a>
+    <a href="#s4"><span class="nav-icon">🧾</span> Penjualan <span class="nav-num">4</span></a>
+    <a href="#s5"><span class="nav-icon">📦</span> Pembelian <span class="nav-num">5</span></a>
+    <a href="#s6"><span class="nav-icon">🔄</span> Retur <span class="nav-num">6</span></a>
+    <a href="#s7"><span class="nav-icon">📘</span> Jurnal Umum <span class="nav-num">7</span></a>
+    <a href="#s8"><span class="nav-icon">📱</span> Point of Sale <span class="nav-num">8</span></a>
+
+    <div class="sidebar-label">Modul Khusus</div>
+    <a href="#s9"><span class="nav-icon">🏦</span> Koperasi <span class="nav-num">9</span></a>
+    <a href="#s10"><span class="nav-icon">🏭</span> Manufaktur <span class="nav-num">10</span></a>
+    <a href="#s11"><span class="nav-icon">🌾</span> Pertanian PSAK 69 <span class="nav-num">11</span></a>
+    <a href="#s12"><span class="nav-icon">🏢</span> Aset Tetap <span class="nav-num">12</span></a>
+
+    <div class="sidebar-label">Akuntansi & Laporan</div>
+    <a href="#s13"><span class="nav-icon">🔒</span> Tutup Buku <span class="nav-num">13</span></a>
+    <a href="#s14"><span class="nav-icon">📊</span> Laporan <span class="nav-num">14</span></a>
+    <a href="#s15"><span class="nav-icon">📤</span> Import/Export <span class="nav-num">15</span></a>
+    <a href="#s16"><span class="nav-icon">💰</span> Kas & Transfer <span class="nav-num">16</span></a>
+
+    <div class="sidebar-label">Infrastruktur</div>
+    <a href="#s17"><span class="nav-icon">🏢</span> Multi-Cabang <span class="nav-num">17</span></a>
+    <a href="#s18"><span class="nav-icon">📝</span> Audit Trail <span class="nav-num">18</span></a>
+    <a href="#s19"><span class="nav-icon">🗺️</span> Cross-Module Map <span class="nav-num">19</span></a>
+    <a href="#s20"><span class="nav-icon">📋</span> Summary <span class="nav-num">20</span></a>
+    <a href="#s21"><span class="nav-icon">🗄️</span> ER Diagram <span class="nav-num">21</span></a>
+    <a href="#s22"><span class="nav-icon">⚙️</span> Architecture Patterns <span class="nav-num">22</span></a>
+</nav>
+
+<!-- ===== MAIN CONTENT ===== -->
+<main class="main-content">
+
+    <!-- HERO -->
+    <div class="hero" id="hero">
+        <div class="hero-badge">📊 Dokumentasi Alur Kerja Sistem</div>
+        <h1>Workflow SimpleAkunting v5</h1>
+        <p>Sistem Akuntansi Terpadu berbasis Laravel — Dagang, Manufaktur, Pertanian (PSAK 69), dan Koperasi Simpan Pinjam</p>
+        <div class="hero-stats">
+            <div class="hero-stat"><div class="num">22</div><div class="label">Total Workflow</div></div>
+            <div class="hero-stat"><div class="num">16</div><div class="label">Modul Bisnis</div></div>
+            <div class="hero-stat"><div class="num">14</div><div class="label">Auto-Jurnal</div></div>
+            <div class="hero-stat"><div class="num">5</div><div class="label">Level Role</div></div>
+        </div>
+    </div>
+
+    <!-- ===== SECTION 1: ARSITEKTUR ===== -->
+    <section class="section" id="s1">
+        <div class="section-header">
+            <div class="section-num" style="background:var(--gradient-primary)">1</div>
+            <div><h2>Arsitektur Sistem</h2><div class="subtitle">Multi-Tenant Architecture dengan Stancl Tenancy</div></div>
+        </div>
+        <div class="card">
+            <h3>🌐 1.1 Multi-Tenant Architecture</h3>
+            <div class="diagram-container">
+                <pre class="mermaid">
+graph TB
+    subgraph Central["🌐 Central Domain — simpleakunting.id"]
+        LP["Landing Page"]
+        CA["Central Admin Login"]
+        TM["Tenant Management"]
+        UM["User Management"]
+    end
+    subgraph Tenant1["🏢 Tenant A — demojaya.simpleakunting.id"]
+        T1App["Full Accounting App"]
+        T1DB["DB: dbv5_demojaya"]
+    end
+    subgraph Tenant2["🏢 Tenant B — kopcuy.simpleakunting.id"]
+        T2App["Full Accounting App"]
+        T2DB["DB: dbv5_kopcuy"]
+    end
+    CA --> TM
+    TM --> Tenant1
+    TM --> Tenant2
+    LP --> CA
+                </pre>
+            </div>
+            <div class="table-wrap">
+                <table>
+                    <thead><tr><th>Komponen</th><th>Detail</th></tr></thead>
+                    <tbody>
+                        <tr><td><strong>Framework</strong></td><td>Laravel 12.x + Stancl Tenancy</td></tr>
+                        <tr><td><strong>Central DB</strong></td><td><code>dbv5_central</code></td></tr>
+                        <tr><td><strong>Tenant DB</strong></td><td><code>dbv5_{tenant_id}</code></td></tr>
+                        <tr><td><strong>Domain</strong></td><td><code>{tenant}.simpleakunting.id</code></td></tr>
+                        <tr><td><strong>Mode</strong></td><td>Single-Tenant (<code>TENANCY_ENABLED=false</code>) atau Multi-Tenant</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        <div class="card">
+            <h3>🔀 1.2 Single-Tenant vs Multi-Tenant</h3>
+            <div class="diagram-container">
+                <pre class="mermaid">
+flowchart LR
+    ENV["TENANCY_ENABLED"]
+    ENV -->|false| ST["Single-Tenant Mode"]
+    ENV -->|true| MT["Multi-Tenant Mode"]
+    ST --> STR["web.php → auth_shared.php"]
+    MT --> MTR1["web.php → Central Routes"]
+    MT --> MTR2["tenant.php → auth_shared.php"]
+                </pre>
+            </div>
+        </div>
+    </section>
+
+    <!-- ===== SECTION 2: ROLE ===== -->
+    <section class="section" id="s2">
+        <div class="section-header">
+            <div class="section-num" style="background:var(--gradient-primary)">2</div>
+            <div><h2>Hierarki Role & Permission</h2><div class="subtitle">5 Level akses bertingkat</div></div>
+        </div>
+        <div class="card">
+            <div class="diagram-container">
+                <pre class="mermaid">
+graph TB
+    SU["🔑 Superuser"]
+    AD["🛡️ Admin"]
+    MN["📋 Manajer"]
+    ST["👤 Staff"]
+    KS["🧾 Kasir"]
+    SU --> AD --> MN --> ST --> KS
+    SU -.->|"Full Access + DB Mgmt"| ALL["Semua Modul"]
+    AD -.->|"Master Data + Settings"| ADMIN_MOD["Master Data, Users, Roles, Cabang, Tutup Buku"]
+    MN -.->|"Read Master + Approval"| MGR_MOD["Approval, Manufacturing, Agriculture, Import/Export"]
+    ST -.->|"Transaksi Harian"| STAFF_MOD["Penjualan, Pembelian, Jurnal, Koperasi"]
+    KS -.->|"POS + Laporan"| KASIR_MOD["Point of Sale, Laporan Dasar"]
+                </pre>
+            </div>
+            <div class="table-wrap">
+                <table>
+                    <thead><tr><th>Role</th><th>Akses Modul</th></tr></thead>
+                    <tbody>
+                        <tr><td><strong>Superuser</strong></td><td>Semua modul + Database Management (truncate, fresh, drop, seed) + bypass role check</td></tr>
+                        <tr><td><strong>Admin</strong></td><td>Master Data (CRUD Pelanggan, Pemasok, Persediaan, CoA), User & Role Management, Cabang, Tutup Buku, Aset Tetap</td></tr>
+                        <tr><td><strong>Manajer</strong></td><td>Read Master Data, Approval Workflow, Manufacturing, Agriculture, Import/Export, Laporan Koperasi</td></tr>
+                        <tr><td><strong>Staff</strong></td><td>Transaksi (Penjualan, Pembelian, Jurnal, Penerimaan, Pembayaran, Retur), Koperasi (Anggota, Simpanan, Pinjaman)</td></tr>
+                        <tr><td><strong>Kasir</strong></td><td>Point of Sale (POS), Laporan Dasar, Buku Besar</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </section>
+
+    <!-- ===== SECTION 3: SETUP ===== -->
+    <section class="section" id="s3">
+        <div class="section-header">
+            <div class="section-num" style="background:var(--gradient-emerald)">3</div>
+            <div><h2>Workflow Setup Awal</h2><div class="subtitle">Onboarding dari registrasi hingga siap bertransaksi</div></div>
+        </div>
+        <div class="card">
+            <div class="diagram-container">
+                <pre class="mermaid">
+flowchart TD
+    START(["🚀 Mulai"])
+    REG["Registrasi Tenant / Install"]
+    LOGIN["Login sebagai Superuser/Admin"]
+    PROF["Isi Profil Perusahaan"]
+    TYPE{"Pilih Jenis Usaha"}
+    COA["Setup Chart of Accounts"]
+    SEED["Seed CoA Template"]
+    DEFAULTS["Set Akun Default"]
+    MASTER["Input Master Data"]
+    PLG["Data Pelanggan"]
+    PMS["Data Pemasok"]
+    PRD["Data Persediaan"]
+    USR["Buat User & Role"]
+    CBG["Setup Cabang & Unit Usaha"]
+    READY(["✅ Siap Bertransaksi"])
+    START --> REG --> LOGIN --> PROF --> TYPE
+    TYPE -->|Dagang| COA
+    TYPE -->|Manufaktur| COA
+    TYPE -->|Pertanian| COA
+    TYPE -->|Jasa| COA
+    TYPE -->|Multi Usaha| COA
+    COA --> SEED --> DEFAULTS --> MASTER
+    MASTER --> PLG & PMS & PRD
+    PLG & PMS & PRD --> USR --> CBG --> READY
+                </pre>
+            </div>
+            <div class="alert alert-important">
+                <span class="alert-icon">📌</span>
+                <div><strong>Template CoA per jenis usaha:</strong><br>
+                    <strong>Dagang:</strong> 57 akun standar perdagangan &bull;
+                    <strong>Manufaktur:</strong> +25 akun produksi (Bahan Baku, WIP, Barang Jadi, BOP, TKL) &bull;
+                    <strong>Pertanian:</strong> +19 akun agrikultur sesuai PSAK 69
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ===== SECTION 4: PENJUALAN ===== -->
+    <section class="section" id="s4">
+        <div class="section-header">
+            <div class="section-num" style="background:var(--gradient-emerald)">4</div>
+            <div><h2>Workflow Penjualan</h2><div class="subtitle">Penawaran → Faktur → Penerimaan + Auto-Jurnal</div></div>
+        </div>
+        <div class="card">
+            <h3>🧾 4.1 Alur Lengkap: Penawaran → Faktur → Penerimaan</h3>
+            <div class="diagram-container">
+                <pre class="mermaid">
+flowchart TD
+    subgraph Quotation["📝 Fase Penawaran — Opsional"]
+        PW_CREATE["Buat Penawaran Penjualan"]
+        PW_CETAK["Cetak Surat Penawaran"]
+        PW_CONVERT["Konversi ke Faktur"]
+    end
+    subgraph Invoice["🧾 Fase Faktur"]
+        FP_CREATE["Buat Faktur Penjualan"]
+        FP_METHOD{"Metode Pembayaran?"}
+        FP_TUNAI["Tunai — Langsung Lunas"]
+        FP_KREDIT["Kredit — Piutang"]
+    end
+    subgraph AutoJournal["⚡ Auto-Jurnal Penjualan"]
+        AJ1["📘 Dr: Piutang Usaha / Kas"]
+        AJ2["📘 Cr: Penjualan Barang"]
+        AJ3["📘 Dr: HPP"]
+        AJ4["📘 Cr: Persediaan"]
+        STOK_UPDATE["📦 Update Stok — Kartu Stok: Keluar"]
+        PIUTANG_UPDATE["💰 Update Saldo Piutang Pelanggan"]
+    end
+    subgraph Receipt["💵 Fase Penerimaan"]
+        PR_CREATE["Buat Penerimaan Pembayaran"]
+        PR_SELECT["Pilih Faktur yang Dibayar"]
+        PR_AMOUNT["Input Jumlah Bayar"]
+        PR_JOURNAL["Auto-Jurnal Penerimaan"]
+        PR_J1["📘 Dr: Kas/Bank"]
+        PR_J2["📘 Cr: Piutang Usaha"]
+        STATUS_CHECK{"Sisa Tagihan = 0?"}
+        LUNAS["✅ Status: Lunas"]
+        BELUM["⏳ Status: Belum Lunas"]
+    end
+    PW_CREATE --> PW_CETAK --> PW_CONVERT --> FP_CREATE
+    FP_CREATE --> FP_METHOD
+    FP_METHOD --> FP_TUNAI --> AJ1
+    FP_METHOD --> FP_KREDIT --> AJ1
+    AJ1 --> AJ2 --> AJ3 --> AJ4
+    AJ4 --> STOK_UPDATE --> PIUTANG_UPDATE
+    PIUTANG_UPDATE -.->|"Jika Kredit"| PR_CREATE
+    PR_CREATE --> PR_SELECT --> PR_AMOUNT --> PR_JOURNAL
+    PR_JOURNAL --> PR_J1 --> PR_J2 --> STATUS_CHECK
+    STATUS_CHECK -->|Ya| LUNAS
+    STATUS_CHECK -->|Tidak| BELUM
+    BELUM -.->|"Bayar lagi"| PR_CREATE
+                </pre>
+            </div>
+            <h4>📘 Auto-Jurnal Detail Penjualan</h4>
+            <div class="table-wrap">
+                <table>
+                    <thead><tr><th>Kondisi</th><th>Debit</th><th>Kredit</th></tr></thead>
+                    <tbody>
+                        <tr><td><strong>Penjualan Kredit</strong></td><td>Piutang Usaha</td><td>Penjualan Barang</td></tr>
+                        <tr><td><strong>Penjualan Tunai</strong></td><td>Kas/Bank</td><td>Penjualan Barang</td></tr>
+                        <tr><td><strong>HPP (otomatis)</strong></td><td>HPP</td><td>Persediaan Barang</td></tr>
+                        <tr><td><strong>Penerimaan Bayar</strong></td><td>Kas/Bank</td><td>Piutang Usaha</td></tr>
+                    </tbody>
+                </table>
+            </div>
+            <div class="alert alert-note">
+                <span class="alert-icon">ℹ️</span>
+                <div>Setiap detail penjualan dapat memiliki <code>akun_pendapatan</code> sendiri, sehingga memungkinkan multi-akun penjualan dalam satu faktur.</div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ===== SECTION 5: PEMBELIAN ===== -->
+    <section class="section" id="s5">
+        <div class="section-header">
+            <div class="section-num" style="background:var(--gradient-amber)">5</div>
+            <div><h2>Workflow Pembelian</h2><div class="subtitle">RFQ → Faktur → Pembayaran + Auto-Jurnal</div></div>
+        </div>
+        <div class="card">
+            <div class="diagram-container">
+                <pre class="mermaid">
+flowchart TD
+    subgraph RFQ["📋 Fase RFQ"]
+        RFQ_CREATE["Buat Permintaan Penawaran"]
+        RFQ_CETAK["Cetak Surat RFQ"]
+        RFQ_CONVERT["Konversi ke Faktur Pembelian"]
+    end
+    subgraph PurchaseInv["🧾 Fase Faktur Pembelian"]
+        FB_CREATE["Buat Faktur Pembelian"]
+        FB_METHOD{"Metode Pembayaran?"}
+        FB_TUNAI["Tunai — Langsung Lunas"]
+        FB_KREDIT["Kredit — Utang"]
+    end
+    subgraph AutoJournal["⚡ Auto-Jurnal Pembelian"]
+        AJ1["📘 Dr: Persediaan Barang"]
+        AJ2["📘 Cr: Utang Usaha / Kas"]
+        STOK_UPDATE["📦 Update Stok — Kartu Stok: Masuk"]
+        UTANG_UPDATE["💰 Update Saldo Utang Pemasok"]
+    end
+    subgraph Payment["💸 Fase Pembayaran Utang"]
+        PB_CREATE["Buat Pembayaran Utang"]
+        PB_SELECT["Pilih Faktur yang Dibayar"]
+        PB_AMOUNT["Input Jumlah Bayar"]
+        PB_JOURNAL["Auto-Jurnal Pembayaran"]
+        PB_J1["📘 Dr: Utang Usaha"]
+        PB_J2["📘 Cr: Kas/Bank"]
+        STATUS_CHECK{"Sisa Tagihan = 0?"}
+        LUNAS["✅ Status: Lunas"]
+        BELUM["⏳ Status: Belum Lunas"]
+    end
+    RFQ_CREATE --> RFQ_CETAK --> RFQ_CONVERT --> FB_CREATE
+    FB_CREATE --> FB_METHOD
+    FB_METHOD --> FB_TUNAI --> AJ1
+    FB_METHOD --> FB_KREDIT --> AJ1
+    AJ1 --> AJ2 --> STOK_UPDATE --> UTANG_UPDATE
+    UTANG_UPDATE -.->|"Jika Kredit"| PB_CREATE
+    PB_CREATE --> PB_SELECT --> PB_AMOUNT --> PB_JOURNAL
+    PB_JOURNAL --> PB_J1 --> PB_J2 --> STATUS_CHECK
+    STATUS_CHECK -->|Ya| LUNAS
+    STATUS_CHECK -->|Tidak| BELUM
+    BELUM -.->|"Bayar lagi"| PB_CREATE
+                </pre>
+            </div>
+            <h4>📘 Auto-Jurnal Detail Pembelian</h4>
+            <div class="table-wrap">
+                <table>
+                    <thead><tr><th>Kondisi</th><th>Debit</th><th>Kredit</th></tr></thead>
+                    <tbody>
+                        <tr><td><strong>Pembelian Kredit</strong></td><td>Persediaan / Akun Beban</td><td>Utang Usaha</td></tr>
+                        <tr><td><strong>Pembelian Tunai</strong></td><td>Persediaan / Akun Beban</td><td>Kas/Bank</td></tr>
+                        <tr><td><strong>Pembayaran Utang</strong></td><td>Utang Usaha</td><td>Kas/Bank</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </section>
+
+    <!-- ===== SECTION 6: RETUR ===== -->
+    <section class="section" id="s6">
+        <div class="section-header">
+            <div class="section-num" style="background:var(--gradient-amber)">6</div>
+            <div><h2>Workflow Retur</h2><div class="subtitle">Retur Penjualan & Pembelian</div></div>
+        </div>
+        <div class="card">
+            <div class="diagram-container">
+                <pre class="mermaid">
+flowchart LR
+    subgraph ReturJual["🔄 Retur Penjualan"]
+        RJ1["Pilih Faktur Penjualan"]
+        RJ2["Pilih Barang & Qty Retur"]
+        RJ3["Auto-Jurnal Retur"]
+        RJ4["📘 Dr: Retur Penjualan"]
+        RJ5["📘 Cr: Piutang/Kas"]
+        RJ6["📦 Stok Masuk Kembali"]
+    end
+    subgraph ReturBeli["🔄 Retur Pembelian"]
+        RB1["Pilih Faktur Pembelian"]
+        RB2["Pilih Barang & Qty Retur"]
+        RB3["Auto-Jurnal Retur"]
+        RB4["📘 Dr: Utang Usaha / Kas"]
+        RB5["📘 Cr: Persediaan"]
+        RB6["📦 Stok Keluar"]
+    end
+    RJ1 --> RJ2 --> RJ3 --> RJ4 --> RJ5 --> RJ6
+    RB1 --> RB2 --> RB3 --> RB4 --> RB5 --> RB6
+                </pre>
+            </div>
+        </div>
+    </section>
+
+    <!-- ===== SECTION 7: JURNAL ===== -->
+    <section class="section" id="s7">
+        <div class="section-header">
+            <div class="section-num" style="background:var(--gradient-primary)">7</div>
+            <div><h2>Workflow Jurnal Umum</h2><div class="subtitle">Pusat pencatatan akuntansi — 14 sumber auto-jurnal</div></div>
+        </div>
+        <div class="card">
+            <div class="diagram-container">
+                <pre class="mermaid">
+flowchart TD
+    START{"Sumber Jurnal"}
+    AUTO["⚡ Auto-Jurnal"]
+    MANUAL["✏️ Jurnal Manual"]
+    KAS["💰 Jurnal Kas"]
+    AUTO --> LOCKED["🔒 is_locked = true"]
+    MANUAL --> APPROVE{"Perlu Approval?"}
+    KAS --> KAS_JURNAL["Jurnal Kas Masuk/Keluar"]
+    APPROVE -->|Ya| PENDING["⏳ Menunggu Approval"]
+    APPROVE -->|Tidak| POSTED["✅ Langsung Posted"]
+    PENDING --> APPROVED["Manajer/Admin Approve"]
+    APPROVED --> POSTED
+    POSTED --> BB["📖 Masuk Buku Besar"]
+    LOCKED --> BB
+    START --> AUTO
+    START --> MANUAL
+    START --> KAS
+                </pre>
+            </div>
+            <div class="alert alert-tip">
+                <span class="alert-icon">💡</span>
+                <div><strong>Validasi Periode Tertutup:</strong> Semua transaksi memanggil <code>validatePeriodOpen($tanggal)</code> dari trait <code>CheckClosedPeriod</code> untuk memastikan periode akuntansi masih terbuka.</div>
+            </div>
+            <h4>📋 7.1 Sumber Jurnal Otomatis</h4>
+            <div class="table-wrap">
+                <table>
+                    <thead><tr><th>Sumber</th><th>Trigger</th><th>Locked?</th></tr></thead>
+                    <tbody>
+                        <tr><td><code>penjualan</code></td><td>Faktur Penjualan di-create</td><td>✅ Yes</td></tr>
+                        <tr><td><code>pembelian</code></td><td>Faktur Pembelian di-create</td><td>✅ Yes</td></tr>
+                        <tr><td><code>penerimaan</code></td><td>Penerimaan Pembayaran di-create</td><td>✅ Yes</td></tr>
+                        <tr><td><code>pembayaran</code></td><td>Pembayaran Utang di-create</td><td>✅ Yes</td></tr>
+                        <tr><td><code>retur_penjualan</code></td><td>Retur Penjualan di-create</td><td>✅ Yes</td></tr>
+                        <tr><td><code>retur_pembelian</code></td><td>Retur Pembelian di-create</td><td>✅ Yes</td></tr>
+                        <tr><td><code>produksi</code></td><td>Order Produksi selesai</td><td>✅ Yes</td></tr>
+                        <tr><td><code>revaluasi</code></td><td>Revaluasi Aset Biologis</td><td>✅ Yes</td></tr>
+                        <tr><td><code>simpanan</code></td><td>Setoran/Penarikan Simpanan</td><td>✅ Yes</td></tr>
+                        <tr><td><code>pinjaman</code></td><td>Pencairan/Angsuran Pinjaman</td><td>✅ Yes</td></tr>
+                        <tr><td><code>kas</code></td><td>Jurnal Kas Manual</td><td>❌ No</td></tr>
+                        <tr><td><code>manual</code></td><td>Jurnal Umum Manual</td><td>❌ No</td></tr>
+                        <tr><td><code>tutup_buku</code></td><td>Penutupan Periode</td><td>✅ Yes</td></tr>
+                        <tr><td><code>pos_sale / pos_purchase</code></td><td>Transaksi POS</td><td>✅ Yes</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </section>
+
+    <!-- ===== SECTION 8: POS ===== -->
+    <section class="section" id="s8">
+        <div class="section-header">
+            <div class="section-num" style="background:var(--gradient-rose)">8</div>
+            <div><h2>Workflow Point of Sale (POS)</h2><div class="subtitle">Sesi Kasir → Transaksi → Shift Report</div></div>
+        </div>
+        <div class="card">
+            <div class="diagram-container">
+                <pre class="mermaid">
+flowchart TD
+    subgraph Session["📱 Sesi Kasir"]
+        OPEN["Buka Sesi / Shift"]
+        SALDO_AWAL["Input Saldo Awal Kas"]
+    end
+    subgraph Transaction["🛒 Transaksi"]
+        SEARCH["Cari Produk — barcode/nama"]
+        ADD["Tambah ke Keranjang"]
+        TOTAL["Hitung Total"]
+        PAY["Input Pembayaran"]
+        CHANGE["Hitung Kembalian"]
+    end
+    subgraph Completion["✅ Penyelesaian"]
+        SALE["Simpan Penjualan POS"]
+        AUTO_JOURNAL["Auto-Jurnal POS"]
+        AJ1["📘 Dr: Kas"]
+        AJ2["📘 Cr: Penjualan"]
+        AJ3["📘 Dr: HPP"]
+        AJ4["📘 Cr: Persediaan"]
+        STOK["📦 Update Stok"]
+        RECEIPT["🧾 Cetak Struk"]
+    end
+    subgraph CloseShift["📊 Tutup Shift"]
+        CLOSE["Tutup Sesi"]
+        REPORT["Laporan Shift"]
+        SUMMARY["Total Penjualan, Pembelian, Kas"]
+    end
+    OPEN --> SALDO_AWAL --> SEARCH
+    SEARCH --> ADD --> TOTAL --> PAY --> CHANGE --> SALE
+    SALE --> AUTO_JOURNAL --> AJ1 --> AJ2 --> AJ3 --> AJ4 --> STOK --> RECEIPT
+    RECEIPT -.->|"Transaksi baru"| SEARCH
+    RECEIPT -.->|"Selesai shift"| CLOSE
+    CLOSE --> REPORT --> SUMMARY
+                </pre>
+            </div>
+            <div class="alert alert-note">
+                <span class="alert-icon">ℹ️</span>
+                <div>POS juga mendukung <strong>pembelian langsung (POS Purchase)</strong> untuk pembelian tunai cepat, dengan auto-jurnal pembelian.</div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ===== SECTION 9: KOPERASI ===== -->
+    <section class="section" id="s9">
+        <div class="section-header">
+            <div class="section-num" style="background:linear-gradient(135deg,#9b59b6,#8b5cf6)">9</div>
+            <div><h2>Workflow Koperasi Simpan Pinjam</h2><div class="subtitle">Registrasi, Simpanan & Pinjaman Lifecycle</div></div>
+        </div>
+        <div class="card">
+            <h3>👤 9.1 Registrasi & Simpanan Anggota</h3>
+            <div class="diagram-container">
+                <pre class="mermaid">
+flowchart TD
+    subgraph Registration["👤 Registrasi Anggota"]
+        REG["Input Data Anggota"]
+        NIP["No. Anggota, Nama, KTP, dll."]
+        KARTU["Cetak Kartu Anggota"]
+    end
+    subgraph Savings["💰 Simpanan"]
+        JS["Pilih Jenis Simpanan"]
+        JS_POKOK["Simpanan Pokok — wajib 1x"]
+        JS_WAJIB["Simpanan Wajib — rutin"]
+        JS_SUKARELA["Simpanan Sukarela"]
+        JS_DEPOSITO["Simpanan Deposito"]
+        SETOR["Setor Simpanan"]
+        TARIK["Tarik Simpanan"]
+        AJ_SETOR["Auto-Jurnal: Dr Kas, Cr Simpanan"]
+        AJ_TARIK["Auto-Jurnal: Dr Simpanan, Cr Kas"]
+        KARTU_S["Kartu Simpanan per Anggota"]
+    end
+    REG --> NIP --> KARTU
+    KARTU --> JS
+    JS --> JS_POKOK & JS_WAJIB & JS_SUKARELA & JS_DEPOSITO
+    JS_POKOK & JS_WAJIB & JS_SUKARELA & JS_DEPOSITO --> SETOR
+    SETOR --> AJ_SETOR --> KARTU_S
+    JS_SUKARELA & JS_DEPOSITO --> TARIK
+    TARIK --> AJ_TARIK --> KARTU_S
+                </pre>
+            </div>
+        </div>
+        <div class="card">
+            <h3>💳 9.2 Workflow Pinjaman — Loan Lifecycle</h3>
+            <div class="diagram-container">
+                <pre class="mermaid">
+flowchart TD
+    subgraph Application["📋 Pengajuan"]
+        CREATE["Buat Permohonan Pinjaman"]
+        DATA["Input: Anggota, Jenis, Jumlah, Tenor"]
+        SIMULASI["Simulasi Angsuran"]
+        SUBMIT["Submit Permohonan"]
+    end
+    subgraph Approval["✅ Approval"]
+        INBOX["Approval Inbox"]
+        REVIEW["Review oleh Manajer/Admin"]
+        DECISION{"Keputusan?"}
+        APPROVE["✅ Disetujui"]
+        REJECT["❌ Ditolak"]
+    end
+    subgraph Disbursement["💵 Pencairan"]
+        CAIR_FORM["Form Pencairan"]
+        GENERATE_JADWAL["Generate Jadwal Angsuran"]
+        AUTO_JOURNAL_CAIR["Auto-Jurnal Pencairan"]
+        STATUS_ACTIVE["Status: Active"]
+    end
+    subgraph Repayment["💳 Angsuran"]
+        ANGSURAN_FORM["Form Bayar Angsuran"]
+        BAYAR["Bayar Angsuran ke-N"]
+        UPDATE_SISA["Update Sisa Pokok"]
+        CHECK{"Sisa Pokok = 0?"}
+        PAID_OFF["✅ Status: Paid Off"]
+        CONTINUE["⏳ Lanjut Angsuran"]
+    end
+    CREATE --> DATA --> SIMULASI --> SUBMIT
+    SUBMIT -->|"submitted"| INBOX
+    INBOX --> REVIEW --> DECISION
+    DECISION --> APPROVE
+    DECISION --> REJECT
+    APPROVE -->|"approved"| CAIR_FORM
+    CAIR_FORM --> GENERATE_JADWAL --> AUTO_JOURNAL_CAIR --> STATUS_ACTIVE
+    STATUS_ACTIVE --> ANGSURAN_FORM --> BAYAR --> UPDATE_SISA --> CHECK
+    CHECK -->|Ya| PAID_OFF
+    CHECK -->|Tidak| CONTINUE
+    CONTINUE -.-> ANGSURAN_FORM
+                </pre>
+            </div>
+        </div>
+        <div class="card">
+            <h3>📊 9.3 Status Flow Pinjaman</h3>
+            <div class="diagram-container">
+                <pre class="mermaid">
+stateDiagram-v2
+    [*] --> draft: Buat Permohonan
+    draft --> submitted: Submit
+    submitted --> approved: Approve
+    submitted --> rejected: Reject
+    approved --> disbursed: Cairkan
+    disbursed --> active: Status Aktif
+    active --> paid_off: Angsuran Lunas
+    active --> settled: Pelunasan Dipercepat
+    rejected --> [*]
+    paid_off --> [*]
+    settled --> [*]
+                </pre>
+            </div>
+        </div>
+    </section>
+
+    <!-- ===== SECTION 10: MANUFAKTUR ===== -->
+    <section class="section" id="s10">
+        <div class="section-header">
+            <div class="section-num" style="background:linear-gradient(135deg,#e74c3c,#c0392b)">10</div>
+            <div><h2>Workflow Manufaktur</h2><div class="subtitle">BOM → Order Produksi → Auto-Jurnal</div></div>
+        </div>
+        <div class="card">
+            <div class="diagram-container">
+                <pre class="mermaid">
+flowchart TD
+    subgraph BOM["📐 Bill of Materials"]
+        BOM_CREATE["Buat BOM"]
+        BOM_PRODUCT["Pilih Produk Jadi"]
+        BOM_MATERIAL["Definisikan Bahan Baku & Kuantitas"]
+        BOM_OVERHEAD["Set Biaya Overhead & TKL"]
+    end
+    subgraph Production["🏭 Order Produksi"]
+        PROD_CREATE["Buat Order Produksi"]
+        PROD_BOM["Pilih BOM"]
+        PROD_QTY["Set Jumlah Produksi"]
+        PROD_CALC["Kalkulasi Kebutuhan Material"]
+        PROD_EXEC["Eksekusi Produksi"]
+    end
+    subgraph Complete["✅ Penyelesaian"]
+        PROD_DONE["Selesai Produksi"]
+        AUTO_JOURNAL["Auto-Jurnal Produksi"]
+        AJ1["📘 Dr: Barang Jadi"]
+        AJ2["📘 Cr: Bahan Baku"]
+        AJ3["📘 Cr: Biaya TKL"]
+        AJ4["📘 Cr: Biaya Overhead"]
+        STOK_IN["📦 Stok Barang Jadi +"]
+        STOK_OUT["📦 Stok Bahan Baku −"]
+    end
+    BOM_CREATE --> BOM_PRODUCT --> BOM_MATERIAL --> BOM_OVERHEAD
+    BOM_OVERHEAD --> PROD_CREATE
+    PROD_CREATE --> PROD_BOM --> PROD_QTY --> PROD_CALC --> PROD_EXEC
+    PROD_EXEC --> PROD_DONE --> AUTO_JOURNAL
+    AUTO_JOURNAL --> AJ1 & AJ2 & AJ3 & AJ4
+    AJ1 & AJ2 --> STOK_IN & STOK_OUT
+                </pre>
+            </div>
+        </div>
+    </section>
+
+    <!-- ===== SECTION 11: PERTANIAN ===== -->
+    <section class="section" id="s11">
+        <div class="section-header">
+            <div class="section-num" style="background:linear-gradient(135deg,#1abc9c,#16a085)">11</div>
+            <div><h2>Workflow Pertanian PSAK 69</h2><div class="subtitle">Aset Biologis & Revaluasi Nilai Wajar</div></div>
+        </div>
+        <div class="card">
+            <div class="diagram-container">
+                <pre class="mermaid">
+flowchart TD
+    subgraph BiologicalAsset["🌾 Aset Biologis"]
+        CREATE["Registrasi Aset Biologis"]
+        TYPE{"Jenis Aset?"}
+        ANNUAL["Tanaman Semusim"]
+        LIVESTOCK["Hewan Ternak Potong"]
+        FORESTRY["Tanaman Kehutanan"]
+        BREEDING["Hewan Ternak Bibit"]
+        BEARER["Tanaman Produktif"]
+        INITIAL["Set Nilai Perolehan Awal"]
+    end
+    subgraph Revaluation["📈 Revaluasi Nilai Wajar"]
+        REVAL["Lakukan Revaluasi"]
+        FAIR_VALUE["Input Nilai Wajar Baru"]
+        CALC["Hitung Selisih Nilai"]
+        GAIN_LOSS{"Selisih?"}
+        GAIN["🔺 Keuntungan"]
+        LOSS["🔻 Kerugian"]
+        LOG["📝 Log Revaluasi"]
+    end
+    CREATE --> TYPE
+    TYPE --> ANNUAL & LIVESTOCK & FORESTRY & BREEDING & BEARER
+    ANNUAL & LIVESTOCK & FORESTRY & BREEDING & BEARER --> INITIAL
+    INITIAL --> REVAL --> FAIR_VALUE --> CALC --> GAIN_LOSS
+    GAIN_LOSS -->|Positif| GAIN --> LOG
+    GAIN_LOSS -->|Negatif| LOSS --> LOG
+                </pre>
+            </div>
+        </div>
+    </section>
+
+    <!-- ===== SECTION 12: ASET TETAP ===== -->
+    <section class="section" id="s12">
+        <div class="section-header">
+            <div class="section-num" style="background:var(--gradient-amber)">12</div>
+            <div><h2>Workflow Aset Tetap & Penyusutan</h2><div class="subtitle">Registrasi → Depresiasi → Pelepasan</div></div>
+        </div>
+        <div class="card">
+            <div class="diagram-container">
+                <pre class="mermaid">
+flowchart TD
+    subgraph Setup["🏗️ Setup"]
+        GROUP["Buat Grup Aset Tetap"]
+        GROUP_DATA["Nama, Akun, Metode, Umur Ekonomis"]
+    end
+    subgraph Registration["📋 Registrasi Aset"]
+        CREATE["Daftarkan Aset Tetap"]
+        DATA["Nama, Kode, Harga Perolehan"]
+        ASSIGN["Assign ke Grup"]
+    end
+    subgraph Depreciation["📉 Penyusutan"]
+        RUN["Jalankan Penyusutan Bulanan"]
+        CALC["Hitung Beban Penyusutan"]
+        JOURNAL["Auto-Jurnal Penyusutan"]
+        AJ1["📘 Dr: Beban Penyusutan"]
+        AJ2["📘 Cr: Akumulasi Penyusutan"]
+    end
+    subgraph Disposal["🗑️ Pelepasan Aset"]
+        DISPOSE["Lepaskan Aset"]
+        METHOD{"Metode?"}
+        SELL["Dijual"]
+        DISCARD["Dihapusbukukan"]
+        JOURNAL_DISPOSE["Auto-Jurnal Pelepasan"]
+    end
+    GROUP --> GROUP_DATA --> CREATE --> DATA --> ASSIGN
+    ASSIGN --> RUN --> CALC --> JOURNAL --> AJ1 --> AJ2
+    ASSIGN -.-> DISPOSE --> METHOD
+    METHOD --> SELL --> JOURNAL_DISPOSE
+    METHOD --> DISCARD --> JOURNAL_DISPOSE
+                </pre>
+            </div>
+        </div>
+    </section>
+
+    <!-- ===== SECTION 13: TUTUP BUKU ===== -->
+    <section class="section" id="s13">
+        <div class="section-header">
+            <div class="section-num" style="background:linear-gradient(135deg,#e74c3c,#c0392b)">13</div>
+            <div><h2>Workflow Tutup Buku</h2><div class="subtitle">Diagnosa → Closing → Lock Periode</div></div>
+        </div>
+        <div class="card">
+            <div class="diagram-container">
+                <pre class="mermaid">
+flowchart TD
+    CHECK_BALANCE["🔍 Diagnosa Neraca"]
+    REVIEW["Review Jurnal tidak balance"]
+    FIX["Perbaiki kesalahan"]
+    CREATE["Buat Penutupan Periode"]
+    SELECT_PERIOD["Pilih Bulan & Tahun"]
+    PROCESS["Proses Tutup Buku"]
+    CALC_INCOME["Hitung Total Pendapatan"]
+    CALC_EXPENSE["Hitung Total Beban"]
+    CLOSING_JOURNAL["Auto-Jurnal Penutupan"]
+    CJ1["📘 Pendapatan → Ikhtisar L/R"]
+    CJ2["📘 Beban → Ikhtisar L/R"]
+    CJ3["📘 Transfer ke Laba Ditahan"]
+    LOCK["🔒 Periode Terkunci"]
+    BLOCKED["❌ Transaksi diblokir"]
+    CHECK_BALANCE --> REVIEW --> FIX --> CREATE --> SELECT_PERIOD --> PROCESS
+    PROCESS --> CALC_INCOME --> CALC_EXPENSE --> CLOSING_JOURNAL
+    CLOSING_JOURNAL --> CJ1 --> CJ2 --> CJ3 --> LOCK --> BLOCKED
+                </pre>
+            </div>
+            <div class="alert alert-warning">
+                <span class="alert-icon">⚠️</span>
+                <div><strong>Peringatan:</strong> Setelah periode ditutup, <strong>tidak ada transaksi</strong> yang dapat ditambahkan atau diubah pada periode tersebut. Pastikan semua data sudah benar sebelum menutup buku!</div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ===== SECTION 14: LAPORAN ===== -->
+    <section class="section" id="s14">
+        <div class="section-header">
+            <div class="section-num" style="background:var(--gradient-emerald)">14</div>
+            <div><h2>Workflow Laporan Keuangan</h2><div class="subtitle">Dari Jurnal hingga Financial Statements</div></div>
+        </div>
+        <div class="card">
+            <div class="diagram-container">
+                <pre class="mermaid">
+graph TD
+    subgraph Input["📥 Data Masuk"]
+        JU["Jurnal Umum"]
+        JD["Jurnal Detail"]
+    end
+    subgraph Process["⚙️ Proses"]
+        BB["Buku Besar per Akun"]
+        NS["Neraca Saldo"]
+        NL["Neraca Lajur"]
+    end
+    subgraph Output["📊 Laporan Utama"]
+        NERACA["Neraca / Balance Sheet"]
+        LR["Laba Rugi"]
+        AK_L["Arus Kas Langsung"]
+        AK_TL["Arus Kas Tidak Langsung"]
+        PE["Perubahan Ekuitas"]
+    end
+    subgraph Additional["📋 Laporan Pendukung"]
+        PI["Buku Pembantu Piutang"]
+        UT["Buku Pembantu Utang"]
+        PER["Laporan Persediaan"]
+        MUT["Mutasi Persediaan"]
+        AT["Daftar Aset Tetap"]
+        DIAG["Diagnosa Neraca"]
+    end
+    subgraph Koperasi["🏦 Laporan Koperasi"]
+        OUT["Outstanding Simpan Pinjam"]
+        KOL["Kolektibilitas Pinjaman"]
+        SHU["Perhitungan SHU"]
+        AGING["Aging Pinjaman"]
+    end
+    JU --> JD --> BB --> NS --> NL
+    NL --> NERACA & LR & AK_L & AK_TL & PE
+    BB --> PI & UT & PER & MUT & AT & DIAG
+    BB --> OUT & KOL & SHU & AGING
+                </pre>
+            </div>
+            <div class="table-wrap">
+                <table>
+                    <thead><tr><th>Laporan</th><th>Akses Role</th><th>Export</th></tr></thead>
+                    <tbody>
+                        <tr><td>Neraca</td><td>Semua</td><td>PDF</td></tr>
+                        <tr><td>Laba Rugi</td><td>Semua</td><td>PDF</td></tr>
+                        <tr><td>Arus Kas</td><td>Semua</td><td>—</td></tr>
+                        <tr><td>Perubahan Ekuitas</td><td>Semua</td><td>—</td></tr>
+                        <tr><td>Buku Besar</td><td>Semua</td><td>—</td></tr>
+                        <tr><td>Diagnosa Neraca</td><td>Semua</td><td>—</td></tr>
+                        <tr><td>Laporan Koperasi</td><td>Manajer+</td><td>—</td></tr>
+                        <tr><td>Download Center</td><td>Semua</td><td>Excel/CSV</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </section>
+
+    <!-- ===== SECTION 15: IMPORT/EXPORT ===== -->
+    <section class="section" id="s15">
+        <div class="section-header">
+            <div class="section-num" style="background:var(--gradient-primary)">15</div>
+            <div><h2>Workflow Import/Export Data</h2><div class="subtitle">Export, Import template & Sinkronisasi Jurnal</div></div>
+        </div>
+        <div class="card">
+            <div class="diagram-container">
+                <pre class="mermaid">
+flowchart LR
+    subgraph Export["📤 Export"]
+        EX_MOD["Pilih Modul"]
+        EX_FILE["Download Excel/CSV"]
+    end
+    subgraph Import["📥 Import"]
+        IM_TEMPLATE["Download Template"]
+        IM_FILL["Isi Data"]
+        IM_UPLOAD["Upload File"]
+        IM_VALIDATE["Validasi"]
+        IM_PROCESS["Proses Import"]
+        IM_RESULT["Hasil per Baris"]
+    end
+    subgraph Sync["🔄 Sync"]
+        SYNC_JUR["Sync Jurnal"]
+        SYNC_DESC["Regenerasi jurnal"]
+    end
+    EX_MOD --> EX_FILE
+    IM_TEMPLATE --> IM_FILL --> IM_UPLOAD --> IM_VALIDATE --> IM_PROCESS --> IM_RESULT
+    SYNC_JUR --> SYNC_DESC
+                </pre>
+            </div>
+        </div>
+    </section>
+
+    <!-- ===== SECTION 16: KAS ===== -->
+    <section class="section" id="s16">
+        <div class="section-header">
+            <div class="section-num" style="background:var(--gradient-amber)">16</div>
+            <div><h2>Workflow Kas & Transfer</h2><div class="subtitle">Kas masuk, keluar, dan transfer antar rekening</div></div>
+        </div>
+        <div class="card">
+            <div class="diagram-container">
+                <pre class="mermaid">
+flowchart LR
+    KAS_INDEX["📊 Lihat Saldo Kas/Bank"]
+    KAS_MASUK["💰 Kas Masuk"]
+    KAS_KELUAR["💸 Kas Keluar"]
+    KAS_TRANSFER["🔄 Transfer Antar Kas/Bank"]
+    KAS_TRANSFER --> TF_FROM["Dari Akun A"]
+    TF_FROM --> TF_TO["Ke Akun B"]
+    TF_TO --> TF_JOURNAL["Auto-Jurnal Transfer"]
+    TF_JOURNAL --> TF1["📘 Dr: Kas/Bank B"]
+    TF_JOURNAL --> TF2["📘 Cr: Kas/Bank A"]
+    KAS_INDEX --> KAS_MASUK & KAS_KELUAR & KAS_TRANSFER
+                </pre>
+            </div>
+        </div>
+    </section>
+
+    <!-- ===== SECTION 17: MULTI-CABANG ===== -->
+    <section class="section" id="s17">
+        <div class="section-header">
+            <div class="section-num" style="background:var(--gradient-rose)">17</div>
+            <div><h2>Data Isolation: Multi-Cabang</h2><div class="subtitle">Isolasi data otomatis per cabang & unit usaha</div></div>
+        </div>
+        <div class="card">
+            <div class="diagram-container">
+                <pre class="mermaid">
+graph TD
+    subgraph Company["🏢 Perusahaan"]
+        C1["Cabang Jakarta"]
+        C2["Cabang Surabaya"]
+        C3["Cabang Makassar"]
+    end
+    subgraph Units["📦 Unit Usaha per Cabang"]
+        C1 --> U1["Toko Retail"]
+        C1 --> U2["Grosir"]
+        C2 --> U3["Workshop"]
+        C2 --> U4["Showroom"]
+    end
+    subgraph Isolation["🔒 Isolasi Data"]
+        SCOPE["CabangScope — Global Scope"]
+        TRAIT["HasCabang Trait"]
+        AUTO["Auto-set id_cabang"]
+        FILTER["Auto-filter per cabang user"]
+    end
+    Company --> Isolation
+    SCOPE --> FILTER
+    TRAIT --> AUTO
+                </pre>
+            </div>
+            <div class="alert alert-important">
+                <span class="alert-icon">📌</span>
+                <div><strong>Trait HasCabang</strong> secara otomatis: (1) Menambahkan CabangScope untuk memfilter data, (2) Auto-set id_cabang & id_unit_usaha saat create, (3) User hanya melihat data cabangnya sendiri (kecuali Superuser).</div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ===== SECTION 18: AUDIT TRAIL ===== -->
+    <section class="section" id="s18">
+        <div class="section-header">
+            <div class="section-num" style="background:var(--gradient-primary)">18</div>
+            <div><h2>Audit Trail & Activity Logging</h2><div class="subtitle">Pelacakan otomatis setiap perubahan data</div></div>
+        </div>
+        <div class="card">
+            <div class="diagram-container">
+                <pre class="mermaid">
+flowchart LR
+    MODEL["Model + LogsActivity"]
+    MODEL -->|Created| LOG_C["📝 Log: dibuat"]
+    MODEL -->|Updated| LOG_U["📝 Log: diubah + diff"]
+    MODEL -->|Deleted| LOG_D["📝 Log: dihapus"]
+    LOG_C & LOG_U & LOG_D --> AUDIT["audit_trails"]
+    AUDIT --> VIEWER["📋 Audit Trail Viewer"]
+                </pre>
+            </div>
+        </div>
+    </section>
+
+    <!-- ===== SECTION 19: CROSS-MODULE ===== -->
+    <section class="section" id="s19">
+        <div class="section-header">
+            <div class="section-num" style="background:var(--gradient-emerald)">19</div>
+            <div><h2>Cross-Module Interaction Map</h2><div class="subtitle">Bagaimana setiap modul saling terhubung</div></div>
+        </div>
+        <div class="card">
+            <div class="diagram-container">
+                <pre class="mermaid">
+graph TB
+    subgraph Core["🔵 Core Accounting"]
+        COA["Chart of Accounts"]
+        JU["Jurnal Umum"]
+        BB["Buku Besar"]
+    end
+    subgraph Sales["🟢 Penjualan"]
+        PNW["Penawaran"]
+        PJ["Faktur"]
+        PN["Penerimaan"]
+        RJ["Retur"]
+    end
+    subgraph Purchase["🟠 Pembelian"]
+        RFQ["RFQ"]
+        PB["Faktur"]
+        BY["Pembayaran"]
+        RB["Retur"]
+    end
+    subgraph Inv["🟡 Persediaan"]
+        MP["Master"]
+        KS["Kartu Stok"]
+    end
+    subgraph Mfg["🔴 Manufaktur"]
+        BOM["BOM"]
+        PRD["Produksi"]
+    end
+    subgraph Agri["🌿 Pertanian"]
+        AB["Aset Biologis"]
+        RV["Revaluasi"]
+    end
+    subgraph Kop["🟣 Koperasi"]
+        ANG["Anggota"]
+        SMP["Simpanan"]
+        PNJ["Pinjaman"]
+    end
+    subgraph POS_M["🟤 POS"]
+        POS["Point of Sale"]
+    end
+    PNW -->|convert| PJ
+    RFQ -->|convert| PB
+    PJ -->|auto-jurnal| JU
+    PB -->|auto-jurnal| JU
+    PN -->|auto-jurnal| JU
+    BY -->|auto-jurnal| JU
+    RJ -->|auto-jurnal| JU
+    RB -->|auto-jurnal| JU
+    PRD -->|auto-jurnal| JU
+    RV -->|auto-jurnal| JU
+    SMP -->|auto-jurnal| JU
+    PNJ -->|auto-jurnal| JU
+    POS -->|auto-jurnal| JU
+    PJ -->|stok| KS
+    PB -->|stok| KS
+    PRD -->|stok| KS
+    POS -->|stok| KS
+    KS -->|track| MP
+    BOM -->|uses| MP
+    PRD -->|uses| BOM
+    JU --> BB
+                </pre>
+            </div>
+        </div>
+    </section>
+
+    <!-- ===== SECTION 20: SUMMARY ===== -->
+    <section class="section" id="s20">
+        <div class="section-header">
+            <div class="section-num" style="background:var(--gradient-primary)">20</div>
+            <div><h2>Summary: Seluruh Workflow</h2><div class="subtitle">Ringkasan lengkap dalam satu pandangan</div></div>
+        </div>
+        <div class="summary-card">
+            <div class="table-wrap">
+                <table>
+                    <thead><tr><th>#</th><th>Modul</th><th>Workflow Utama</th><th>Auto-Jurnal</th><th>Role Min.</th></tr></thead>
+                    <tbody>
+                        <tr><td>1</td><td><strong>Setup</strong></td><td>Profil → CoA → Master Data → Users</td><td>—</td><td>Admin</td></tr>
+                        <tr><td>2</td><td><strong>Penjualan</strong></td><td>Penawaran → Faktur → Penerimaan</td><td>✅</td><td>Staff</td></tr>
+                        <tr><td>3</td><td><strong>Pembelian</strong></td><td>RFQ → Faktur → Pembayaran</td><td>✅</td><td>Staff</td></tr>
+                        <tr><td>4</td><td><strong>Retur</strong></td><td>Pilih Faktur → Input Retur</td><td>✅</td><td>Staff</td></tr>
+                        <tr><td>5</td><td><strong>POS</strong></td><td>Buka Shift → Transaksi → Tutup Shift</td><td>✅</td><td>Kasir</td></tr>
+                        <tr><td>6</td><td><strong>Jurnal</strong></td><td>Manual / Kas / Auto dari transaksi</td><td>✅</td><td>Staff</td></tr>
+                        <tr><td>7</td><td><strong>Koperasi</strong></td><td>Registrasi → Simpanan → Pinjaman</td><td>✅</td><td>Staff</td></tr>
+                        <tr><td>8</td><td><strong>Approval</strong></td><td>Submit → Review → Approve/Reject</td><td>—</td><td>Manajer</td></tr>
+                        <tr><td>9</td><td><strong>Manufaktur</strong></td><td>BOM → Order Produksi → Selesai</td><td>✅</td><td>Manajer</td></tr>
+                        <tr><td>10</td><td><strong>Pertanian</strong></td><td>Registrasi Aset → Revaluasi</td><td>✅</td><td>Manajer</td></tr>
+                        <tr><td>11</td><td><strong>Aset Tetap</strong></td><td>Registrasi → Penyusutan → Pelepasan</td><td>✅</td><td>Admin</td></tr>
+                        <tr><td>12</td><td><strong>Tutup Buku</strong></td><td>Diagnosa → Closing → Lock</td><td>✅</td><td>Admin</td></tr>
+                        <tr><td>13</td><td><strong>Laporan</strong></td><td>Neraca, L/R, Arus Kas, dll.</td><td>—</td><td>Semua</td></tr>
+                        <tr><td>14</td><td><strong>Import/Export</strong></td><td>Template → Upload → Validasi</td><td>—</td><td>Manajer</td></tr>
+                        <tr><td>15</td><td><strong>Audit Trail</strong></td><td>Auto-log create/update/delete</td><td>—</td><td>Admin</td></tr>
+                        <tr><td>16</td><td><strong>Database</strong></td><td>Truncate / Fresh / Drop / Seed</td><td>—</td><td>Superuser</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        <div class="alert alert-caution">
+            <span class="alert-icon">🚨</span>
+            <div><strong>Prinsip Auto-Jurnal:</strong> Semua jurnal otomatis memiliki flag <code>is_locked = true</code> dan <strong>tidak dapat diedit langsung</strong>. Untuk koreksi, gunakan jurnal penyesuaian manual atau hapus/edit transaksi asalnya.</div>
+        </div>
+    </section>
+
+    <!-- ===== SECTION 21: ER DIAGRAM ===== -->
+    <section class="section" id="s21">
+        <div class="section-header">
+            <div class="section-num" style="background:var(--gradient-rose)">21</div>
+            <div><h2>Entity Relationship Map</h2><div class="subtitle">Hubungan antar entitas dalam database</div></div>
+        </div>
+        <div class="card">
+            <div class="diagram-container">
+                <pre class="mermaid">
+erDiagram
+    TENANT ||--o{ CABANG : has
+    CABANG ||--o{ UNIT_USAHA : has
+    CABANG ||--o{ USER : employs
+    UNIT_USAHA ||--o{ PROJECT : contains
+    USER }o--|| ROLE : has
+    ROLE }o--o{ PERMISSION : "many-to-many"
+    PELANGGAN ||--o{ PENJUALAN : buys
+    PEMASOK ||--o{ PEMBELIAN : supplies
+    PENJUALAN ||--o{ PENJUALAN_DETAIL : contains
+    PENJUALAN }o--|| JURNAL : generates
+    PEMBELIAN ||--o{ PEMBELIAN_DETAIL : contains
+    PEMBELIAN }o--|| JURNAL : generates
+    PERSEDIAAN ||--o{ KARTU_STOK : tracks
+    BOM ||--o{ BOM_DETAIL : contains
+    BOM ||--o{ PRODUKSI : produces
+    JURNAL ||--o{ JURNAL_DETAIL : contains
+    JURNAL_DETAIL }o--|| AKUN : references
+    ANGGOTA ||--o{ SIMPANAN : deposits
+    ANGGOTA ||--o{ PINJAMAN : borrows
+    PINJAMAN ||--o{ PINJAMAN_JADWAL : schedule
+    PINJAMAN ||--o{ PINJAMAN_ANGSURAN : payments
+    PINJAMAN ||--o{ APPROVAL_HISTORY : approvals
+    ASET_BIOLOGIS ||--o{ LOG_REVALUASI : revaluations
+    FIXED_ASSET_GROUP ||--o{ FIXED_ASSET : groups
+    POS_SESSION ||--o{ PENJUALAN : records
+                </pre>
+            </div>
+        </div>
+    </section>
+
+    <!-- ===== SECTION 22: PATTERNS ===== -->
+    <section class="section" id="s22">
+        <div class="section-header">
+            <div class="section-num" style="background:var(--gradient-primary)">22</div>
+            <div><h2>Common Architecture Patterns</h2><div class="subtitle">Pola arsitektur yang digunakan secara konsisten</div></div>
+        </div>
+        <div class="card">
+            <div class="table-wrap">
+                <table>
+                    <thead><tr><th>Pattern</th><th>Deskripsi</th><th>Digunakan Oleh</th></tr></thead>
+                    <tbody>
+                        <tr><td><span class="pattern-badge">CheckClosedPeriod</span></td><td>Validasi tanggal transaksi terhadap periode tertutup</td><td>Penjualan, Pembelian, Penerimaan, Pembayaran, Jurnal, Pinjaman, Simpanan, POS, Retur</td></tr>
+                        <tr><td><span class="pattern-badge">CheckSaldoTrait</span></td><td>Cek kecukupan saldo kas/bank sebelum transaksi keluar</td><td>Pembayaran, Jurnal</td></tr>
+                        <tr><td><span class="pattern-badge">HasCabang</span></td><td>Auto-filter data per cabang + auto-set cabang saat create</td><td>Semua model transaksional</td></tr>
+                        <tr><td><span class="pattern-badge">LogsActivity</span></td><td>Auto-log create/update/delete ke audit trail</td><td>Penjualan, Pembelian, Jurnal, Persediaan, Akun, Penawaran, RFQ, Pinjaman</td></tr>
+                        <tr><td><span class="pattern-badge">ClearsDashboardCache</span></td><td>Invalidasi cache dashboard saat data berubah</td><td>Penjualan, Pembelian, Jurnal, POS, Simpanan, Pinjaman</td></tr>
+                        <tr><td><span class="pattern-badge">Reverse-then-Apply</span></td><td>Pada edit/hapus: balikkan semua dampak lalu terapkan ulang</td><td>Penjualan, Pembelian, Manufaktur</td></tr>
+                        <tr><td><span class="pattern-badge">Atomic Number Gen</span></td><td><code>lockForUpdate()</code> mencegah duplikat nomor transaksi</td><td>Semua controller transaksi</td></tr>
+                        <tr><td><span class="pattern-badge">Quotation→Transaction</span></td><td>Konversi dokumen non-finansial ke transaksi</td><td>Penawaran→Penjualan, RFQ→Pembelian</td></tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <h4>📋 Number Format per Modul</h4>
+            <div class="number-format-grid">
+                <div class="nf-item"><div class="nf-module">Penjualan</div><div class="nf-format">INV-XXXXX</div><div class="nf-example">INV-00042</div></div>
+                <div class="nf-item"><div class="nf-module">Pembelian</div><div class="nf-format">PUR-XXXXX</div><div class="nf-example">PUR-00015</div></div>
+                <div class="nf-item"><div class="nf-module">Jurnal Manual</div><div class="nf-format">JU-XXXXX</div><div class="nf-example">JU-00103</div></div>
+                <div class="nf-item"><div class="nf-module">Kas Masuk</div><div class="nf-format">KM-XXXXX</div><div class="nf-example">KM-00007</div></div>
+                <div class="nf-item"><div class="nf-module">Kas Keluar</div><div class="nf-format">KK-XXXXX</div><div class="nf-example">KK-00012</div></div>
+                <div class="nf-item"><div class="nf-module">Penawaran</div><div class="nf-format">QTN-XXXXX</div><div class="nf-example">QTN-00003</div></div>
+                <div class="nf-item"><div class="nf-module">RFQ</div><div class="nf-format">RFQ-XXXXX</div><div class="nf-example">RFQ-00005</div></div>
+                <div class="nf-item"><div class="nf-module">POS Sale</div><div class="nf-format">POS-YYYYMMDD-XXXXX</div><div class="nf-example">POS-20260605-00001</div></div>
+                <div class="nf-item"><div class="nf-module">POS Purchase</div><div class="nf-format">POB-YYYYMMDD-XXXXX</div><div class="nf-example">POB-20260605-00001</div></div>
+                <div class="nf-item"><div class="nf-module">Pinjaman</div><div class="nf-format">PIN-YYYY-XXXX</div><div class="nf-example">PIN-2026-0001</div></div>
+                <div class="nf-item"><div class="nf-module">Simpanan</div><div class="nf-format">SIM-YYYYMM-XXXX</div><div class="nf-example">SIM-202606-0001</div></div>
+                <div class="nf-item"><div class="nf-module">Retur Jual</div><div class="nf-format">RJ-YYYYMMDD-XXXX</div><div class="nf-example">RJ-20260605-0001</div></div>
+                <div class="nf-item"><div class="nf-module">Retur Beli</div><div class="nf-format">RB-YYYYMMDD-XXXX</div><div class="nf-example">RB-20260605-0001</div></div>
+                <div class="nf-item"><div class="nf-module">Produksi</div><div class="nf-format">PRD-XXXXX</div><div class="nf-example">PRD-00001</div></div>
+                <div class="nf-item"><div class="nf-module">Revaluasi</div><div class="nf-format">REV-XXXXX</div><div class="nf-example">REV-00001</div></div>
+                <div class="nf-item"><div class="nf-module">Tutup Buku</div><div class="nf-format">CLOSING-YYYY-MM</div><div class="nf-example">CLOSING-2026-06</div></div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ===== FOOTER ===== -->
+    <footer class="site-footer">
+        <p>Dokumen ini di-generate berdasarkan analisis kode sumber <strong>SimpleAkunting v5</strong></p>
+        <p style="margin-top:4px; font-size: 12px;">Terakhir diperbarui: 5 Juni 2026</p>
+        <div class="tech-stack">
+            <span class="tech-pill">Laravel 12.x</span>
+            <span class="tech-pill">Bootstrap 5.3</span>
+            <span class="tech-pill">MySQL 8.0+</span>
+            <span class="tech-pill">PHP 8.3</span>
+            <span class="tech-pill">Stancl Tenancy</span>
+            <span class="tech-pill">Vite</span>
+        </div>
+    </footer>
+
+</main>
+
+<!-- BACK TO TOP -->
+<button class="back-to-top" id="backToTop" onclick="window.scrollTo({top:0,behavior:'smooth'})">↑</button>
+
+<script>
+    // ===== MERMAID INIT =====
+    mermaid.initialize({
+        startOnLoad: true,
+        theme: 'dark',
+        themeVariables: {
+            primaryColor: '#1e3a5f',
+            primaryTextColor: '#e2e8f0',
+            primaryBorderColor: '#3b82f6',
+            lineColor: '#475569',
+            secondaryColor: '#1a2744',
+            tertiaryColor: '#0f172a',
+            fontFamily: 'Inter, sans-serif',
+            fontSize: '13px',
+            nodeBorder: '#3b82f6',
+            clusterBkg: 'rgba(59,130,246,0.06)',
+            clusterBorder: 'rgba(59,130,246,0.2)',
+            edgeLabelBackground: '#1e293b',
+        },
+        flowchart: { curve: 'basis', padding: 16, htmlLabels: true },
+        er: { fontSize: 12 }
+    });
+
+    // ===== SIDEBAR TOGGLE =====
+    function toggleSidebar() {
+        document.getElementById('sidebar').classList.toggle('open');
+    }
+
+    // close sidebar on link click (mobile)
+    document.querySelectorAll('.sidebar a').forEach(a => {
+        a.addEventListener('click', () => {
+            if (window.innerWidth <= 1024) {
+                document.getElementById('sidebar').classList.remove('open');
+            }
+        });
+    });
+
+    // ===== HEADER SCROLL EFFECT =====
+    const header = document.getElementById('siteHeader');
+    const backToTop = document.getElementById('backToTop');
+    window.addEventListener('scroll', () => {
+        const scrolled = window.scrollY > 50;
+        header.classList.toggle('scrolled', scrolled);
+        backToTop.classList.toggle('visible', window.scrollY > 400);
+    });
+
+    // ===== ACTIVE NAV TRACKING =====
+    const sections = document.querySelectorAll('.section');
+    const navLinks = document.querySelectorAll('.sidebar a');
+
+    const observer = new IntersectionObserver((entries) => {
+        entries.forEach(entry => {
+            if (entry.isIntersecting) {
+                navLinks.forEach(l => l.classList.remove('active'));
+                const id = entry.target.id;
+                const link = document.querySelector(`.sidebar a[href="#${id}"]`);
+                if (link) link.classList.add('active');
+            }
+        });
+    }, { rootMargin: '-100px 0px -60% 0px', threshold: 0 });
+
+    sections.forEach(s => observer.observe(s));
+
+    // ===== FADE-IN ANIMATION =====
+    const fadeObserver = new IntersectionObserver((entries) => {
+        entries.forEach(entry => {
+            if (entry.isIntersecting) {
+                entry.target.style.animationDelay = '0.1s';
+                entry.target.style.animationPlayState = 'running';
+            }
+        });
+    }, { threshold: 0.1 });
+
+    sections.forEach(s => {
+        s.style.animationPlayState = 'paused';
+        fadeObserver.observe(s);
+    });
+</script>
+
+</body>
+</html>

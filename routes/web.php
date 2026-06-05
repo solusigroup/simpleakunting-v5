@@ -89,6 +89,12 @@ if (config('app.tenancy_enabled')) {
 
                 $rUpdP = Route::put('admin/password', [CentralUserController::class, 'updatePassword']);
                 if ($isPrimary) $rUpdP->name('central.password.update');
+
+                // Workflow Documentation
+                $rWorkflow = Route::get('admin/workflow', function () {
+                    return view('central.admin.workflow');
+                });
+                if ($isPrimary) $rWorkflow->name('central.workflow');
             });
         });
     }
