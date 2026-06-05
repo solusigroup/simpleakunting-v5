@@ -74,6 +74,7 @@
                 <a href="{{ route('central.tenants.index') }}" class="{{ request()->routeIs('central.tenants.*') || request()->routeIs('central.register-tenant*') ? 'active' : '' }}">🏢 Tenant</a>
                 <a href="{{ route('central.users.index') }}" class="{{ request()->routeIs('central.users.*') || request()->routeIs('central.password.*') ? 'active' : '' }}">👥 Users</a>
                 <a href="{{ route('central.workflow') }}" class="{{ request()->routeIs('central.workflow') ? 'active' : '' }}">📊 Workflow</a>
+                <a href="{{ route('central.security') }}" class="{{ request()->routeIs('central.security') ? 'active' : '' }}">🛡️ Keamanan</a>
             </div>
             <div class="navbar-user">
                 <span>👤 {{ Auth::guard('central')->user()->nama_user }}</span>

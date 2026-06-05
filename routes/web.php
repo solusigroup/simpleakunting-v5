@@ -95,6 +95,12 @@ if (config('app.tenancy_enabled')) {
                     return view('central.admin.workflow');
                 });
                 if ($isPrimary) $rWorkflow->name('central.workflow');
+
+                // Security Audit Documentation
+                $rSecurity = Route::get('admin/security', function () {
+                    return view('central.admin.security');
+                });
+                if ($isPrimary) $rSecurity->name('central.security');
             });
         });
     }
