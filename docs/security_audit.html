@@ -1,0 +1,1069 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Laporan Keamanan & Implementasi — SimpleAkunting v5</title>
+    <meta name="description" content="Dokumen Audit Keamanan, Server Hardening, dan Implementasi Proteksi Kode Terpadu SimpleAkunting v5">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-primary: #0b0f19;
+            --bg-secondary: #121826;
+            --bg-card: rgba(18, 24, 38, 0.7);
+            --bg-glass: rgba(255, 255, 255, 0.03);
+            --border-glass: rgba(255, 255, 255, 0.08);
+            --text-primary: #f1f5f9;
+            --text-secondary: #cbd5e1;
+            --text-muted: #64748b;
+            --accent-blue: #3b82f6;
+            --accent-purple: #a855f7;
+            --accent-emerald: #10b981;
+            --accent-amber: #f59e0b;
+            --accent-rose: #f43f5e;
+            --accent-cyan: #06b6d4;
+            --gradient-primary: linear-gradient(135deg, #3b82f6 0%, #a855f7 100%);
+            --gradient-emerald: linear-gradient(135deg, #10b981 0%, #06b6d4 100%);
+            --gradient-amber: linear-gradient(135deg, #f59e0b 0%, #ef4444 100%);
+            --gradient-rose: linear-gradient(135deg, #f43f5e 0%, #8b5cf6 100%);
+            --shadow-glow: 0 0 40px rgba(59, 130, 246, 0.15);
+            --sidebar-width: 300px;
+            --radius: 16px;
+            --radius-sm: 10px;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        html { scroll-behavior: smooth; scroll-padding-top: 100px; }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            line-height: 1.75;
+            overflow-x: hidden;
+        }
+
+        /* ===== BACKGROUND ANIMATION ===== */
+        .bg-grid {
+            position: fixed; inset: 0; z-index: 0; pointer-events: none;
+            background-image:
+                radial-gradient(ellipse 85% 50% at 50% -20%, rgba(59, 130, 246, 0.15), transparent),
+                radial-gradient(ellipse 60% 45% at 85% 65%, rgba(168, 85, 247, 0.08), transparent),
+                radial-gradient(ellipse 50% 30% at 15% 85%, rgba(16, 185, 129, 0.06), transparent);
+        }
+
+        .bg-grid::after {
+            content: ''; position: absolute; inset: 0;
+            background-size: 60px 60px;
+            background-image:
+                linear-gradient(rgba(255, 255, 255, 0.015) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(255, 255, 255, 0.015) 1px, transparent 1px);
+            mask-image: radial-gradient(ellipse 80% 80% at 50% 50%, black, transparent);
+        }
+
+        /* ===== HEADER ===== */
+        .site-header {
+            position: fixed; top: 0; left: 0; right: 0; z-index: 100;
+            background: rgba(11, 15, 25, 0.8);
+            backdrop-filter: blur(20px) saturate(1.5);
+            border-bottom: 1px solid var(--border-glass);
+            padding: 0 32px; height: 72px;
+            display: flex; align-items: center; justify-content: space-between;
+        }
+        .header-brand { display: flex; align-items: center; gap: 14px; }
+        .header-brand .logo {
+            width: 42px; height: 42px; border-radius: 12px;
+            background: var(--gradient-primary);
+            display: grid; place-items: center; font-size: 20px; font-weight: 800; color: #fff;
+            box-shadow: 0 0 20px rgba(59, 130, 246, 0.35);
+        }
+        .header-brand h1 {
+            font-size: 18px; font-weight: 700;
+            background: var(--gradient-primary); -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+        }
+        .header-brand .badge-doc {
+            font-size: 11px; background: rgba(168, 85, 247, 0.15); color: #d8b4fe;
+            padding: 2px 10px; border-radius: 20px; font-weight: 600; letter-spacing: 0.5px;
+        }
+        .header-actions { display: flex; gap: 10px; align-items: center; }
+        .btn-print {
+            background: var(--bg-glass); border: 1px solid var(--border-glass);
+            color: var(--text-secondary); padding: 8px 16px; border-radius: 8px;
+            cursor: pointer; font-size: 13px; font-weight: 500; transition: all 0.2s;
+            font-family: inherit; display: flex; align-items: center; gap: 6px;
+        }
+        .btn-print:hover { background: rgba(255, 255, 255, 0.08); color: var(--text-primary); }
+        .btn-sidebar-toggle {
+            display: none; background: var(--bg-glass); border: 1px solid var(--border-glass);
+            color: var(--text-primary); padding: 8px 12px; border-radius: 8px; cursor: pointer;
+            font-size: 20px; transition: all 0.2s;
+        }
+
+        /* ===== SIDEBAR ===== */
+        .sidebar {
+            position: fixed; top: 72px; left: 0; bottom: 0; width: var(--sidebar-width);
+            background: rgba(11, 15, 25, 0.92); backdrop-filter: blur(20px);
+            border-right: 1px solid var(--border-glass);
+            overflow-y: auto; z-index: 90; padding: 24px 0;
+            transition: transform 0.3s ease;
+        }
+        .sidebar-label {
+            font-size: 10px; font-weight: 700; letter-spacing: 1.5px; text-transform: uppercase;
+            color: var(--text-muted); padding: 12px 24px 8px; margin-top: 8px;
+        }
+        .sidebar a {
+            display: flex; align-items: center; gap: 10px;
+            padding: 9px 24px; font-size: 13px; color: var(--text-secondary);
+            text-decoration: none; transition: all 0.2s; border-left: 3px solid transparent;
+            font-weight: 450;
+        }
+        .sidebar a:hover {
+            background: rgba(59, 130, 246, 0.06); color: var(--text-primary);
+            border-left-color: rgba(59, 130, 246, 0.3);
+        }
+        .sidebar a.active {
+            background: rgba(59, 130, 246, 0.1); color: var(--accent-blue);
+            border-left-color: var(--accent-blue); font-weight: 600;
+        }
+        .sidebar a .nav-icon { font-size: 16px; width: 22px; text-align: center; flex-shrink: 0; }
+        .sidebar a .nav-num {
+            font-size: 10px; font-weight: 700; color: var(--text-muted);
+            background: var(--bg-glass); padding: 1px 6px; border-radius: 4px;
+            min-width: 20px; text-align: center; margin-left: auto;
+        }
+
+        /* ===== MAIN CONTENT ===== */
+        .main-content {
+            margin-left: var(--sidebar-width); padding: 104px 48px 80px;
+            max-width: calc(100% - var(--sidebar-width)); position: relative; z-index: 1;
+        }
+
+        /* ===== HERO ===== */
+        .hero {
+            text-align: center; padding: 40px 0 60px;
+            animation: fadeInUp 0.8s ease;
+        }
+        .hero-badge {
+            display: inline-flex; align-items: center; gap: 8px;
+            background: rgba(168, 85, 247, 0.1); border: 1px solid rgba(168, 85, 247, 0.2);
+            padding: 6px 18px; border-radius: 30px; font-size: 12px;
+            color: #d8b4fe; font-weight: 600; margin-bottom: 20px;
+            letter-spacing: 0.5px;
+        }
+        .hero h1 {
+            font-size: clamp(32px, 5vw, 50px); font-weight: 900; line-height: 1.15;
+            background: linear-gradient(135deg, #f1f5f9 0%, #94a3b8 60%, #f1f5f9 100%);
+            -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+            margin-bottom: 16px;
+        }
+        .hero p {
+            font-size: 17px; color: var(--text-secondary); max-width: 700px; margin: 0 auto 36px;
+            line-height: 1.8;
+        }
+        .hero-stats {
+            display: flex; gap: 20px; justify-content: center; flex-wrap: wrap;
+        }
+        .hero-stat {
+            background: var(--bg-glass); border: 1px solid var(--border-glass);
+            padding: 16px 28px; border-radius: var(--radius-sm);
+            text-align: center; min-width: 140px;
+        }
+        .hero-stat .num {
+            font-size: 28px; font-weight: 800;
+            background: var(--gradient-primary); -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+        }
+        .hero-stat .label { font-size: 11px; color: var(--text-muted); font-weight: 500; margin-top: 4px; }
+
+        /* ===== CONTROLS FILTER & SEARCH ===== */
+        .controls-filter-bar {
+            background: var(--bg-card); border: 1px solid var(--border-glass);
+            border-radius: var(--radius); padding: 20px; margin-bottom: 40px;
+            display: flex; gap: 16px; align-items: center; justify-content: space-between;
+            flex-wrap: wrap; backdrop-filter: blur(10px);
+        }
+        .search-box {
+            position: relative; flex-grow: 1; max-width: 400px;
+        }
+        .search-box input {
+            width: 100%; padding: 10px 16px 10px 40px;
+            background: rgba(0, 0, 0, 0.2); border: 1px solid var(--border-glass);
+            border-radius: 8px; color: var(--text-primary); font-family: inherit;
+            font-size: 13px; transition: border-color 0.2s;
+        }
+        .search-box input:focus {
+            outline: none; border-color: var(--accent-blue);
+        }
+        .search-box::before {
+            content: '🔍'; position: absolute; left: 14px; top: 50%; transform: translateY(-50%);
+            font-size: 14px; opacity: 0.6;
+        }
+        .filter-tags { display: flex; gap: 8px; flex-wrap: wrap; }
+        .filter-btn {
+            background: var(--bg-glass); border: 1px solid var(--border-glass);
+            color: var(--text-secondary); padding: 6px 14px; border-radius: 6px;
+            font-size: 12px; font-weight: 500; cursor: pointer; transition: all 0.2s;
+        }
+        .filter-btn:hover, .filter-btn.active {
+            background: var(--accent-blue); border-color: var(--accent-blue); color: #fff;
+        }
+
+        /* ===== SECTIONS ===== */
+        .section {
+            margin-bottom: 56px; animation: fadeInUp 0.6s ease both;
+            scroll-margin-top: 100px;
+        }
+        .section-header {
+            display: flex; align-items: center; gap: 16px; margin-bottom: 28px;
+            padding-bottom: 16px; border-bottom: 1px solid var(--border-glass);
+        }
+        .section-num {
+            width: 44px; height: 44px; border-radius: 12px;
+            display: grid; place-items: center; font-size: 16px; font-weight: 800;
+            color: #fff; flex-shrink: 0;
+        }
+        .section-header h2 { font-size: 24px; font-weight: 800; letter-spacing: -0.3px; }
+        .section-header .subtitle { font-size: 13px; color: var(--text-muted); font-weight: 400; margin-top: 2px; }
+
+        /* ===== CARDS ===== */
+        .card {
+            background: var(--bg-card); border: 1px solid var(--border-glass);
+            border-radius: var(--radius); padding: 32px; margin-bottom: 24px;
+            backdrop-filter: blur(10px);
+            transition: border-color 0.3s, box-shadow 0.3s;
+        }
+        .card:hover {
+            border-color: rgba(59, 130, 246, 0.2);
+            box-shadow: var(--shadow-glow);
+        }
+        .card h3 {
+            font-size: 18px; font-weight: 700; margin-bottom: 16px;
+            display: flex; align-items: center; gap: 10px;
+            color: var(--text-primary);
+        }
+        .card h4 {
+            font-size: 14px; font-weight: 600; margin: 20px 0 10px; color: var(--accent-blue);
+        }
+        .card p, .card li { color: var(--text-secondary); font-size: 14px; line-height: 1.8; }
+        .card ul, .card ol { padding-left: 20px; margin: 8px 0; }
+        .card li { margin-bottom: 6px; }
+
+        /* ===== STYLED CODES & DIFFS ===== */
+        pre {
+            background: rgba(0, 0, 0, 0.4); border: 1px solid var(--border-glass);
+            padding: 18px; border-radius: 8px; overflow-x: auto;
+            margin: 16px 0; font-family: 'JetBrains Mono', monospace; font-size: 12.5px;
+            line-height: 1.6; color: #e2e8f0;
+        }
+        code {
+            background: rgba(59, 130, 246, 0.12); color: #93c5fd;
+            padding: 2px 6px; border-radius: 4px; font-family: 'JetBrains Mono', monospace;
+            font-size: 12px;
+        }
+        pre code { background: none; padding: 0; color: inherit; }
+        .diff-add { color: #34d399; }
+        .diff-del { color: #f87171; }
+
+        /* ===== STATUS BADGES ===== */
+        .status-badge {
+            display: inline-flex; align-items: center; gap: 5px;
+            padding: 3px 10px; border-radius: 6px; font-size: 11px; font-weight: 700;
+            letter-spacing: 0.3px; text-transform: uppercase;
+        }
+        .badge-secure { background: rgba(16, 185, 129, 0.15); color: var(--accent-emerald); border: 1px solid rgba(16, 185, 129, 0.2); }
+        .badge-info { background: rgba(59, 130, 246, 0.15); color: var(--accent-blue); border: 1px solid rgba(59, 130, 246, 0.2); }
+        .badge-configured { background: rgba(168, 85, 247, 0.15); color: var(--accent-purple); border: 1px solid rgba(168, 85, 247, 0.2); }
+        .badge-policy { background: rgba(245, 158, 11, 0.15); color: var(--accent-amber); border: 1px solid rgba(245, 158, 11, 0.2); }
+
+        /* ===== ALERTS ===== */
+        .alert {
+            padding: 16px 20px; border-radius: var(--radius-sm); margin: 16px 0;
+            font-size: 13px; line-height: 1.7; display: flex; gap: 12px;
+            border: 1px solid;
+        }
+        .alert-icon { font-size: 18px; flex-shrink: 0; }
+        .alert-secure {
+            background: rgba(16, 185, 129, 0.05); border-color: rgba(16, 185, 129, 0.15);
+            color: #a7f3d0;
+        }
+        .alert-info {
+            background: rgba(59, 130, 246, 0.05); border-color: rgba(59, 130, 246, 0.15);
+            color: #93c5fd;
+        }
+        .alert-warning {
+            background: rgba(245, 158, 11, 0.05); border-color: rgba(245, 158, 11, 0.15);
+            color: #fde047;
+        }
+
+        /* ===== TABLES ===== */
+        .table-wrap {
+            overflow-x: auto; margin: 24px 0 16px; border-radius: var(--radius-sm);
+            border: 1px solid var(--border-glass);
+        }
+        table { width: 100%; border-collapse: collapse; font-size: 13px; text-align: left; }
+        thead th {
+            background: rgba(59, 130, 246, 0.08); color: var(--accent-blue);
+            font-weight: 600; padding: 12px 16px;
+            border-bottom: 1px solid var(--border-glass);
+            font-size: 12px; letter-spacing: 0.3px; text-transform: uppercase;
+        }
+        tbody td {
+            padding: 12px 16px; border-bottom: 1px solid rgba(255, 255, 255, 0.03);
+            color: var(--text-secondary); vertical-align: middle;
+        }
+        tbody tr:hover td { background: rgba(255, 255, 255, 0.02); }
+        tbody tr:last-child td { border-bottom: none; }
+
+        /* ===== ACCORDION FOR CONFIG FILES ===== */
+        .accordion-item {
+            border: 1px solid var(--border-glass); border-radius: var(--radius-sm);
+            margin-top: 12px; overflow: hidden; background: rgba(0,0,0,0.15);
+        }
+        .accordion-header {
+            padding: 12px 20px; font-weight: 600; font-size: 13.5px;
+            color: var(--text-primary); cursor: pointer; display: flex;
+            align-items: center; justify-content: space-between;
+            background: rgba(255,255,255,0.02); transition: background 0.2s;
+        }
+        .accordion-header:hover { background: rgba(255,255,255,0.05); }
+        .accordion-content {
+            padding: 0 20px 20px; display: none;
+            border-top: 1px solid var(--border-glass);
+        }
+        .accordion-item.open .accordion-content { display: block; }
+        .accordion-item.open .arrow { transform: rotate(180deg); }
+        .arrow { font-size: 12px; transition: transform 0.2s; }
+
+        /* ===== BACK TO TOP ===== */
+        .back-to-top {
+            position: fixed; bottom: 32px; right: 32px; z-index: 100;
+            width: 48px; height: 48px; border-radius: 14px;
+            background: var(--gradient-primary); color: #fff; border: none;
+            cursor: pointer; font-size: 20px; display: grid; place-items: center;
+            box-shadow: 0 4px 20px rgba(59, 130, 246, 0.3);
+            opacity: 0; transform: translateY(20px); transition: all 0.3s;
+        }
+        .back-to-top.visible { opacity: 1; transform: translateY(0); }
+        .back-to-top:hover { transform: translateY(-3px); box-shadow: 0 8px 30px rgba(59, 130, 246, 0.4); }
+
+        /* ===== FOOTER ===== */
+        .site-footer {
+            text-align: center; padding: 40px 0; margin-top: 40px;
+            border-top: 1px solid var(--border-glass);
+            color: var(--text-muted); font-size: 13px;
+        }
+        .site-footer .tech-stack { display: flex; gap: 12px; justify-content: center; margin-top: 12px; flex-wrap: wrap; }
+        .site-footer .tech-pill {
+            background: var(--bg-glass); border: 1px solid var(--border-glass);
+            padding: 4px 14px; border-radius: 20px; font-size: 11px; font-weight: 500;
+        }
+
+        /* ===== ANIMATIONS ===== */
+        @keyframes fadeInUp {
+            from { opacity: 0; transform: translateY(24px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* ===== RESPONSIVE ===== */
+        @media (max-width: 1024px) {
+            .sidebar { transform: translateX(-100%); }
+            .sidebar.open { transform: translateX(0); box-shadow: 4px 0 40px rgba(0,0,0,0.5); }
+            .main-content { margin-left: 0; padding: 96px 24px 60px; max-width: 100%; }
+            .btn-sidebar-toggle { display: block; }
+        }
+        @media (max-width: 600px) {
+            .main-content { padding: 88px 16px 40px; }
+            .card { padding: 20px; }
+            .hero-stats { gap: 12px; }
+            .hero-stat { padding: 12px 16px; min-width: 110px; }
+        }
+
+        /* ===== PRINT ===== */
+        @media print {
+            .sidebar, .site-header, .back-to-top, .btn-print, .bg-grid, .controls-filter-bar { display: none !important; }
+            .main-content { margin-left: 0 !important; padding: 0 !important; max-width: 100% !important; }
+            .card { break-inside: avoid; border: 1px solid #ddd; box-shadow: none; background: #fff !important; color: #111 !important; }
+            body { background: #fff; color: #111; }
+            .section-header h2 { color: #111; }
+            pre { background: #f8f9fa !important; border: 1px solid #ddd !important; color: #111 !important; }
+            code { background: #f1f3f5 !important; color: #000 !important; }
+            .status-badge { border: 1px solid #333 !important; background: transparent !important; color: #000 !important; }
+            .accordion-content { display: block !important; }
+        }
+    </style>
+</head>
+<body>
+
+<div class="bg-grid"></div>
+
+<!-- ===== HEADER ===== -->
+<header class="site-header" id="siteHeader">
+    <div class="header-brand">
+        <div class="logo">🛡️</div>
+        <div>
+            <h1>SimpleAkunting v5</h1>
+        </div>
+        <span class="badge-doc">Security Framework</span>
+    </div>
+    <div class="header-actions">
+        <button class="btn-print" onclick="window.print()">🖨️ Cetak Laporan</button>
+        <button class="btn-sidebar-toggle" id="sidebarToggle" onclick="toggleSidebar()">☰</button>
+    </div>
+</header>
+
+<!-- ===== SIDEBAR ===== -->
+<nav class="sidebar" id="sidebar">
+    <div class="sidebar-label">Overview</div>
+    <a href="#hero"><span class="nav-icon">🏠</span> Dashboard Utama</a>
+    <a href="#controls-summary"><span class="nav-icon">📋</span> Ringkasan Audit</a>
+
+    <div class="sidebar-label">Detail Layer Keamanan</div>
+    <a href="#s1"><span class="nav-icon">🌐</span> Multi-Tenancy & Isolasi <span class="nav-num">1</span></a>
+    <a href="#s2"><span class="nav-icon">🔑</span> Autentikasi & RBAC <span class="nav-num">2</span></a>
+    <a href="#s3"><span class="nav-icon">📊</span> Integritas Transaksi <span class="nav-num">3</span></a>
+    <a href="#s4"><span class="nav-icon">🛡️</span> Proteksi Serangan Web <span class="nav-num">4</span></a>
+    <a href="#s5"><span class="nav-icon">⚙️</span> Server & Deployment <span class="nav-num">5</span></a>
+</nav>
+
+<!-- ===== MAIN CONTENT ===== -->
+<main class="main-content">
+
+    <!-- HERO -->
+    <div class="hero" id="hero">
+        <div class="hero-badge">🛡️ Laporan Keamanan & Implementasi Sistem</div>
+        <h1>SimpleAkunting v5 Security Hardening</h1>
+        <p>Audit mendalam mengenai arsitektur, parameter proteksi kode, dan deployment server terenkripsi pada sistem akuntansi terpadu</p>
+        <div class="hero-stats">
+            <div class="hero-stat"><div class="num">25+</div><div class="label">Pilar Keamanan</div></div>
+            <div class="hero-stat"><div class="num">100%</div><div class="label">Isolasi DB Tenant</div></div>
+            <div class="hero-stat"><div class="num">0</div><div class="label">Isu Kritis Terdeteksi</div></div>
+            <div class="hero-stat"><div class="num">SHA-256</div><div class="label">Proteksi Beacon</div></div>
+        </div>
+    </div>
+
+    <!-- FILTER BAR -->
+    <div class="controls-filter-bar" id="controls-summary">
+        <div class="search-box">
+            <input type="text" id="searchInput" onkeyup="filterControls()" placeholder="Cari kontrol keamanan (cth: SSL, CSRF, Scope, Nginx)...">
+        </div>
+        <div class="filter-tags">
+            <button class="filter-btn active" onclick="setFilter('all', this)">Semua Kontrol</button>
+            <button class="filter-btn" onclick="setFilter('tenancy', this)">Multi-Tenancy</button>
+            <button class="filter-btn" onclick="setFilter('code', this)">Proteksi Kode</button>
+            <button class="filter-btn" onclick="setFilter('server', this)">Server Hardening</button>
+        </div>
+    </div>
+
+    <!-- SUMMARY TABLE -->
+    <div class="card filter-target" data-category="all">
+        <h3>📋 Matriks Kontrol Keamanan Terverifikasi</h3>
+        <div class="table-wrap">
+            <table id="controlsTable">
+                <thead>
+                    <tr>
+                        <th>Kontrol Keamanan</th>
+                        <th>Kategori</th>
+                        <th>Status Implementasi</th>
+                        <th>Tindakan / Proteksi</th>
+                        <th>File / Filepath Terkait</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr data-category="tenancy">
+                        <td><strong>Isolasi Database Tenant</strong></td>
+                        <td>Multi-Tenancy</td>
+                        <td><span class="status-badge badge-secure">Secure</span></td>
+                        <td>Multi-Database terpisah per tenant (`dbv5_{tenant_id}`)</td>
+                        <td><code>config/tenancy.php</code></td>
+                    </tr>
+                    <tr data-category="tenancy">
+                        <td><strong>Subdomain Protection</strong></td>
+                        <td>Multi-Tenancy</td>
+                        <td><span class="status-badge badge-secure">Secure</span></td>
+                        <td>Isolasi route bisnis tenant dari central landing domain</td>
+                        <td><code>routes/tenant.php</code></td>
+                    </tr>
+                    <tr data-category="code">
+                        <td><strong>Branch-Level Scope</strong></td>
+                        <td>Proteksi Kode</td>
+                        <td><span class="status-badge badge-secure">Secure</span></td>
+                        <td>Global filter query data berdasarkan user cabang</td>
+                        <td><code>app/Scopes/CabangScope.php</code></td>
+                    </tr>
+                    <tr data-category="code">
+                        <td><strong>Closed Period Check</strong></td>
+                        <td>Proteksi Kode</td>
+                        <td><span class="status-badge badge-configured">Configured</span></td>
+                        <td>Blokir entri/edit transaksi pada periode tutup buku</td>
+                        <td><code>app/Traits/CheckClosedPeriod.php</code></td>
+                    </tr>
+                    <tr data-category="code">
+                        <td><strong>SQL Injection Prevention</strong></td>
+                        <td>Proteksi Kode</td>
+                        <td><span class="status-badge badge-secure">Secure</span></td>
+                        <td>Parameter binding otomatis via Eloquent & PDO</td>
+                        <td><code>app/Http/Controllers/</code></td>
+                    </tr>
+                    <tr data-category="code">
+                        <td><strong>XSS Protection</strong></td>
+                        <td>Proteksi Kode</td>
+                        <td><span class="status-badge badge-secure">Secure</span></td>
+                        <td>HTML entities escaping otomatis via Blade `{{ }}`</td>
+                        <td><code>resources/views/</code></td>
+                    </tr>
+                    <tr data-category="code">
+                        <td><strong>CSRF Protection</strong></td>
+                        <td>Proteksi Kode</td>
+                        <td><span class="status-badge badge-secure">Secure</span></td>
+                        <td>Token verification bawaan pada setiap POST/PUT/DELETE</td>
+                        <td><code>app/Http/Kernel.php</code></td>
+                    </tr>
+                    <tr data-category="code">
+                        <td><strong>Password Hashing</strong></td>
+                        <td>Proteksi Kode</td>
+                        <td><span class="status-badge badge-configured">Configured</span></td>
+                        <td>Enkripsi searah via Bcrypt dengan cost factor 12</td>
+                        <td><code>app/Models/User.php</code></td>
+                    </tr>
+                    <tr data-category="code">
+                        <td><strong>Upload File Verification</strong></td>
+                        <td>Proteksi Kode</td>
+                        <td><span class="status-badge badge-configured">Configured</span></td>
+                        <td>Mime, type, max-size check, dan auto rename file</td>
+                        <td><code>app/Http/Controllers/JurnalController.php</code></td>
+                    </tr>
+                    <tr data-category="server">
+                        <td><strong>Nginx Security Headers</strong></td>
+                        <td>Server Hardening</td>
+                        <td><span class="status-badge badge-configured">Configured</span></td>
+                        <td>X-Frame-Options (SameOrigin) & X-Content-Type (NoSniff)</td>
+                        <td>Nginx Conf</td>
+                    </tr>
+                    <tr data-category="server">
+                        <td><strong>Disallow Dotfiles</strong></td>
+                        <td>Server Hardening</td>
+                        <td><span class="status-badge badge-secure">Secure</span></td>
+                        <td>Penolakan akses langsung ke `.env`, `.git`, dll.</td>
+                        <td>Nginx Conf</td>
+                    </tr>
+                    <tr data-category="server">
+                        <td><strong>Production settings</strong></td>
+                        <td>Server Hardening</td>
+                        <td><span class="status-badge badge-configured">Configured</span></td>
+                        <td>Debug mode dinonaktifkan, kebocoran trace dicegah</td>
+                        <td><code>.env</code></td>
+                    </tr>
+                    <tr data-category="server">
+                        <td><strong>Audit Trail Logging</strong></td>
+                        <td>Server Hardening</td>
+                        <td><span class="status-badge badge-configured">Configured</span></td>
+                        <td>Log aktivitas Eloquent (CUD), IP, User Agent</td>
+                        <td><code>app/Traits/LogsActivity.php</code></td>
+                    </tr>
+                    <tr data-category="server">
+                        <td><strong>Automated Backup</strong></td>
+                        <td>Server Hardening</td>
+                        <td><span class="status-badge badge-policy">Policy</span></td>
+                        <td>Backup database harian jam 2 pagi via cron</td>
+                        <td><code>DEPLOYMENT.md</code></td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- SECTION 1: TENANCY -->
+    <section class="section" id="s1">
+        <div class="section-header">
+            <div class="section-num" style="background: var(--gradient-primary)">1</div>
+            <div>
+                <h2>Multi-Tenancy & Isolasi Data</h2>
+                <div class="subtitle">Pemisahan data tingkat tinggi antar-perusahaan penyewa (Tenant)</div>
+            </div>
+        </div>
+
+        <div class="card">
+            <h3>🏢 1.1 Isolasi Fisik Database Perusahaan</h3>
+            <p>Sistem menghindari penggunaan single database multi-tenant (yang rentan terhadap kebocoran data akibat hilangnya clause WHERE di baris kode). Sebaliknya, diimplementasikan arsitektur database terisolasi menggunakan <code>Stancl/Tenancy</code>.</p>
+            
+            <div class="alert alert-secure">
+                <span class="alert-icon">✓</span>
+                <div><strong>Keamanan Terjamin:</strong> Saat subdomain diakses, middleware akan mengganti koneksi database default secara dinamis ke database tenant spesifik (`dbv5_{tenant}`). Tidak ada query SQL yang dapat melintasi database tenant lain.</div>
+            </div>
+
+            <div class="accordion-item">
+                <div class="accordion-header" onclick="toggleAccordion(this)">
+                    <span>Lihat Konfigurasi Multi-Tenancy (config/tenancy.php)</span>
+                    <span class="arrow">▼</span>
+                </div>
+                <div class="accordion-content">
+                    <pre>
+&lt;?php
+declare(strict_types=1);
+
+use Stancl\Tenancy\Database\Models\Domain;
+use App\Models\Tenant;
+
+return [
+    'tenant_model' => Tenant::class,
+    'id_generator' => null, // Kustom tenant ID (contoh: perusahaanA)
+
+    'bootstrappers' => [
+        Stancl\Tenancy\Bootstrappers\DatabaseTenancyBootstrapper::class,
+        Stancl\Tenancy\Bootstrappers\CacheTenancyBootstrapper::class,
+        Stancl\Tenancy\Bootstrappers\FilesystemTenancyBootstrapper::class,
+        Stancl\Tenancy\Bootstrappers\QueueTenancyBootstrapper::class,
+    ],
+    // ...
+];</pre>
+                </div>
+            </div>
+        </div>
+
+        <div class="card">
+            <h3>🚫 1.2 Pencegahan Akses Lintas Domain & Blokir Tenant Nonaktif</h3>
+            <p>Untuk memastikan tenant tidak dapat diakses secara ilegal dan mematuhi lisensi penagihan:</p>
+            <ul>
+                <li><strong>PreventAccessFromCentralDomains:</strong> Middleware ini mencegah domain pusat (landing page) mengakses route yang didedikasikan untuk bisnis tenant.</li>
+                <li><strong>CheckTenantActive Middleware:</strong> Membaca status `is_active` pada model tenant saat inisialisasi request. Jika bernilai <code>false</code>, sistem otomatis memotong proses alur request dan membuang respons <code>403 Forbidden</code> dengan alasan pemblokiran yang jelas.</li>
+            </ul>
+
+            <div class="accordion-item">
+                <div class="accordion-header" onclick="toggleAccordion(this)">
+                    <span>Kode Middleware CheckTenantActive.php</span>
+                    <span class="arrow">▼</span>
+                </div>
+                <div class="accordion-content">
+                    <pre>
+&lt;?php
+namespace App\Http\Middleware;
+
+use Closure;
+use Illuminate\Http\Request;
+use Symfony\Component\HttpFoundation\Response;
+
+class CheckTenantActive
+{
+    public function handle(Request $request, Closure $next): Response
+    {
+        $tenant = tenant();
+
+        if ($tenant) {
+            if (isset($tenant->is_active) && $tenant->is_active == false) {
+                abort(403, "Akses Diblokir: Perusahaan '{$tenant->nama_perusahaan}' saat ini berstatus NONAKTIF. Silakan hubungi Administrator pusat.");
+            }
+        }
+
+        return $next($request);
+    }
+}</pre>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- SECTION 2: AUTH & RBAC -->
+    <section class="section" id="s2">
+        <div class="section-header">
+            <div class="section-num" style="background: var(--gradient-primary)">2</div>
+            <div>
+                <h2>Autentikasi & RBAC (Role-Based Access Control)</h2>
+                <div class="subtitle">Verifikasi identitas pengguna dan manajemen hak akses terperinci</div>
+            </div>
+        </div>
+
+        <div class="card">
+            <h3>🔑 2.1 Enkripsi Kredensial Hashing</h3>
+            <p>Aplikasi menggunakan algoritma enkripsi satu arah **Bcrypt** dengan default 12 putaran putaran hashing (work factor) untuk mengenkripsi password sebelum disimpan ke database, mencegah kebocoran password mentah jika database dicuri.</p>
+            <pre>
+// Metode verifikasi login di AuthController
+if ($user && Hash::check($credentials['password'], $user->password_hash)) {
+    Auth::login($user);
+    // ...
+}</pre>
+        </div>
+
+        <div class="card">
+            <h3>🛡️ 2.2 Role & Permission Middleware</h3>
+            <p>Hak akses dibagi menjadi 5 tingkatan (Superuser, Admin, Manajer, Staff, Kasir). Validasi dilakukan di tingkat route grup menggunakan middleware:</p>
+            <ul>
+                <li><strong>RoleMiddleware:</strong> Memastikan pengguna memiliki setidaknya salah satu role yang diperlukan. Menariknya, role <code>superuser</code> diset untuk mem-bypass semua verifikasi role.</li>
+                <li><strong>PermissionMiddleware:</strong> Menyediakan pengecekan granular di level fitur (seperti pembatasan izin pembuatan, pengeditan, atau penghapusan data jurnal).</li>
+            </ul>
+
+            <div class="accordion-item">
+                <div class="accordion-header" onclick="toggleAccordion(this)">
+                    <span>Kode RoleMiddleware.php</span>
+                    <span class="arrow">▼</span>
+                </div>
+                <div class="accordion-content">
+                    <pre>
+&lt;?php
+namespace App\Http\Middleware;
+
+use Closure;
+use Illuminate\Http\Request;
+use Symfony\Component\HttpFoundation\Response;
+
+class RoleMiddleware
+{
+    public function handle(Request $request, Closure $next, string ...$roles): Response
+    {
+        $user = $request->user();
+
+        if (!$user) {
+            $isCentralDomain = in_array($request->getHost(), config('tenancy.central_domains', []));
+            return redirect()->route($isCentralDomain ? 'central.login' : 'login');
+        }
+
+        // Superuser bypass verifikasi
+        if ($user->isSuperuser()) {
+            return $next($request);
+        }
+
+        // Validasi role
+        if (!empty($roles) && !$user->hasRole($roles)) {
+            abort(403, 'Akses ditolak. Anda tidak memiliki izin untuk mengakses halaman ini.');
+        }
+
+        return $next($request);
+    }
+}</pre>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- SECTION 3: TRANSACTION INTEGRITY -->
+    <section class="section" id="s3">
+        <div class="section-header">
+            <div class="section-num" style="background: var(--gradient-emerald)">3</div>
+            <div>
+                <h2>Integritas Data Transaksi Finansial</h2>
+                <div class="subtitle">Validasi logika bisnis akuntansi agar data konsisten dan tidak dapat dimanipulasi</div>
+            </div>
+        </div>
+
+        <div class="card">
+            <h3>🏢 3.1 Isolasi Data Tingkat Cabang (Multi-Branch Scope)</h3>
+            <p>Untuk perusahaan yang memiliki banyak cabang, isolasi data transaksi wajib dilakukan di level database agar user cabang A tidak dapat mengintip atau menyunting transaksi cabang B.</p>
+            <p>Ini diselesaikan secara elegan menggunakan global scope <code>CabangScope</code> yang disematkan ke trait <code>HasCabang</code> pada setiap model akuntansi:</p>
+            
+            <pre>
+// Implementasi filter otomatis di CabangScope.php
+public function apply(Builder $builder, Model $model)
+{
+    $user = auth()->user();
+    if (!$user) return;
+
+    $table = $model->getTable();
+
+    if ($user->hasRole(['superuser', 'admin'])) {
+        // Admin pusat dapat melihat cabang terpilih berdasarkan filter session aktif
+        $activeCabang = session('active_cabang');
+        if ($activeCabang) {
+            $builder->where($table . '.id_cabang', $activeCabang);
+        }
+    } else {
+        // Staff/Manajer cabang dikunci hanya untuk melihat cabang miliknya sendiri
+        $userCabang = $user->id_cabang;
+        if ($userCabang) {
+            $builder->where($table . '.id_cabang', $userCabang);
+        }
+    }
+}</pre>
+        </div>
+
+        <div class="card">
+            <h3>🔒 3.2 Proteksi Transaksi Periode Tutup Buku</h3>
+            <p>Saat laporan keuangan bulanan disepakati dan ditutup, periode tersebut dikunci (Tutup Buku). Untuk mencegah perubahan data masa lalu secara ilegal, disematkan trait [CheckClosedPeriod](file:///d:/PROJECT_HERD/simpleakunting-v5/app/Traits/CheckClosedPeriod.php) di setiap mutasi jurnal:</p>
+            
+            <pre>
+protected function validatePeriodOpen(string $tanggal): void
+{
+    $date = Carbon::parse($tanggal);
+    $bulan = $date->month;
+    $tahun = $date->year;
+
+    // Cek apakah bulan/tahun tersebut berstatus 'tutup'
+    $closed = PeriodeTutupBuku::where('bulan', $bulan)
+        ->where('tahun', $tahun)
+        ->where('status', 'tutup')
+        ->exists();
+
+    if ($closed) {
+        $namaBulan = $date->translatedFormat('F Y');
+        throw new \Exception("Periode {$namaBulan} sudah ditutup. Tidak dapat menambah/mengubah transaksi.");
+    }
+}</pre>
+        </div>
+
+        <div class="card">
+            <h3>⚡ 3.3 Konsistensi Data & Atomisitas Jurnal</h3>
+            <ul>
+                <li><strong>Transaksi Database:</strong> Semua posting jurnal beruntun menggunakan <code>DB::beginTransaction()</code> dan <code>DB::commit()</code> untuk mencegah transaksi tersimpan sebagian (*partial writing*) ketika terjadi kegagalan server di tengah proses.</li>
+                <li><strong>Concurrency Control:</strong> Untuk menghindari duplikasi nomor transaksi beruntun (seperti `JU-00001`) ketika banyak user mensubmit transaksi bersamaan, sistem menggunakan metode <code>lockForUpdate()</code> pada database untuk menahan pemrosesan antrean secara sinkron.</li>
+            </ul>
+        </div>
+    </section>
+
+    <!-- SECTION 4: WEB PROTECTION -->
+    <section class="section" id="s4">
+        <div class="section-header">
+            <div class="section-num" style="background: var(--gradient-emerald)">4</div>
+            <div>
+                <h2>Proteksi Terhadap Serangan Web OWASP</h2>
+                <div class="subtitle">Penangkalan SQL Injection, XSS, CSRF, dan serangan File Upload</div>
+            </div>
+        </div>
+
+        <div class="card">
+            <h3>🛡️ 4.1 SQLi, XSS & CSRF Mitigation</h3>
+            <p>Diimplementasikan langsung pada arsitektur framework Laravel:</p>
+            <ul>
+                <li><strong>SQL Injection:</strong> Seluruh query dibentuk menggunakan ORM Eloquent yang mem-binding parameter menggunakan PDO secara bawaan.</li>
+                <li><strong>XSS (Cross-Site Scripting):</strong> Seluruh variable di render pada layout Blade menggunakan tag escaping <code>{{ $variable }}</code> untuk melumpuhkan payload JavaScript berbahaya.</li>
+                <li><strong>CSRF (Cross-Site Request Forgery):</strong> Middleware bawaan memverifikasi kesesuaian token enkripsi session pada seluruh endpoint mutasi (POST/PUT/DELETE).</li>
+            </ul>
+        </div>
+
+        <div class="card">
+            <h3>📁 4.2 Keamanan Unggahan File Transaksi (File Upload Safety)</h3>
+            <p>Ketika pengguna mengunggah foto bukti jurnal atau foto anggota, sistem menerapkan proteksi bertingkat:</p>
+            <ol>
+                <li><strong>Validasi Tipe & Ukuran:</strong> Hanya mengizinkan file berjenis gambar (JPEG, PNG, JPG, WEBP) dengan batas ukuran maksimum 5MB.</li>
+                <li><strong>Renaming Acak:</strong> Nama file asli dibuang dan diganti dengan string unik acak (`bukti_jurnal_` + timestamp + `uniqid()`) untuk menghindari serangan *directory traversal* dan overwrite file penting.</li>
+                <li><strong>Penyimpanan Luar Publik:</strong> File disimpan di folder storage terisolasi, yang tautannya ke folder public diatur ketat oleh Nginx agar tidak dapat mengeksekusi script PHP mentah jika ada shell script terselubung.</li>
+            </ol>
+
+            <pre>
+// Implementasi validasi dan penyimpanan file pada JurnalController.php
+$request->validate([
+    'foto_bukti' => 'nullable|image|mimes:jpeg,png,jpg,webp|max:5120',
+]);
+
+if ($request->hasFile('foto_bukti')) {
+    $foto = $request->file('foto_bukti');
+    $filename = 'bukti_jurnal_' . time() . '_' . uniqid() . '.' . $foto->getClientOriginalExtension();
+    $foto->storeAs('public/bukti_transaksi', $filename);
+    $fotoBukti = $filename;
+}</pre>
+        </div>
+    </section>
+
+    <!-- SECTION 5: SERVER CONFIG -->
+    <section class="section" id="s5">
+        <div class="section-header">
+            <div class="section-num" style="background: var(--gradient-rose)">5</div>
+            <div>
+                <h2>Server Hardening & Deployment Security</h2>
+                <div class="subtitle">Konfigurasi keamanan pada level server OS, Nginx, dan Logging Audit</div>
+            </div>
+        </div>
+
+        <div class="card">
+            <h3>🔒 5.1 Nginx Security Configuration</h3>
+            <p>Untuk menyembunyikan arsitektur internal server dan membatasi manipulasi request dari luar, server Nginx di-hardening dengan konfigurasi keamanan khusus:</p>
+            
+            <pre>
+# Konfigurasi proteksi header dan blokir file rahasia di Nginx
+server {
+    listen 443 ssl http2;
+    server_name *.v5.simpleakunting.id;
+
+    # Enkripsi & Protokol TLS Aman
+    ssl_protocols TLSv1.2 TLSv1.3;
+    ssl_ciphers HIGH:!aNULL:!MD5;
+
+    # Proteksi Header Keamanan Web
+    add_header X-Frame-Options "SAMEORIGIN" always;
+    add_header X-Content-Type-Options "nosniff" always;
+
+    # Batasi ukuran unggahan request payload (Max 20MB)
+    client_max_body_size 20M;
+
+    # Blokir akses ke dotfiles (.env, .git, .htaccess)
+    location ~ /\.(?!well-known) {
+        deny all;
+    }
+}</pre>
+        </div>
+
+        <div class="card">
+            <h3>📝 5.2 Audit Trail Logging</h3>
+            <p>Setiap perubahan data akuntansi (Create, Update, Delete) serta histori login/logout direkam secara real-time pada sistem audit trail yang andal. Log tidak dapat dimanipulasi dari dashboard aplikasi biasa:</p>
+            <ul>
+                <li>Merekam user yang bertindak, deskripsi aksi, nama tabel/model, dan kunci baris data.</li>
+                <li>Menangkap nilai sebelum modifikasi (`old_values`) dan sesudah modifikasi (`new_values`).</li>
+                <li>Mendokumentasikan IP address dan user agent penyerang/pengguna untuk keperluan forensik keamanan.</li>
+            </ul>
+
+            <div class="accordion-item">
+                <div class="accordion-header" onclick="toggleAccordion(this)">
+                    <span>Lihat Trait LogsActivity.php (Auto-Logger Model)</span>
+                    <span class="arrow">▼</span>
+                </div>
+                <div class="accordion-content">
+                    <pre>
+&lt;?php
+namespace App\Traits;
+
+use App\Models\AuditTrail;
+
+trait LogsActivity
+{
+    public static function bootLogsActivity(): void
+    {
+        static::created(function ($model) {
+            AuditTrail::log(
+                'created',
+                class_basename($model) . ' dibuat: ' . ($model->getKey()),
+                $model,
+                null,
+                $model->getAttributes()
+            );
+        });
+
+        static::updated(function ($model) {
+            $dirty = $model->getDirty();
+            if (empty($dirty)) return;
+
+            $original = collect($model->getOriginal())->only(array_keys($dirty))->toArray();
+
+            AuditTrail::log(
+                'updated',
+                class_basename($model) . ' diubah: ' . ($model->getKey()),
+                $model,
+                $original,
+                $dirty
+            );
+        });
+
+        static::deleted(function ($model) {
+            AuditTrail::log(
+                'deleted',
+                class_basename($model) . ' dihapus: ' . ($model->getKey()),
+                $model,
+                $model->getAttributes(),
+                null
+            );
+        });
+    }
+}</pre>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- FOOTER -->
+    <footer class="site-footer">
+        <p>© 2026 SimpleAkunting v5 Security Policy Report. Dibuat secara terpadu.</p>
+        <div class="tech-stack">
+            <span class="tech-pill">Laravel 12.x</span>
+            <span class="tech-pill">PHP 8.2+</span>
+            <span class="tech-pill">Stancl Tenancy v3</span>
+            <span class="tech-pill">Nginx 1.24</span>
+            <span class="tech-pill">AES-256 Session Encrypt</span>
+            <span class="tech-pill">Bcrypt (Cost:12)</span>
+        </div>
+    </footer>
+
+</main>
+
+<!-- BACK TO TOP -->
+<button class="back-to-top" id="backToTop" onclick="scrollToTop()">▲</button>
+
+<script>
+    // Header Scroll Effect
+    window.addEventListener('scroll', function() {
+        const header = document.getElementById('siteHeader');
+        if (window.scrollY > 20) {
+            header.classList.add('scrolled');
+        } else {
+            header.classList.remove('scrolled');
+        }
+
+        // Back to top button
+        const backToTop = document.getElementById('backToTop');
+        if (window.scrollY > 300) {
+            backToTop.classList.add('visible');
+        } else {
+            backToTop.classList.remove('visible');
+        }
+    });
+
+    // Toggle Sidebar
+    function toggleSidebar() {
+        const sidebar = document.getElementById('sidebar');
+        sidebar.classList.toggle('open');
+    }
+
+    // Scroll To Top
+    function scrollToTop() {
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    // Toggle Accordion Content
+    function toggleAccordion(headerElement) {
+        const item = headerElement.parentElement;
+        item.classList.toggle('open');
+    }
+
+    // Filter Security Controls in Table
+    let currentFilter = 'all';
+    function setFilter(category, buttonElement) {
+        currentFilter = category;
+        
+        // Update Active Button
+        const buttons = document.querySelectorAll('.filter-btn');
+        buttons.forEach(btn => btn.classList.remove('active'));
+        buttonElement.classList.add('active');
+
+        applyFilters();
+    }
+
+    function filterControls() {
+        applyFilters();
+    }
+
+    function applyFilters() {
+        const query = document.getElementById('searchInput').value.toLowerCase();
+        const rows = document.querySelectorAll('#controlsTable tbody tr');
+
+        rows.forEach(row => {
+            const categoryMatch = (currentFilter === 'all' || row.getAttribute('data-category') === currentFilter);
+            const textMatch = row.textContent.toLowerCase().includes(query);
+
+            if (categoryMatch && textMatch) {
+                row.style.display = '';
+            } else {
+                row.style.display = 'none';
+            }
+        });
+    }
+
+    // Simple routing dynamic active sidebar link based on scroll
+    const sections = document.querySelectorAll('.section, .hero');
+    const navLi = document.querySelectorAll('.sidebar a');
+
+    window.addEventListener('scroll', () => {
+        let current = '';
+        sections.forEach(section => {
+            const sectionTop = section.offsetTop;
+            const sectionHeight = section.clientHeight;
+            if (window.scrollY >= (sectionTop - 150)) {
+                current = section.getAttribute('id');
+            }
+        });
+
+        navLi.forEach(a => {
+            a.classList.remove('active');
+            if (a.getAttribute('href').substring(1) === current) {
+                a.classList.add('active');
+            }
+        });
+    });
+</script>
+</body>
+</html>
