@@ -11,26 +11,26 @@
     <script src="https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.min.js"></script>
     <style>
         :root {
-            --bg-primary: #0a0e1a;
-            --bg-secondary: #111827;
-            --bg-card: rgba(17, 24, 39, 0.7);
+            --bg-primary: linear-gradient(135deg, #131127 0%, #12333d 35%, #086b51 70%, #00e28b 100%);
+            --bg-secondary: #12333d;
+            --bg-card: rgba(255, 255, 255, 0.045);
             --bg-glass: rgba(255,255,255,0.04);
             --border-glass: rgba(255,255,255,0.08);
             --text-primary: #e2e8f0;
-            --text-secondary: #94a3b8;
-            --text-muted: #64748b;
-            --accent-blue: #3b82f6;
-            --accent-purple: #8b5cf6;
+            --text-secondary: #cbd5e1;
+            --text-muted: #94a3b8;
+            --accent-blue: #00e28b;
+            --accent-purple: #c4b5fd;
             --accent-emerald: #10b981;
-            --accent-amber: #f59e0b;
-            --accent-rose: #f43f5e;
-            --accent-cyan: #06b6d4;
-            --accent-indigo: #6366f1;
-            --gradient-primary: linear-gradient(135deg, #3b82f6 0%, #8b5cf6 100%);
-            --gradient-emerald: linear-gradient(135deg, #10b981 0%, #06b6d4 100%);
-            --gradient-amber: linear-gradient(135deg, #f59e0b 0%, #ef4444 100%);
-            --gradient-rose: linear-gradient(135deg, #f43f5e 0%, #a855f7 100%);
-            --shadow-glow: 0 0 40px rgba(59,130,246,0.15);
+            --accent-amber: #ffaa00;
+            --accent-rose: #ff625c;
+            --accent-cyan: #00e28b;
+            --accent-indigo: #818cf8;
+            --gradient-primary: linear-gradient(135deg, #00e28b 0%, #086b51 100%);
+            --gradient-emerald: linear-gradient(135deg, #00e28b 0%, #086b51 100%);
+            --gradient-amber: linear-gradient(135deg, #ffaa00 0%, #ff625c 100%);
+            --gradient-rose: linear-gradient(135deg, #ff625c 0%, #b556fc 100%);
+            --shadow-glow: 0 8px 32px 0 rgba(0, 226, 139, 0.08);
             --sidebar-width: 300px;
             --radius: 16px;
             --radius-sm: 10px;
@@ -68,7 +68,7 @@
         /* ===== HEADER ===== */
         .site-header {
             position: fixed; top: 0; left: 0; right: 0; z-index: 100;
-            background: rgba(10,14,26,0.85);
+            background: rgba(19, 17, 39, 0.45);
             backdrop-filter: blur(20px) saturate(1.5);
             border-bottom: 1px solid var(--border-glass);
             padding: 0 32px; height: 72px;
@@ -109,7 +109,7 @@
         /* ===== SIDEBAR ===== */
         .sidebar {
             position: fixed; top: 72px; left: 0; bottom: 0; width: var(--sidebar-width);
-            background: rgba(10,14,26,0.92); backdrop-filter: blur(20px);
+            background: rgba(19, 17, 39, 0.45); backdrop-filter: blur(16px);
             border-right: 1px solid var(--border-glass);
             overflow-y: auto; z-index: 90; padding: 24px 0;
             transition: transform 0.3s ease;
@@ -206,12 +206,15 @@
         .card {
             background: var(--bg-card); border: 1px solid var(--border-glass);
             border-radius: var(--radius); padding: 32px; margin-bottom: 24px;
-            backdrop-filter: blur(10px);
-            transition: border-color 0.3s, box-shadow 0.3s;
+            backdrop-filter: blur(16px);
+            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.2);
+            transition: all 0.3s ease;
         }
         .card:hover {
-            border-color: rgba(59,130,246,0.2);
+            background: rgba(255, 255, 255, 0.07);
+            border-color: rgba(0, 226, 139, 0.3);
             box-shadow: var(--shadow-glow);
+            transform: translateY(-2px);
         }
         .card h3 {
             font-size: 18px; font-weight: 700; margin-bottom: 16px;
@@ -1548,18 +1551,18 @@ erDiagram
         startOnLoad: true,
         theme: 'dark',
         themeVariables: {
-            primaryColor: '#1e3a5f',
+            primaryColor: '#102e2b',
             primaryTextColor: '#e2e8f0',
-            primaryBorderColor: '#3b82f6',
-            lineColor: '#475569',
-            secondaryColor: '#1a2744',
-            tertiaryColor: '#0f172a',
+            primaryBorderColor: '#00e28b',
+            lineColor: '#00e28b',
+            secondaryColor: '#123f39',
+            tertiaryColor: '#131127',
             fontFamily: 'Inter, sans-serif',
             fontSize: '13px',
-            nodeBorder: '#3b82f6',
-            clusterBkg: 'rgba(59,130,246,0.06)',
-            clusterBorder: 'rgba(59,130,246,0.2)',
-            edgeLabelBackground: '#1e293b',
+            nodeBorder: '#00e28b',
+            clusterBkg: 'rgba(0,226,139,0.04)',
+            clusterBorder: 'rgba(0,226,139,0.15)',
+            edgeLabelBackground: '#131127',
         },
         flowchart: { curve: 'basis', padding: 16, htmlLabels: true },
         er: { fontSize: 12 }

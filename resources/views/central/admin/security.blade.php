@@ -271,7 +271,7 @@
                             <td><strong>XSS Protection</strong></td>
                             <td>Proteksi Kode</td>
                             <td><span class="status-badge badge-secure">Secure</span></td>
-                            <td>HTML entities escaping otomatis via Blade `{{ }}`</td>
+                            <td>HTML entities escaping otomatis via Blade <code>@{{ }}</code></td>
                             <td><code>resources/views/</code></td>
                         </tr>
                         <tr data-category="code">
@@ -532,7 +532,7 @@ protected function validatePeriodOpen(string $tanggal): void
                 <p>Diimplementasikan langsung pada arsitektur framework Laravel:</p>
                 <ul>
                     <li><strong>SQL Injection:</strong> Seluruh query dibentuk menggunakan ORM Eloquent yang mem-binding parameter menggunakan PDO secara bawaan.</li>
-                    <li><strong>XSS (Cross-Site Scripting):</strong> Seluruh variable di render pada layout Blade menggunakan tag escaping <code>{!! '{{ $variable }}' !!}</code> untuk melumpuhkan payload JavaScript berbahaya.</li>
+                    <li><strong>XSS (Cross-Site Scripting):</strong> Seluruh variable di render pada layout Blade menggunakan tag escaping <code>@{{ $variable }}</code> untuk melumpuhkan payload JavaScript berbahaya.</li>
                     <li><strong>CSRF (Cross-Site Request Forgery):</strong> Middleware bawaan memverifikasi kesesuaian token enkripsi session pada seluruh endpoint mutasi (POST/PUT/DELETE).</li>
                 </ul>
             </div>
