@@ -108,6 +108,30 @@
         .mission-block li { display: flex; align-items: flex-start; gap: 10px; color: #e0e0e0; font-size: 0.95rem; }
         .mission-block li i { color: #ff8c00; margin-top: 3px; }
 
+        /* Links Hub Section */
+        .links-hub-section { padding: 40px 0 80px; border-top: 1px solid rgba(255,255,255,0.06); }
+        .hero-box { background: linear-gradient(135deg, rgba(255, 140, 0, 0.08) 0%, rgba(30, 58, 138, 0.15) 100%); border: 1px solid rgba(255, 140, 0, 0.2); border-radius: 20px; padding: 48px; box-shadow: 0 20px 40px rgba(0, 0, 0, 0.35); position: relative; overflow: hidden; }
+        .hero-box::before { content: ''; position: absolute; top: -50px; right: -50px; width: 180px; height: 180px; background: rgba(255, 140, 0, 0.15); filter: blur(50px); border-radius: 50%; }
+        
+        .hero-box-header { text-align: center; margin-bottom: 40px; }
+        .hero-box-subtitle { font-size: 0.8rem; font-weight: 700; color: #ff8c00; letter-spacing: 2px; text-transform: uppercase; margin-bottom: 8px; display: block; }
+        .hero-box-title { font-size: 1.8rem; font-weight: 800; color: #fff; margin-bottom: 12px; }
+        .hero-box-desc { font-size: 0.95rem; color: #8fa8c8; max-width: 650px; margin: 0 auto; line-height: 1.6; }
+        
+        .links-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 20px; }
+        .link-item { background: rgba(255, 255, 255, 0.03); border: 1px solid rgba(255, 255, 255, 0.05); border-radius: 14px; padding: 20px 24px; display: flex; align-items: center; gap: 16px; text-decoration: none; transition: background 0.2s, border-color 0.2s, transform 0.2s; position: relative; }
+        .link-item:hover { background: rgba(255, 140, 0, 0.05); border-color: rgba(255, 140, 0, 0.3); transform: translateY(-3px); }
+        
+        .link-icon { font-size: 1.4rem; color: #ff8c00; background: rgba(255, 140, 0, 0.1); width: 44px; height: 44px; border-radius: 50%; display: flex; align-items: center; justify-content: center; flex-shrink: 0; transition: background 0.2s, color 0.2s; }
+        .link-item:hover .link-icon { background: #ff8c00; color: #fff; }
+        
+        .link-text { flex-grow: 1; }
+        .link-text h4 { font-size: 1rem; font-weight: 700; color: #fff; margin-bottom: 4px; }
+        .link-text p { font-size: 0.8rem; color: #8fa8c8; line-height: 1.4; }
+        
+        .arrow-icon { font-size: 0.9rem; color: #5a7090; transition: transform 0.2s, color 0.2s; }
+        .link-item:hover .arrow-icon { color: #ff8c00; transform: translateX(3px); }
+
         /* Contact Section */
         .contact-section { padding: 80px 0; border-top: 1px solid rgba(255,255,255,0.06); }
         .contact-card { background: rgba(255, 255, 255, 0.04); border: 1px solid rgba(255, 255, 255, 0.08); border-radius: 16px; overflow: hidden; display: flex; box-shadow: 0 20px 40px rgba(0,0,0,0.4); }
@@ -165,6 +189,9 @@
 
             .about-container { flex-direction: column; gap: 32px; }
             .about-vision-mission { padding: 24px; }
+
+            .hero-box { padding: 32px 20px; }
+            .links-grid { grid-template-columns: 1fr; }
         }
     </style>
 </head>
@@ -312,6 +339,73 @@
                     <i class="fas fa-user-graduate stat-icon"></i>
                     <h3>Akademisi & Mentor</h3>
                     <p>Dosen Tetap, Mentor Inkubasi Bisnis & Narasumber Tingkat Provinsi</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- Ecosystem / Other Links Section -->
+        <section id="links-hub" class="links-hub-section">
+            <div class="hero-box">
+                <div class="hero-box-header">
+                    <span class="hero-box-subtitle">AKSES CEPAT</span>
+                    <h2 class="hero-box-title">Sistem & Layanan Pendukung</h2>
+                    <p class="hero-box-desc">Hubungkan dengan platform akuntansi, koperasi, dan tata kelola digital lainnya dalam ekosistem kami.</p>
+                </div>
+                
+                <div class="links-grid">
+                    <a href="https://simpleakunting.my.id/" target="_blank" class="link-item">
+                        <i class="fas fa-globe link-icon"></i>
+                        <div class="link-text">
+                            <h4>Solusi Consult</h4>
+                            <p>Profil & Layanan Konsultan</p>
+                        </div>
+                        <i class="fas fa-arrow-right arrow-icon"></i>
+                    </a>
+                    
+                    <a href="https://simpleakunting.biz.id/login.php" target="_blank" class="link-item">
+                        <i class="fas fa-sign-in-alt link-icon"></i>
+                        <div class="link-text">
+                            <h4>SimpleAkunting v2</h4>
+                            <p>Classic Login Platform</p>
+                        </div>
+                        <i class="fas fa-arrow-right arrow-icon"></i>
+                    </a>
+
+                    <a href="https://v3.simpleakunting.biz.id/login" target="_blank" class="link-item">
+                        <i class="fas fa-laptop-code link-icon"></i>
+                        <div class="link-text">
+                            <h4>SimpleAkunting v3</h4>
+                            <p>Sistem Akuntansi Koperasi & UMKM v3</p>
+                        </div>
+                        <i class="fas fa-arrow-right arrow-icon"></i>
+                    </a>
+
+                    <a href="https://v4.simpleakunting.biz.id/admin/login" target="_blank" class="link-item">
+                        <i class="fas fa-shield-alt link-icon"></i>
+                        <div class="link-text">
+                            <h4>SimpleAkunting v4</h4>
+                            <p>Sistem Akuntansi BUMDesa & Koperasi v4</p>
+                        </div>
+                        <i class="fas fa-arrow-right arrow-icon"></i>
+                    </a>
+
+                    <a href="https://umkm.simkopdes.biz.id/login" target="_blank" class="link-item">
+                        <i class="fas fa-user-tie link-icon"></i>
+                        <div class="link-text">
+                            <h4>Akuntansi UMKM</h4>
+                            <p>Login Portal Pelaku UMKM</p>
+                        </div>
+                        <i class="fas fa-arrow-right arrow-icon"></i>
+                    </a>
+
+                    <a href="https://bumdesadigital.my.id/" target="_blank" class="link-item">
+                        <i class="fas fa-university link-icon"></i>
+                        <div class="link-text">
+                            <h4>BUMDesa Digital</h4>
+                            <p>Platform Tata Kelola Desa Digital</p>
+                        </div>
+                        <i class="fas fa-arrow-right arrow-icon"></i>
+                    </a>
                 </div>
             </div>
         </section>
