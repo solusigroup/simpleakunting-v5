@@ -929,7 +929,7 @@
                         <div class="qualification-card">
                             <i class="fas fa-university q-icon"></i>
                             <div>
-                                <h4>Magister Akuntansi</h4>
+                                <h4>Magister Akuntansi (M.Ak)</h4>
                                 <p>Univ. Trunojoyo Madura</p>
                             </div>
                         </div>
