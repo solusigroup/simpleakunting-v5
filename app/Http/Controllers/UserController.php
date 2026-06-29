@@ -83,15 +83,15 @@ class UserController extends Controller
         $cabang = Cabang::orderBy('nama_cabang')->get();
         
         // Include current user's role in options if not already there
-        if (!isset($roles[$user->role])) {
-            $roleLabels = [
-                'superuser' => 'Superuser',
-                'admin' => 'Admin',
-                'manajer' => 'Manajer',
-                'staff' => 'Staff',
-                'kasir' => 'Kasir',
-            ];
-            $roles[$user->role] = $roleLabels[$user->role] ?? ucfirst($user->role);
+        $userRole = null;
+        if ($user->role_id) {
+            $userRole = $user->role_relation;
+        } elseif ($user->role) {
+            $userRole = \App\Models\Role::where('name', $user->role)->first();
+        }
+
+        if ($userRole && !$roles->contains('id', $userRole->id)) {
+            $roles->push($userRole);
         }
         
         return view('users.edit', compact('user', 'roles', 'cabang'));
