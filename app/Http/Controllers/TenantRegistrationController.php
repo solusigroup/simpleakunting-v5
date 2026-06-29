@@ -144,6 +144,22 @@ class TenantRegistrationController extends Controller
         // 2. Sinkronisasi ke Database Tenant
         $tenant->run(function () use ($validated) {
             $user = \App\Models\User::where('role', 'admin')->first();
+            
+            // Jika user admin tidak ditemukan (misal seeder gagal dijalankan di awal karena --force),
+            // jalankan seeder sekarang dengan opsi --force agar database terisi lengkap.
+            if (!$user) {
+                try {
+                    \Illuminate\Support\Facades\Artisan::call('db:seed', [
+                        '--class' => 'Database\\Seeders\\TenantDatabaseSeeder',
+                        '--force' => true,
+                    ]);
+                    // Cari lagi setelah seeding
+                    $user = \App\Models\User::where('role', 'admin')->first();
+                } catch (\Exception $e) {
+                    \Log::error("Failed to seed tenant database during update sync: " . $e->getMessage());
+                }
+            }
+
             if ($user) {
                 $updateData = [
                     'nama_user' => $validated['admin_username'],
@@ -154,6 +170,16 @@ class TenantRegistrationController extends Controller
                 }
 
                 $user->update($updateData);
+            } else {
+                // Fallback jika seeder tetap tidak membuat user admin, buat secara manual
+                $roleId = \App\Models\Role::where('name', 'admin')->value('id');
+                \App\Models\User::create([
+                    'nama_user'     => $validated['admin_username'],
+                    'password_hash' => \Illuminate\Support\Facades\Hash::make($validated['admin_password'] ?? 'password'),
+                    'role'          => 'admin',
+                    'role_id'       => $roleId,
+                    'jabatan'       => 'Administrator',
+                ]);
             }
         });
 

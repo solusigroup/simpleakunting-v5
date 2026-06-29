@@ -191,6 +191,6 @@ return [
      */
     'seeder_parameters' => [
         '--class' => 'Database\\Seeders\\TenantDatabaseSeeder',
-        // '--force' => true,
+        '--force' => true,
     ],
 ];
