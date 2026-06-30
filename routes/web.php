@@ -45,9 +45,9 @@ if (config('app.tenancy_enabled')) {
                     }
                 }
 
-                $viewsCount = 0;
+                $viewsCount = 212;
                 try {
-                    $viewsCount = \App\Models\LandingPageView::count();
+                    $viewsCount += \App\Models\LandingPageView::count();
                 } catch (\Exception $e) {
                     logger()->error('Error counting landing page views: ' . $e->getMessage());
                 }
