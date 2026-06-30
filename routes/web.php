@@ -33,7 +33,26 @@ if (config('app.tenancy_enabled')) {
 
             // Central landing page
             $route = Route::get('/', function () {
-                return view('central.landing');
+                if (!session()->has('landing_page_viewed')) {
+                    try {
+                        \App\Models\LandingPageView::create([
+                            'ip_address' => request()->ip(),
+                            'user_agent' => request()->userAgent(),
+                        ]);
+                        session()->put('landing_page_viewed', true);
+                    } catch (\Exception $e) {
+                        logger()->error('Error recording landing page view: ' . $e->getMessage());
+                    }
+                }
+
+                $viewsCount = 0;
+                try {
+                    $viewsCount = \App\Models\LandingPageView::count();
+                } catch (\Exception $e) {
+                    logger()->error('Error counting landing page views: ' . $e->getMessage());
+                }
+
+                return view('central.landing', compact('viewsCount'));
             });
             if ($isPrimary) $route->name('central.landing');
 

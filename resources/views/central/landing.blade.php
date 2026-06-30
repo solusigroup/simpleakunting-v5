@@ -1089,6 +1089,11 @@
         </section>
 
         <footer class="footer">
+            <div style="margin-bottom: 16px; display: inline-flex; align-items: center; gap: 8px; background: rgba(255, 140, 0, 0.08); border: 1px solid rgba(255, 140, 0, 0.2); padding: 8px 18px; border-radius: 20px; color: #fff; font-size: 0.9rem; font-weight: 500; box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);">
+                <i class="fas fa-eye" style="color: #ff8c00; font-size: 1rem;"></i>
+                <span>Total Pengunjung: <strong style="color: #ff8c00;">{{ number_format($viewsCount ?? 0, 0, ',', '.') }}</strong></span>
+            </div>
+            <br>
             &copy; {{ date('Y') }} SimpleAkunting dibuat oleh Kurniawan dengan ❤️ untuk membantu bisnis lebih
             berkembang. All rights reserved.
             <br>
