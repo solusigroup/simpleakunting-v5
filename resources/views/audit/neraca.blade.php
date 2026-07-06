@@ -184,6 +184,83 @@
             </div>
         </div>
 
+        <!-- 4. Duplikasi Nama Akun -->
+        <div class="card mb-4 shadow-sm border-0">
+            <div class="card-header bg-dark text-white d-flex justify-content-between align-items-center">
+                <span>4. Duplikasi Nama Akun (Kode Berbeda)</span>
+                @php $totalDuplicates = $duplicateAccounts->flatten(1)->count(); @endphp
+                <span class="badge {{ $totalDuplicates > 0 ? 'bg-warning text-dark' : 'bg-success' }}">{{ $duplicateAccounts->count() }} Grup ({{ $totalDuplicates }} Akun)</span>
+            </div>
+            @if($duplicateAccounts->count() > 0)
+            <div class="card-body border-bottom bg-light">
+                <p class="small mb-0 text-muted">
+                    <span data-feather="info" style="width: 14px; height: 14px;"></span>
+                    Akun-akun berikut memiliki <strong>nama yang sama tetapi kode berbeda</strong>. Centang akun duplikat yang ingin dihapus, lalu klik <strong>Hapus Terpilih</strong>.
+                    Akun yang sudah digunakan dalam transaksi tidak dapat dihapus (gunakan fitur <strong>Merge</strong> di menu Master Akun).
+                </p>
+            </div>
+            <form method="POST" action="{{ route('akun.bulk-delete-duplicates') }}" id="bulkDeleteForm">
+                @csrf
+                <div class="table-responsive">
+                    <table class="table table-sm table-hover mb-0">
+                        <thead class="table-light">
+                            <tr>
+                                <th style="width:40px;">
+                                    <input type="checkbox" id="selectAllDuplicates" class="form-check-input" title="Pilih Semua yang Bisa Dihapus">
+                                </th>
+                                <th>Nama Akun</th>
+                                <th>Kode Akun</th>
+                                <th>Tipe</th>
+                                <th class="text-end">Saldo Awal</th>
+                                <th>Status</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach($duplicateAccounts as $namaAkun => $group)
+                                @foreach($group as $idx => $a)
+                                <tr class="{{ $idx === 0 ? 'table-warning' : '' }}">
+                                    <td>
+                                        @if($a->has_transactions)
+                                            <input type="checkbox" class="form-check-input" disabled title="Tidak bisa dihapus: sudah digunakan dalam transaksi">
+                                        @else
+                                            <input type="checkbox" name="kode_akun[]" value="{{ $a->kode_akun }}" class="form-check-input dup-checkbox">
+                                        @endif
+                                    </td>
+                                    <td class="fw-bold {{ $idx === 0 ? '' : 'text-danger' }}">{{ $a->nama_akun }}</td>
+                                    <td><span class="badge bg-secondary">{{ $a->kode_akun }}</span></td>
+                                    <td>{{ $a->tipe_akun }}</td>
+                                    <td class="text-end">Rp {{ number_format($a->saldo_awal ?? 0, 0, ',', '.') }}</td>
+                                    <td>
+                                        @if($a->has_transactions)
+                                            <span class="badge bg-info text-dark">Digunakan</span>
+                                        @else
+                                            <span class="badge bg-light text-dark border">Tidak Digunakan</span>
+                                        @endif
+                                    </td>
+                                </tr>
+                                @endforeach
+                                @if(!$loop->last)
+                                <tr><td colspan="6" class="p-0" style="border-bottom: 2px solid #dee2e6;"></td></tr>
+                                @endif
+                            @endforeach
+                        </tbody>
+                    </table>
+                </div>
+                <div class="card-footer d-flex justify-content-between align-items-center">
+                    <small class="text-muted"><span id="selectedCount">0</span> akun dipilih</small>
+                    <button type="submit" class="btn btn-sm btn-danger" id="btnBulkDelete" disabled
+                        onclick="return confirm('Yakin ingin menghapus akun yang dipilih? Proses ini tidak bisa dibatalkan.')">
+                        <span data-feather="trash-2" style="width:14px;height:14px;"></span> Hapus Terpilih
+                    </button>
+                </div>
+            </form>
+            @else
+            <div class="card-body">
+                <p class="text-center py-3 text-success mb-0">Tidak ada duplikasi nama akun. ✅</p>
+            </div>
+            @endif
+        </div>
+
     <!-- Missing Master Accounts Alert -->
     @if(count($missingMasterAccounts) > 0)
     <div class="row mt-3">
@@ -204,4 +281,32 @@
 <style>
     .btn-xs { font-size: 0.75rem; }
 </style>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    var selectAll = document.getElementById('selectAllDuplicates');
+    var checkboxes = document.querySelectorAll('.dup-checkbox');
+    var btnDelete = document.getElementById('btnBulkDelete');
+    var countEl = document.getElementById('selectedCount');
+
+    if (!selectAll || !btnDelete) return;
+
+    function updateState() {
+        var checked = document.querySelectorAll('.dup-checkbox:checked').length;
+        countEl.textContent = checked;
+        btnDelete.disabled = checked === 0;
+        selectAll.checked = checkboxes.length > 0 && checked === checkboxes.length;
+        selectAll.indeterminate = checked > 0 && checked < checkboxes.length;
+    }
+
+    selectAll.addEventListener('change', function() {
+        checkboxes.forEach(function(cb) { cb.checked = selectAll.checked; });
+        updateState();
+    });
+
+    checkboxes.forEach(function(cb) {
+        cb.addEventListener('change', updateState);
+    });
+});
+</script>
 @endsection

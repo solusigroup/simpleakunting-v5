@@ -1067,11 +1067,25 @@ class LaporanController extends Controller
             $grandDiff = abs(($grandTotals->td ?? 0) - ($grandTotals->tk ?? 0));
             $accountBalances = collect([]); // Placeholder to avoid 500
 
+            // 7. Duplicate Account Names (same nama_akun, different kode_akun)
+            $allAccounts = Akun::all();
+            $usedKodeAkuns = DB::table('jurnal_detail')->distinct()->pluck('kode_akun')->toArray();
+            $duplicateAccounts = $allAccounts->groupBy(function ($item) {
+                return strtolower(trim($item->nama_akun));
+            })->filter(function ($group) {
+                return $group->count() > 1;
+            })->map(function ($group) use ($usedKodeAkuns) {
+                return $group->map(function ($akun) use ($usedKodeAkuns) {
+                    $akun->has_transactions = in_array($akun->kode_akun, $usedKodeAkuns);
+                    return $akun;
+                });
+            });
+
             return view('audit.neraca', compact(
                 'perTanggal', 'unbalancedData', 'invalidAccounts', 'allowedTypes',
                 'totalAset', 'totalKewajiban', 'totalEkuitas', 'labaBerjalan', 
                 'totalPasiva', 'gap', 'orphanedDetails', 'missingMasterAccounts',
-                'accountBalances', 'grandDiff'
+                'accountBalances', 'grandDiff', 'duplicateAccounts'
             ));
         } catch (\Exception $e) {
             return "Audit Error: " . $e->getMessage();

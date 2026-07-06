@@ -85,6 +85,7 @@ Route::middleware('role:superuser,admin')->group(function () {
     Route::put('akun/{akun}', [AkunController::class, 'update'])->name('akun.update');
     Route::delete('akun/{akun}', [AkunController::class, 'destroy'])->name('akun.destroy');
     Route::post('akun/merge', [AkunController::class, 'merge'])->name('akun.merge');
+    Route::post('akun/bulk-delete-duplicates', [AkunController::class, 'bulkDeleteDuplicates'])->name('akun.bulk-delete-duplicates');
     
     Route::resource('jenis-pinjaman', JenisPinjamanController::class);
     Route::resource('jenis-simpanan', JenisSimpananController::class);

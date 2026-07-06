@@ -130,4 +130,42 @@ class AkunController extends Controller
             return back()->with('error', 'Gagal merge akun: ' . $e->getMessage());
         }
     }
+
+    /**
+     * Bulk delete akun duplikat yang belum digunakan dalam transaksi.
+     */
+    public function bulkDeleteDuplicates(Request $request)
+    {
+        $request->validate([
+            'kode_akun' => 'required|array|min:1',
+            'kode_akun.*' => 'required|string|exists:akun,kode_akun',
+        ]);
+
+        $kodeAkuns = $request->input('kode_akun');
+        $deleted = 0;
+        $skipped = [];
+
+        try {
+            DB::transaction(function () use ($kodeAkuns, &$deleted, &$skipped) {
+                foreach ($kodeAkuns as $kode) {
+                    $isUsed = DB::table('jurnal_detail')->where('kode_akun', $kode)->exists();
+                    if ($isUsed) {
+                        $skipped[] = $kode;
+                        continue;
+                    }
+                    Akun::where('kode_akun', $kode)->delete();
+                    $deleted++;
+                }
+            });
+
+            $message = "{$deleted} akun duplikat berhasil dihapus.";
+            if (count($skipped) > 0) {
+                $message .= " " . count($skipped) . " akun dilewati karena sudah digunakan dalam transaksi (" . implode(', ', $skipped) . ").";
+            }
+
+            return redirect()->route('audit.neraca')->with('success', $message);
+        } catch (\Exception $e) {
+            return back()->with('error', 'Gagal menghapus akun: ' . $e->getMessage());
+        }
+    }
 }
