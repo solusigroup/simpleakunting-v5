@@ -17,7 +17,7 @@ class UserController extends Controller
     {
         $currentUser = auth()->user();
         
-        // Roles with lower privilege (higher level number)
+        // Roles with lower or equal privilege (higher or equal level number)
         $currentLevel = $currentUser->getRoleLevel();
         
         return \App\Models\Role::all()->filter(function ($role) use ($currentLevel) {
@@ -29,7 +29,7 @@ class UserController extends Controller
                 'kasir' => 5,
                 default => 6, // Custom roles are level 6
             };
-            return $roleLevel > $currentLevel;
+            return $roleLevel >= $currentLevel;
         });
     }
 

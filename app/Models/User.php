@@ -246,7 +246,12 @@ class User extends Authenticatable
      */
     public function getRoleLevel(): int
     {
-        return match($this->role) {
+        $roleName = $this->role;
+        if (!$roleName && $this->role_id && $this->role_relation) {
+            $roleName = $this->role_relation->name;
+        }
+
+        return match($roleName) {
             'superuser' => 1,
             'admin' => 2,
             'manajer' => 3,
@@ -261,8 +266,8 @@ class User extends Authenticatable
      */
     public function canEditUser(User $targetUser): bool
     {
-        // Cannot edit users with higher or equal privilege
-        return $this->getRoleLevel() < $targetUser->getRoleLevel();
+        // Cannot edit users with higher privilege, or edit oneself
+        return $this->id_user !== $targetUser->id_user && $this->getRoleLevel() <= $targetUser->getRoleLevel();
     }
 
     public function cabang()
