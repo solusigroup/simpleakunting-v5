@@ -20,11 +20,18 @@ class KasController extends Controller
         // Ambil semua akun Kas & Bank
         $akunKas = Akun::where('tipe_akun', 'Kas & Bank')->orderBy('kode_akun')->get();
 
-        // Hitung saldo terkini untuk setiap akun kas
+        $sums = JurnalDetail::whereIn('kode_akun', $akunKas->pluck('kode_akun'))
+            ->groupBy('kode_akun')
+            ->select('kode_akun', DB::raw('SUM(debit) as total_debit'), DB::raw('SUM(kredit) as total_kredit'))
+            ->get()
+            ->keyBy('kode_akun');
+
+        // Hitung saldo terkini untuk setiap akun kas termasuk saldo awal
         foreach ($akunKas as $akun) {
-            $debit = JurnalDetail::where('kode_akun', $akun->kode_akun)->sum('debit');
-            $kredit = JurnalDetail::where('kode_akun', $akun->kode_akun)->sum('kredit');
-            $akun->saldo_terkini = $debit - $kredit;
+            $row = $sums->get($akun->kode_akun);
+            $debit = $row ? $row->total_debit : 0;
+            $kredit = $row ? $row->total_kredit : 0;
+            $akun->saldo_terkini = ($akun->saldo_awal ?? 0) + ($debit - $kredit);
         }
 
         return view('kas.index', compact('akunKas'));

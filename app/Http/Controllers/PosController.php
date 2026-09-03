@@ -396,7 +396,7 @@ class PosController extends Controller
             $detailsData = [];
 
             foreach ($request->items as $item) {
-                $barang = Persediaan::findOrFail($item['id_barang']);
+                $barang = Persediaan::where('id_barang', $item['id_barang'])->lockForUpdate()->firstOrFail();
                 $subtotal = $item['harga_beli'] * $item['qty'];
                 $totalPembelian += $subtotal;
 

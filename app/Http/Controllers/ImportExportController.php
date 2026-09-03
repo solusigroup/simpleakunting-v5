@@ -109,7 +109,7 @@ class ImportExportController extends Controller
             foreach ($data as $row) {
                 $rowData = [];
                 foreach ($config['columns'] as $col) {
-                    $rowData[] = $row->$col ?? '';
+                    $rowData[] = $this->sanitizeCsvValue($row->$col ?? '');
                 }
                 fputcsv($file, $rowData, ';');
             }
@@ -645,7 +645,7 @@ class ImportExportController extends Controller
                 foreach ($data as $row) {
                     $rowData = [];
                     foreach ($config['columns'] as $col) {
-                        $rowData[] = $row->$col ?? '';
+                        $rowData[] = $this->sanitizeCsvValue($row->$col ?? '');
                     }
                     fputcsv($file, $rowData, ';');
                 }
@@ -658,6 +658,18 @@ class ImportExportController extends Controller
         };
 
         return Response::stream($callback, 200, $headers);
+    }
+
+    /**
+     * Sanitize cell value to prevent CSV Formula Injection (CWE-1236).
+     */
+    private function sanitizeCsvValue($value): string
+    {
+        $val = (string)($value ?? '');
+        if ($val !== '' && in_array($val[0], ['=', '+', '-', '@', "\t", "\r"])) {
+            return "'" . $val;
+        }
+        return $val;
     }
 
     /**

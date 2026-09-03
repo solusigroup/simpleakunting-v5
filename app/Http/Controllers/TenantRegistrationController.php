@@ -64,8 +64,10 @@ class TenantRegistrationController extends Controller
             
         foreach ($tenants as $tenant) {
             try {
-                $tenant->run(function () use ($tenant) {
-                    $tenant->trx_count = \App\Models\Jurnal::count();
+                $tenant->trx_count = \Illuminate\Support\Facades\Cache::remember('tenant_trx_count_' . $tenant->id, now()->addMinutes(10), function () use ($tenant) {
+                    return $tenant->run(function () {
+                        return \App\Models\Jurnal::count();
+                    });
                 });
             } catch (\Exception $e) {
                 $tenant->trx_count = '-';
