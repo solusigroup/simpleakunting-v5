@@ -18,7 +18,8 @@ class DashboardController extends Controller
 {
     public function index()
     {
-        $dashboardData = \Illuminate\Support\Facades\Cache::remember('dashboard_data_' . tenant('id'), now()->addMinutes(10), function () {
+        $tenantId = (function_exists('tenant') && tenant('id')) ? tenant('id') : 'central';
+        $dashboardData = \Illuminate\Support\Facades\Cache::remember('dashboard_data_' . $tenantId, now()->addMinutes(10), function () {
             // 1. Saldo Kas & Bank - dari jurnal_detail
             $totalKasBank = DB::table('jurnal_detail')
                 ->join('akun', 'jurnal_detail.kode_akun', '=', 'akun.kode_akun')

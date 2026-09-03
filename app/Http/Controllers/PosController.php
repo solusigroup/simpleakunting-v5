@@ -202,7 +202,7 @@ class PosController extends Controller
             $detailsData = [];
 
             foreach ($request->items as $item) {
-                $barang = Persediaan::findOrFail($item['id_barang']);
+                $barang = Persediaan::where('id_barang', $item['id_barang'])->lockForUpdate()->firstOrFail();
 
                 if ($barang->stok_saat_ini < $item['qty']) {
                     throw new \Exception("Stok {$barang->nama_barang} tidak cukup. Sisa: {$barang->stok_saat_ini}");

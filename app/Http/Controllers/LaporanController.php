@@ -44,25 +44,28 @@ class LaporanController extends Controller
             'Utang Usaha', 'Kewajiban Lancar Lainnya', 'Kewajiban Jangka Panjang', 'Ekuitas'
         ])->orderBy('kode_akun')->get();
 
-        // Helper untuk hitung saldo per tanggal
+        // Helper untuk hitung saldo per tanggal (Agregasi 1 query GROUP BY)
         $hitungSaldo = function ($tanggal) use ($akunNeraca, $cabangId, $unitId, $projectId) {
-            return $akunNeraca->map(function ($akun) use ($tanggal, $cabangId, $unitId, $projectId) {
+            $aggregated = JurnalDetail::join('jurnal_umum', 'jurnal_detail.id_jurnal', '=', 'jurnal_umum.id_jurnal')
+                ->where('jurnal_umum.tanggal', '<=', $tanggal)
+                ->when($cabangId, fn($q) => $q->where('jurnal_umum.id_cabang', $cabangId))
+                ->when($unitId, fn($q) => $q->where('jurnal_umum.id_unit_usaha', $unitId))
+                ->when($projectId, fn($q) => $q->where('jurnal_umum.id_project', $projectId))
+                ->groupBy('jurnal_detail.kode_akun')
+                ->select(
+                    'jurnal_detail.kode_akun',
+                    DB::raw('SUM(jurnal_detail.debit) as total_debit'),
+                    DB::raw('SUM(jurnal_detail.kredit) as total_kredit')
+                )
+                ->get()
+                ->keyBy('kode_akun');
+
+            return $akunNeraca->map(function ($akun) use ($aggregated) {
                 // Clone akun agar tidak merubah referensi asli saat loop kedua
                 $akunClone = clone $akun;
-                
-                $query = JurnalDetail::where('kode_akun', $akun->kode_akun)
-                    ->whereHas('jurnal', function ($q) use ($tanggal, $cabangId, $unitId, $projectId) {
-                        $q->where('tanggal', '<=', $tanggal);
-                        if ($cabangId) $q->where('id_cabang', $cabangId);
-                        if ($unitId) $q->where('id_unit_usaha', $unitId);
-                        if ($projectId) $q->where('id_project', $projectId);
-                    });
-
-                $saldo = $query->select(DB::raw('SUM(debit) as total_debit'), DB::raw('SUM(kredit) as total_kredit'))
-                    ->first();
-
-                $totalDebit = $saldo->total_debit ?? 0;
-                $totalKredit = $saldo->total_kredit ?? 0;
+                $row = $aggregated->get($akun->kode_akun);
+                $totalDebit = $row ? $row->total_debit : 0;
+                $totalKredit = $row ? $row->total_kredit : 0;
 
                 if ($akun->saldo_normal == 'Debit') {
                     $akunClone->saldo_akhir = $akun->saldo_awal + $totalDebit - $totalKredit;
@@ -126,21 +129,25 @@ class LaporanController extends Controller
         ])->orderBy('kode_akun')->get();
 
         $hitungPeriode = function ($start, $end) use ($akunLabaRugi, $cabangId, $unitId, $projectId) {
-            return $akunLabaRugi->map(function ($akun) use ($start, $end, $cabangId, $unitId, $projectId) {
+            $aggregated = JurnalDetail::join('jurnal_umum', 'jurnal_detail.id_jurnal', '=', 'jurnal_umum.id_jurnal')
+                ->whereBetween('jurnal_umum.tanggal', [$start, $end])
+                ->when($cabangId, fn($q) => $q->where('jurnal_umum.id_cabang', $cabangId))
+                ->when($unitId, fn($q) => $q->where('jurnal_umum.id_unit_usaha', $unitId))
+                ->when($projectId, fn($q) => $q->where('jurnal_umum.id_project', $projectId))
+                ->groupBy('jurnal_detail.kode_akun')
+                ->select(
+                    'jurnal_detail.kode_akun',
+                    DB::raw('SUM(jurnal_detail.debit) as total_debit'),
+                    DB::raw('SUM(jurnal_detail.kredit) as total_kredit')
+                )
+                ->get()
+                ->keyBy('kode_akun');
+
+            return $akunLabaRugi->map(function ($akun) use ($aggregated) {
                 $akunClone = clone $akun;
-                $query = JurnalDetail::where('kode_akun', $akun->kode_akun)
-                    ->whereHas('jurnal', function ($q) use ($start, $end, $cabangId, $unitId, $projectId) {
-                        $q->whereBetween('tanggal', [$start, $end]);
-                        if ($cabangId) $q->where('id_cabang', $cabangId);
-                        if ($unitId) $q->where('id_unit_usaha', $unitId);
-                        if ($projectId) $q->where('id_project', $projectId);
-                    });
-
-                $saldo = $query->select(DB::raw('SUM(debit) as total_debit'), DB::raw('SUM(kredit) as total_kredit'))
-                    ->first();
-
-                $totalDebit = $saldo->total_debit ?? 0;
-                $totalKredit = $saldo->total_kredit ?? 0;
+                $row = $aggregated->get($akun->kode_akun);
+                $totalDebit = $row ? $row->total_debit : 0;
+                $totalKredit = $row ? $row->total_kredit : 0;
 
                 if ($akun->saldo_normal == 'Kredit') {
                     $akunClone->saldo_periode = $akun->saldo_awal + $totalKredit - $totalDebit;
@@ -469,56 +476,48 @@ class LaporanController extends Controller
         ));
     }
 
-    private function hitungLabaRugiPeriode($startDate, $endDate, $cabangId = null, $unitId = null, $projectId = null)
+    public function hitungLabaRugiPeriode($startDate, $endDate, $cabangId = null, $unitId = null, $projectId = null)
     {
-        $pendapatan = JurnalDetail::whereHas('akun', function($q) {
-                $q->whereIn('tipe_akun', ['Pendapatan', 'Pendapatan Lainnya']);
-            })
-            ->whereHas('jurnal', function ($q) use ($startDate, $endDate, $cabangId, $unitId, $projectId) {
-                $q->whereBetween('tanggal', [$startDate, $endDate]);
-                if ($cabangId) $q->where('id_cabang', $cabangId);
-                if ($unitId) $q->where('id_unit_usaha', $unitId);
-                if ($projectId) $q->where('id_project', $projectId);
-            })
-            ->sum(DB::raw('kredit - debit'));
+        $rows = JurnalDetail::join('jurnal_umum', 'jurnal_detail.id_jurnal', '=', 'jurnal_umum.id_jurnal')
+            ->join('akun', 'jurnal_detail.kode_akun', '=', 'akun.kode_akun')
+            ->whereBetween('jurnal_umum.tanggal', [$startDate, $endDate])
+            ->when($cabangId, fn($q) => $q->where('jurnal_umum.id_cabang', $cabangId))
+            ->when($unitId, fn($q) => $q->where('jurnal_umum.id_unit_usaha', $unitId))
+            ->when($projectId, fn($q) => $q->where('jurnal_umum.id_project', $projectId))
+            ->whereIn('akun.tipe_akun', ['Pendapatan', 'Pendapatan Lainnya', 'HPP', 'Beban', 'Beban Lainnya'])
+            ->select(
+                'akun.tipe_akun',
+                DB::raw('SUM(jurnal_detail.debit) as total_debit'),
+                DB::raw('SUM(jurnal_detail.kredit) as total_kredit')
+            )
+            ->groupBy('akun.tipe_akun')
+            ->get();
 
-        $beban = JurnalDetail::whereHas('akun', function($q) {
-                $q->whereIn('tipe_akun', ['HPP', 'Beban', 'Beban Lainnya']);
-            })
-            ->whereHas('jurnal', function ($q) use ($startDate, $endDate, $cabangId, $unitId, $projectId) {
-                $q->whereBetween('tanggal', [$startDate, $endDate]);
-                if ($cabangId) $q->where('id_cabang', $cabangId);
-                if ($unitId) $q->where('id_unit_usaha', $unitId);
-                if ($projectId) $q->where('id_project', $projectId);
-            })
-            ->sum(DB::raw('debit - kredit'));
+        $pendapatan = $rows->whereIn('tipe_akun', ['Pendapatan', 'Pendapatan Lainnya'])->sum(fn($r) => $r->total_kredit - $r->total_debit);
+        $beban = $rows->whereIn('tipe_akun', ['HPP', 'Beban', 'Beban Lainnya'])->sum(fn($r) => $r->total_debit - $r->total_kredit);
 
         return $pendapatan - $beban;
     }
 
-    private function hitungLabaRugi($perTanggal, $cabangId = null, $unitId = null, $projectId = null)
+    public function hitungLabaRugi($perTanggal, $cabangId = null, $unitId = null, $projectId = null)
     {
-        $pendapatan = JurnalDetail::whereHas('akun', function($q) {
-                $q->whereIn('tipe_akun', ['Pendapatan', 'Pendapatan Lainnya']);
-            })
-            ->whereHas('jurnal', function ($q) use ($perTanggal, $cabangId, $unitId, $projectId) {
-                $q->where('tanggal', '<=', $perTanggal);
-                if ($cabangId) $q->where('id_cabang', $cabangId);
-                if ($unitId) $q->where('id_unit_usaha', $unitId);
-                if ($projectId) $q->where('id_project', $projectId);
-            })
-            ->sum(DB::raw('kredit - debit'));
+        $rows = JurnalDetail::join('jurnal_umum', 'jurnal_detail.id_jurnal', '=', 'jurnal_umum.id_jurnal')
+            ->join('akun', 'jurnal_detail.kode_akun', '=', 'akun.kode_akun')
+            ->where('jurnal_umum.tanggal', '<=', $perTanggal)
+            ->when($cabangId, fn($q) => $q->where('jurnal_umum.id_cabang', $cabangId))
+            ->when($unitId, fn($q) => $q->where('jurnal_umum.id_unit_usaha', $unitId))
+            ->when($projectId, fn($q) => $q->where('jurnal_umum.id_project', $projectId))
+            ->whereIn('akun.tipe_akun', ['Pendapatan', 'Pendapatan Lainnya', 'HPP', 'Beban', 'Beban Lainnya'])
+            ->select(
+                'akun.tipe_akun',
+                DB::raw('SUM(jurnal_detail.debit) as total_debit'),
+                DB::raw('SUM(jurnal_detail.kredit) as total_kredit')
+            )
+            ->groupBy('akun.tipe_akun')
+            ->get();
 
-        $beban = JurnalDetail::whereHas('akun', function($q) {
-                $q->whereIn('tipe_akun', ['HPP', 'Beban', 'Beban Lainnya']);
-            })
-            ->whereHas('jurnal', function ($q) use ($perTanggal, $cabangId, $unitId, $projectId) {
-                $q->where('tanggal', '<=', $perTanggal);
-                if ($cabangId) $q->where('id_cabang', $cabangId);
-                if ($unitId) $q->where('id_unit_usaha', $unitId);
-                if ($projectId) $q->where('id_project', $projectId);
-            })
-            ->sum(DB::raw('debit - kredit'));
+        $pendapatan = $rows->whereIn('tipe_akun', ['Pendapatan', 'Pendapatan Lainnya'])->sum(fn($r) => $r->total_kredit - $r->total_debit);
+        $beban = $rows->whereIn('tipe_akun', ['HPP', 'Beban', 'Beban Lainnya'])->sum(fn($r) => $r->total_debit - $r->total_kredit);
 
         return $pendapatan - $beban;
     }

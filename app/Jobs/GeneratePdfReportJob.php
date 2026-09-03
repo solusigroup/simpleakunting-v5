@@ -91,19 +91,24 @@ class GeneratePdfReportJob implements ShouldQueue
             'Utang Usaha', 'Kewajiban Lancar Lainnya', 'Kewajiban Jangka Panjang', 'Ekuitas'
         ])->orderBy('kode_akun')->get();
 
-        $laporan = $akunNeraca->map(function ($akun) use ($perTanggal, $cabangId, $unitId, $projectId) {
-            $query = \App\Models\JurnalDetail::where('kode_akun', $akun->kode_akun)
-                ->whereHas('jurnal', function ($q) use ($perTanggal, $cabangId, $unitId, $projectId) {
-                    $q->where('tanggal', '<=', $perTanggal);
-                    if ($cabangId) $q->where('id_cabang', $cabangId);
-                    if ($unitId) $q->where('id_unit_usaha', $unitId);
-                    if ($projectId) $q->where('id_project', $projectId);
-                });
-            
-            $saldo = $query->select(\Illuminate\Support\Facades\DB::raw('SUM(debit) as total_debit'), \Illuminate\Support\Facades\DB::raw('SUM(kredit) as total_kredit'))->first();
+        $aggregated = \App\Models\JurnalDetail::join('jurnal_umum', 'jurnal_detail.id_jurnal', '=', 'jurnal_umum.id_jurnal')
+            ->where('jurnal_umum.tanggal', '<=', $perTanggal)
+            ->when($cabangId, fn($q) => $q->where('jurnal_umum.id_cabang', $cabangId))
+            ->when($unitId, fn($q) => $q->where('jurnal_umum.id_unit_usaha', $unitId))
+            ->when($projectId, fn($q) => $q->where('jurnal_umum.id_project', $projectId))
+            ->groupBy('jurnal_detail.kode_akun')
+            ->select(
+                'jurnal_detail.kode_akun',
+                \Illuminate\Support\Facades\DB::raw('SUM(jurnal_detail.debit) as total_debit'),
+                \Illuminate\Support\Facades\DB::raw('SUM(jurnal_detail.kredit) as total_kredit')
+            )
+            ->get()
+            ->keyBy('kode_akun');
 
-            $totalDebit = $saldo->total_debit ?? 0;
-            $totalKredit = $saldo->total_kredit ?? 0;
+        $laporan = $akunNeraca->map(function ($akun) use ($aggregated) {
+            $row = $aggregated->get($akun->kode_akun);
+            $totalDebit = $row ? $row->total_debit : 0;
+            $totalKredit = $row ? $row->total_kredit : 0;
 
             return [
                 'kode' => $akun->kode_akun,
@@ -118,12 +123,9 @@ class GeneratePdfReportJob implements ShouldQueue
         $kewajiban = $laporan->whereIn('tipe', ['Utang Usaha', 'Kewajiban Lancar Lainnya', 'Kewajiban Jangka Panjang'])->values();
         $modal = $laporan->where('tipe', 'Ekuitas')->values();
 
-        // Need hitungLabaRugi
+        // Direct call to public hitungLabaRugi
         $controller = new \App\Http\Controllers\LaporanController();
-        $reflection = new \ReflectionClass($controller);
-        $method = $reflection->getMethod('hitungLabaRugi');
-        $method->setAccessible(true);
-        $labaBersih = $method->invokeArgs($controller, [$perTanggal, $cabangId, $unitId, $projectId]);
+        $labaBersih = $controller->hitungLabaRugi($perTanggal, $cabangId, $unitId, $projectId);
 
         $subtitle = 'Per Tanggal ' . date('d F Y', strtotime($perTanggal));
         if ($projectId) {
@@ -166,18 +168,24 @@ class GeneratePdfReportJob implements ShouldQueue
             'Pendapatan', 'Pendapatan Lainnya', 'HPP', 'Beban', 'Beban Lainnya'
         ])->orderBy('kode_akun')->get();
 
-        $laporan = $akunLabaRugi->map(function ($akun) use ($startDate, $endDate, $cabangId, $unitId, $projectId) {
-            $query = \App\Models\JurnalDetail::where('kode_akun', $akun->kode_akun)
-                ->whereHas('jurnal', function ($q) use ($startDate, $endDate, $cabangId, $unitId, $projectId) {
-                    $q->whereBetween('tanggal', [$startDate, $endDate]);
-                    if ($cabangId) $q->where('id_cabang', $cabangId);
-                    if ($unitId) $q->where('id_unit_usaha', $unitId);
-                    if ($projectId) $q->where('id_project', $projectId);
-                });
+        $aggregated = \App\Models\JurnalDetail::join('jurnal_umum', 'jurnal_detail.id_jurnal', '=', 'jurnal_umum.id_jurnal')
+            ->whereBetween('jurnal_umum.tanggal', [$startDate, $endDate])
+            ->when($cabangId, fn($q) => $q->where('jurnal_umum.id_cabang', $cabangId))
+            ->when($unitId, fn($q) => $q->where('jurnal_umum.id_unit_usaha', $unitId))
+            ->when($projectId, fn($q) => $q->where('jurnal_umum.id_project', $projectId))
+            ->groupBy('jurnal_detail.kode_akun')
+            ->select(
+                'jurnal_detail.kode_akun',
+                \Illuminate\Support\Facades\DB::raw('SUM(jurnal_detail.debit) as total_debit'),
+                \Illuminate\Support\Facades\DB::raw('SUM(jurnal_detail.kredit) as total_kredit')
+            )
+            ->get()
+            ->keyBy('kode_akun');
 
-            $saldo = $query->select(\Illuminate\Support\Facades\DB::raw('SUM(debit) as total_debit'), \Illuminate\Support\Facades\DB::raw('SUM(kredit) as total_kredit'))->first();
-            $totalDebit = $saldo->total_debit ?? 0;
-            $totalKredit = $saldo->total_kredit ?? 0;
+        $laporan = $akunLabaRugi->map(function ($akun) use ($aggregated) {
+            $row = $aggregated->get($akun->kode_akun);
+            $totalDebit = $row ? $row->total_debit : 0;
+            $totalKredit = $row ? $row->total_kredit : 0;
 
             return [
                 'kode' => $akun->kode_akun,
