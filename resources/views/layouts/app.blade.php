@@ -857,6 +857,41 @@
             </div>
             @endif
 
+            <!-- Analisa & Kinerja Bisnis -->
+            @if(auth()->user()->hasRole(['superuser', 'admin', 'manajer']))
+            @php
+                $isAnalisaActive = request()->routeIs('analisa.*');
+            @endphp
+            <div class="sidebar-section" @if(!$showMenu('analisa')) style="display:none;" @endif>
+                <div class="sidebar-section-header" data-bs-toggle="collapse" data-bs-target="#analisaMenu" aria-expanded="{{ $isAnalisaActive ? 'true' : 'false' }}">
+                    <span>📈 Analisa Bisnis</span>
+                    <span data-feather="chevron-down" class="chevron"></span>
+                </div>
+                <div class="collapse {{ $isAnalisaActive ? 'show' : '' }}" id="analisaMenu">
+                    <ul class="sidebar-nav sidebar-submenu">
+                        <li class="sidebar-nav-item">
+                            <a class="sidebar-nav-link {{ request()->routeIs('analisa.laporan_keuangan') ? 'active' : '' }}" href="{{ route('analisa.laporan_keuangan') }}">
+                                <span data-feather="bar-chart-2"></span>
+                                Analisa Lap. Keuangan
+                            </a>
+                        </li>
+                        <li class="sidebar-nav-item">
+                            <a class="sidebar-nav-link {{ request()->routeIs('analisa.rasio') ? 'active' : '' }}" href="{{ route('analisa.rasio') }}">
+                                <span data-feather="percent"></span>
+                                Rasio-Rasio Keuangan
+                            </a>
+                        </li>
+                        <li class="sidebar-nav-item">
+                            <a class="sidebar-nav-link {{ request()->routeIs('analisa.kesehatan_perusahaan') ? 'active' : '' }}" href="{{ route('analisa.kesehatan_perusahaan') }}">
+                                <span data-feather="activity"></span>
+                                Kesehatan Perusahaan
+                            </a>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+            @endif
+
             <!-- Simpan Pinjam -->
             @php
                 $isKoperasiActive = request()->routeIs('anggota.*') || request()->routeIs('simpanan.*') || request()->routeIs('pinjaman.*') || request()->routeIs('approval.*');

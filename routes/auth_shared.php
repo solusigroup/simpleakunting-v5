@@ -42,6 +42,7 @@ use App\Http\Controllers\ImportExportController;
 use App\Http\Controllers\AuditTrailController;
 use App\Http\Controllers\PenjualanPenawaranController;
 use App\Http\Controllers\PembelianRfqController;
+use App\Http\Controllers\AnalisaController;
 
 Route::post('logout', [AuthController::class, 'logout'])->name('logout');
 
@@ -181,6 +182,15 @@ Route::middleware('role:superuser,admin,manajer,staff,kasir')->group(function ()
     Route::get('/laporan/aset-tetap', [LaporanController::class, 'daftarAsetTetap'])->name('laporan.aset_tetap');
     Route::get('/laporan/downloads', [LaporanController::class, 'downloads'])->name('laporan.downloads');
     Route::get('/laporan/downloads/{id}', [LaporanController::class, 'downloadFile'])->name('laporan.download_file');
+});
+
+// =====================================================
+// ANALISA & KINERJA BISNIS - Manajer, Admin, Superuser
+// =====================================================
+Route::middleware('role:superuser,admin,manajer')->prefix('analisa')->name('analisa.')->group(function () {
+    Route::get('laporan-keuangan', [AnalisaController::class, 'laporanKeuangan'])->name('laporan_keuangan');
+    Route::get('rasio', [AnalisaController::class, 'rasio'])->name('rasio');
+    Route::get('kesehatan-perusahaan', [AnalisaController::class, 'kesehatanPerusahaan'])->name('kesehatan_perusahaan');
 });
 
 // =====================================================
